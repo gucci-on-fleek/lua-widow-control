@@ -48,42 +48,25 @@ function lwc.save_paragraphs(head)
 
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     luatexbase.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
-
-    local short_node, short_info = lwc.linebreak(head, {
-        looseness = -1,
-        emergencystretch = lwc.emergency_stretch
-    })
     local long_node, long_info = lwc.linebreak(head, {
         looseness = 1,
         emergencystretch = lwc.emergency_stretch
     })
     luatexbase.remove_from_callback("hpack_quality", "disable-box-warnings")
 
-    local loose_demerits, tight_demerits, demerits, best_node
-
     -- If we can't change the length of a paragraph, assign a very large demerit value
-    if short_info.looseness == 0 then
-        tight_demerits = lwc.max_demerits
-    else
-        tight_demerits = short_info.demerits
-    end
-
+    local long_demerits
     if long_info.looseness == 0 then
-        loose_demerits = lwc.max_demerits
+        long_demerits = lwc.max_demerits
     else
-        loose_demerits = long_info.demerits
+        long_demerits = long_info.demerits
     end
 
-    -- Only save the node with the least badness
-    if loose_demerits < tight_demerits then
-        demerits = loose_demerits
-        best_node = long_node
-    else
-        demerits = tight_demerits
-        best_node = short_node
-    end
-
-    table.insert(lwc.paragraphs, {demerits = demerits, node = best_node, lines = natural_info.prevgraf})
+    table.insert(lwc.paragraphs, {
+        demerits = long_demerits,
+        node = long_node,
+        lines = natural_info.prevgraf
+    })
 
     -- Set attributes on the first and last node of the original paragraph so that
     -- we can find and remove it later.
