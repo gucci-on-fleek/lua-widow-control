@@ -1,8 +1,7 @@
-\NeedsTeXFormat{LaTeX2e}
+\NeedsTeXFormat{LaTeX2e}[2015/01/01] % For luatexbase
 \ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
 
-\RequirePackage{luatexbase}
+\clubpenalty=3
+\widowpenalty=5
 
-\parskip=0pt
-
-\directlua{dofile("lua-widow-control.lua")}
+\directlua{require "lua-widow-control"}
