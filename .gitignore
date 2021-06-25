@@ -38,3 +38,4 @@ prv_*
 nogit-**
 old/**
 really_old/**
+tests/lua-widow-control.*

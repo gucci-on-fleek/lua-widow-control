@@ -89,6 +89,11 @@ function lwc.remove_widows(head)
         return head_save
     end
 
+    if #paragraphs == 0 then
+        -- Callbacks were enabled at a page break
+        return head_save
+    end
+
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
@@ -137,7 +142,16 @@ function lwc.remove_widows(head)
 end
 
 
-luatexbase.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
-luatexbase.add_to_callback("linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
+function lwc.enable_callbacks()
+    luatexbase.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
+    luatexbase.add_to_callback("linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
+end
+
+
+function lwc.disable_callbacks()
+    luatexbase.remove_from_callback("pre_output_filter", "remove-widows")
+    luatexbase.remove_from_callback("linebreak_filter", "save-paragraphs")
+end
+
 
 return lwc

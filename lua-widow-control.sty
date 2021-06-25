@@ -1,9 +1,14 @@
-\NeedsTeXFormat{LaTeX2e}[2015/01/01] % For luatexbase
+\NeedsTeXFormat{LaTeX2e}[2015/01/01]
 \ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
 
 \clubpenalty=3
 \widowpenalty=5
 
 \directlua{require "lua-widow-control"}
+
+\newcommand\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
+\newcommand\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+
+\LuaWidowControlEnable
 
 \endinput
