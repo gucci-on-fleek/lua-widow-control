@@ -18,6 +18,8 @@ lwc.emergency_stretch = tex.sp("10em") -- \emergencystretch value for adjusted p
 lwc.max_demerits = 10000 -- Demerits assigned when a paragraph can't adjusted
 lwc.club_penalty = tex.clubpenalty
 lwc.widow_penalty = tex.widowpenalty
+lwc.broken_club_penalty = tex.clubpenalty + tex.brokenpenalty
+lwc.broken_widow_penalty = tex.widowpenalty + tex.brokenpenalty
 lwc.attribute = luatexbase.new_attribute("lua-widow-control")
 
 if lwc.club_penalty == lwc.widow_penalty then
@@ -44,7 +46,7 @@ end
 
 function lwc.save_paragraphs(head)
     -- Produce the regular paragraph
-    local natural_node, natural_info = lwc.linebreak(head)
+    local natural_node, natural_info = tex.linebreak(node.copy_list(head))
 
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     luatexbase.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
@@ -84,7 +86,7 @@ function lwc.remove_widows(head)
     local penalty = tex.outputpenalty
     local paragraphs = lwc.paragraphs
 
-    if penalty ~= lwc.club_penalty and penalty ~= lwc.widow_penalty then
+    if penalty ~= lwc.club_penalty and penalty ~= lwc.widow_penalty and penalty ~= lwc.broken_club_penalty and penalty ~= lwc.broken_widow_penalty then
         -- We only need to process paragraphs with orphans or widows
         return head_save
     end
@@ -118,17 +120,18 @@ function lwc.remove_widows(head)
 
         -- Start of final paragraph
         if node.has_attribute(head, lwc.attribute, #paragraphs) then
-            if penalty == lwc.club_penalty then
+            if penalty == lwc.club_penalty or penalty == lwc.broken_club_penalty then
                 -- Move last line to next page
                 node.write(paragraphs[#paragraphs].node)
                 head.prev.next = nil
 
-            elseif penalty == lwc.widow_penalty then
+            elseif penalty == lwc.widow_penalty or penalty == lwc.broken_widow_penalty then
                 -- Insert last line on top of next page
-                local last_line = node.copy_list(head.next.next)
+                local last_line = node.copy_list(node.slide(head))
+
                 node.slide(last_line).next = node.copy_list(tex.lists.contrib_head)
 
-                head.next.next = nil
+                node.slide(head).prev.prev.next = nil
                 tex.lists.contrib_head = nil
                 tex.lists.contrib_head = last_line
             end

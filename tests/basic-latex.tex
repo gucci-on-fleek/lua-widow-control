@@ -14,7 +14,13 @@
 
 \newcommand\threeline{This is a medium-length paragraph. It is exactly three lines long; just enough to make an orphan or a widow. But now we need some more filler text, like this. Finally, the paragraph is long enough.\par}
 
-\newcommand\tests{\threeline\threeline\threeline\threeline\kant[1-3]\clearpage}
+\newcommand\threebythreeline{\threeline\threeline\threeline}
+
+\newcommand\tests{
+    \threeline\threebythreeline\kant[1-3]\clearpage
+
+    \threeline\twoline\threebythreeline\threebythreeline\kant[1-3]\clearpage
+}
 
 \begin{document}
 \LuaWidowControlDisable
