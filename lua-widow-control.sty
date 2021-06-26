@@ -6,6 +6,8 @@
 
 \directlua{require "lua-widow-control"}
 
+\RequirePackage[final]{microtype} % Microtype is pretty much required to get good results
+
 \newcommand\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
 \newcommand\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
 

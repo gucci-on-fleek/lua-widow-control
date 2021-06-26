@@ -14,8 +14,8 @@ luatexbase.provides_module{
 }
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
-lwc.emergency_stretch = tex.sp("10em") -- \emergencystretch value for adjusted paragraphs
-lwc.max_demerits = 10000 -- Demerits assigned when a paragraph can't adjusted
+lwc.emergency_stretch = tex.sp("3em") -- \emergencystretch value for adjusted paragraphs
+lwc.max_demerits = 1000000 -- Demerits assigned when a paragraph can't adjusted
 lwc.club_penalty = tex.clubpenalty
 lwc.widow_penalty = tex.widowpenalty
 lwc.broken_club_penalty = tex.clubpenalty + tex.brokenpenalty
@@ -99,7 +99,7 @@ function lwc.remove_widows(head)
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
-    for i, x in pairs(paragraphs) do
+    for i, x in pairs({table.unpack(paragraphs, 1, #paragraphs - 1)}) do
         if paragraphs[i].demerits < minimum_demerits then
             paragraph_index, minimum_demerits = i, x.demerits
         end
