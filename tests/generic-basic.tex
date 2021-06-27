@@ -1,12 +1,6 @@
-%!TeX program = LuaLaTeX
-
-\documentclass{article}
-
 \parskip=0pt % Remove stretch component
 
-\usepackage{lua-widow-control}
-
-\def\filler{
+\def\fillertext{
     \input knuth
 
     \input bryson
@@ -18,25 +12,22 @@
     \input knuth
 }
 
-\def\tests{
+\def\widoworphantests{
     This is a short paragraph. It is exactly two lines long; just enough to make an orphan or a widow.
 
-    \filler
+    \fillertext
 
-    \clearpage
+    \pagebreakcommand
 
     This is a short paragraph. It is exactly one line long.
 
-    \filler
+    \fillertext
 
-    \clearpage
+    \pagebreakcommand
 }
 
-\begin{document}
 \LuaWidowControlDisable
-\tests
+\widoworphantests
 
 \LuaWidowControlEnable
-\tests
-
-\end{document}
+\widoworphantests
