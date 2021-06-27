@@ -1,25 +1,35 @@
 %!TeX program = LuaLaTeX
 
 \documentclass{article}
-\widowpenalty=0
-\clubpenalty=0
+
 \parskip=0pt % Remove stretch component
 
 \usepackage{lua-widow-control}
-\usepackage{kantlipsum} % Has really long paragraphs
 
-\newcommand\oneline{This is a short paragraph. It is exactly one line long.\par}
+\def\filler{
+    \input knuth
 
-\newcommand\twoline{This is a short paragraph. It is exactly two lines long; just enough to make an orphan or a widow.\par}
+    \input bryson
 
-\newcommand\threeline{This is a medium-length paragraph. It is exactly three lines long; just enough to make an orphan or a widow. But now we need some more filler text, like this. Finally, the paragraph is long enough.\par}
+    \input knuth
 
-\newcommand\threebythreeline{\threeline\threeline\threeline}
+    \input bryson
 
-\newcommand\tests{
-    \threeline\threebythreeline\kant[1-3]\clearpage
+    \input knuth
+}
 
-    \threeline\twoline\threebythreeline\threebythreeline\kant[1-3]\clearpage
+\def\tests{
+    This is a short paragraph. It is exactly two lines long; just enough to make an orphan or a widow.
+
+    \filler
+
+    \clearpage
+
+    This is a short paragraph. It is exactly one line long.
+
+    \filler
+
+    \clearpage
 }
 
 \begin{document}
