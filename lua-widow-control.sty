@@ -1,15 +1,29 @@
-\NeedsTeXFormat{LaTeX2e}[2015/01/01]
-\ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
+\newif\ifLaTeX
+\expandafter\ifx\csname NeedsTeXFormat\endcsname
+    \LaTeXtrue
+\fi
+
+\ifLaTeX
+    \NeedsTeXFormat{LaTeX2e}[2015/01/01]
+    \ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
+\else
+    \input ltluatex % luatexbase
+\fi
 
 \clubpenalty=3
 \widowpenalty=5
 
 \directlua{require "lua-widow-control"}
 
-\RequirePackage[final]{microtype} % Microtype is pretty much required to get good results
+\ifLaTeX
+    \RequirePackage[final]{microtype} % Required to have decent paragraph breaks with a non-zero looseness value
+\else
+    \expandglyphsinfont\the\font 20 20 5 autoexpand % Plain LuaTeX font expansion
+    \adjustspacing=2
+\fi
 
-\newcommand\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
-\newcommand\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+\def\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
+\def\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
 
 \LuaWidowControlEnable
 
