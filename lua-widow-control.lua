@@ -1,17 +1,43 @@
 lwc = {}
 lwc.name = "lua-widow-control"
 
-luatexbase.provides_module{
-    name = lwc.name,
-    date = "2021/06/24",
-    version = "v0.00",
-    description = [[
-        This module provides a LuaTeX-based solution to prevent
-        widows and orphans from appearing in a document. It does
-        so by increasing or decreasing the lengths of previous
-        paragraphs.
+if context then
+    lwc.add_to_callback = function (callback, func, name)
+        callbacks.register(callback, func)
+    end
+    lwc.remove_from_callback = function (callback, name)
+        -- callbacks.register(callback, nil)
+    end
+    lwc.warning = logs.reporter("module", lwc.name)
+    lwc.attribute = attributes.public(lwc.name)
+elseif luatexbase then
+    luatexbase.provides_module{
+        name = lwc.name,
+        date = "2021/06/24",
+        version = "v0.00",
+        description = [[
+            This module provides a LuaTeX-based solution to prevent
+            widows and orphans from appearing in a document. It does
+            so by increasing or decreasing the lengths of previous
+            paragraphs.
+        ]]
+    }
+    lwc.add_to_callback = luatexbase.add_to_callback
+    lwc.remove_from_callback = luatexbase.remove_from_callback
+    lwc.warning = function(str)
+        luatexbase.module_warning(lwc.name, str)
+    end
+    lwc.attribute = luatexbase.new_attribute(lwc.name)
+else
+    error [[
+        This module requires a supported callback library. Please
+        follow the following format-dependant instructions:
+          - LaTeX: Use a version built after 2015-01-01, or include
+                   `\usepackage{luatexbase}' before loading this module.
+          - Plain: Include `\input ltluatex' before loading this module.
+          - ConTeXt: Use the LMTX or MKIV versions.
     ]]
-}
+end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
 lwc.emergency_stretch = tex.sp("3em") -- \emergencystretch value for adjusted paragraphs
@@ -20,15 +46,14 @@ lwc.club_penalty = tex.clubpenalty
 lwc.widow_penalty = tex.widowpenalty
 lwc.broken_club_penalty = tex.clubpenalty + tex.brokenpenalty
 lwc.broken_widow_penalty = tex.widowpenalty + tex.brokenpenalty
-lwc.attribute = luatexbase.new_attribute("lua-widow-control")
 
 if lwc.club_penalty == lwc.widow_penalty then
-    luatexbase.module_warning(lwc.name, [[
+    lwc.warning [[
         \clubpenalty and \widowpenalty both have the same value.
         This will prevent the package from distinguishing between
         orphans and widows and will almost certainly lead to
         undesirable behavior.
-        ]])
+        ]]
 end
 
 
@@ -49,12 +74,12 @@ function lwc.save_paragraphs(head)
     local natural_node, natural_info = tex.linebreak(node.copy_list(head))
 
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
-    luatexbase.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
+    lwc.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
     local long_node, long_info = lwc.linebreak(head, {
         looseness = 1,
         emergencystretch = lwc.emergency_stretch
     })
-    luatexbase.remove_from_callback("hpack_quality", "disable-box-warnings")
+    lwc.remove_from_callback("hpack_quality", "disable-box-warnings")
 
     -- If we can't change the length of a paragraph, assign a very large demerit value
     local long_demerits
@@ -146,14 +171,14 @@ end
 
 
 function lwc.enable_callbacks()
-    luatexbase.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
-    luatexbase.add_to_callback("linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
+    lwc.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
+    lwc.add_to_callback("linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
 end
 
 
 function lwc.disable_callbacks()
-    luatexbase.remove_from_callback("pre_output_filter", "remove-widows")
-    luatexbase.remove_from_callback("linebreak_filter", "save-paragraphs")
+    lwc.remove_from_callback("pre_output_filter", "remove-widows")
+    lwc.remove_from_callback("linebreak_filter", "save-paragraphs")
 end
 
 

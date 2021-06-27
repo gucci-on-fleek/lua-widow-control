@@ -1,0 +1,19 @@
+\startmodule[lua-widow-control]
+
+% This is not a good idea, but I don't see any regular way to register a `linebreak_filter` callback
+\enabledirectives[system.callbacks.permitoverloads]
+
+\clubpenalty=3
+\widowpenalty=5
+
+\ctxlua{require "lua-widow-control"}
+
+\define\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
+\define\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+
+\unprotect
+    % This is a terrible idea, but it's an easy way to stop the penalies from being reset
+    \expandafter\def\csname\??setup:*default\endcsname{\relax}
+\protect
+
+\stopmodule

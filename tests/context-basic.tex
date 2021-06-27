@@ -1,27 +1,22 @@
 %!TeX program = context
 
-% \input lua-widow-control.sty
-\let\LuaWidowControlEnable=\relax
-\let\LuaWidowControlDisable=\relax
-
 \setuppapersize[letter]
 
 \setuplayout[
     width=345pt,
-    height=555pt,
+    height=560pt,
     header=0pt,
     footer=0pt,
     backspace=135pt,
-    topspace=129pt,
+    topspace=130pt,
 ]
-
 \setupbodyfont[10pt]
-
 \setupindenting[2em, yes]
+
+\usemodule[lua-widow-control]
 
 \define\pagebreakcommand{\page}
 
 \starttext
-    \nopenalties
     \input generic-basic
 \stoptext
