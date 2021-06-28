@@ -1,0 +1,21 @@
+\startmodule[lua-widow-control]
+
+\startsetups[*default]
+    \clubpenalty=3
+    \widowpenalty=5
+\stopsetups
+
+\setups[*default]
+
+\ctxloadluafile{lua-widow-control}
+
+\definefontfeature[default][default][expansion=quality]
+
+\setupalign[hz]
+
+\define\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
+\define\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+
+\LuaWidowControlEnable
+
+\stopmodule
