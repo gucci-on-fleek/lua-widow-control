@@ -57,7 +57,10 @@ if lwc.club_penalty == lwc.widow_penalty then
 end
 
 
-function lwc.linebreak(head, params)
+function lwc.save_paragraphs(head)
+    -- Prevent the "underfull hbox" warnings when we store a potential paragraph
+    lwc.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
+
     local new_head = node.copy_list(head)
 
     -- Prevent ultra-short last lines (TeXBook p. 104)
@@ -65,20 +68,11 @@ function lwc.linebreak(head, params)
     parfillskip.stretch_order = 0
     parfillskip.stretch = 0.9 * tex.hsize
 
-    return tex.linebreak(new_head, params)
-end
-
-
-function lwc.save_paragraphs(head)
-    -- Produce the regular paragraph
-    local natural_node, natural_info = tex.linebreak(node.copy_list(head))
-
-    -- Prevent the "underfull hbox" warnings when we store a potential paragraph
-    lwc.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
-    local long_node, long_info = lwc.linebreak(head, {
+    local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
         emergencystretch = lwc.emergency_stretch
     })
+
     lwc.remove_from_callback("hpack_quality", "disable-box-warnings")
 
     -- If we can't change the length of a paragraph, assign a very large demerit value
@@ -91,18 +85,17 @@ function lwc.save_paragraphs(head)
 
     table.insert(lwc.paragraphs, {
         demerits = long_demerits,
-        node = long_node,
-        lines = natural_info.prevgraf
+        node = long_node
     })
 
-    -- Set attributes on the first and last node of the original paragraph so that
-    -- we can find and remove it later.
-    node.set_attribute(natural_node, lwc.attribute, #lwc.paragraphs)
-    node.set_attribute(node.slide(natural_node), lwc.attribute, -1 * #lwc.paragraphs)
+    return true
+end
 
-    tex.prevdepth = natural_info.prevdepth -- https://tex.stackexchange.com/a/403813
+function lwc.mark_paragraphs(head)
+    node.set_attribute(head, lwc.attribute, #lwc.paragraphs)
+    node.set_attribute(node.slide(head), lwc.attribute, -1 * #lwc.paragraphs)
 
-    return natural_node
+    return true
 end
 
 
@@ -147,7 +140,7 @@ function lwc.remove_widows(head)
         if node.has_attribute(head, lwc.attribute, #paragraphs) then
             if penalty == lwc.club_penalty or penalty == lwc.broken_club_penalty then
                 -- Move last line to next page
-                node.write(paragraphs[#paragraphs].node)
+                tex.lists.contrib_head = paragraphs[#paragraphs].node
                 head.prev.next = nil
 
             elseif penalty == lwc.widow_penalty or penalty == lwc.broken_widow_penalty then
@@ -172,13 +165,15 @@ end
 
 function lwc.enable_callbacks()
     lwc.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
-    lwc.add_to_callback("linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
+    lwc.add_to_callback("pre_linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
+    lwc.add_to_callback("post_linebreak_filter", lwc.mark_paragraphs, "mark-paragraphs")
 end
 
 
 function lwc.disable_callbacks()
     lwc.remove_from_callback("pre_output_filter", "remove-widows")
-    lwc.remove_from_callback("linebreak_filter", "save-paragraphs")
+    lwc.remove_from_callback("pre_linebreak_filter", "save-paragraphs")
+    lwc.remove_from_callback("post_linebreak_filter", "mark-paragraphs")
 end
 
 
