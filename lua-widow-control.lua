@@ -23,6 +23,7 @@ assert(lwc.context or luatexbase, [[
 if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
+    lwc.contrib_head = 'contribute_head'
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module{
         name = lwc.name,
@@ -39,6 +40,7 @@ elseif lwc.plain or lwc.latex then
         luatexbase.module_warning(lwc.name, str)
     end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
+    lwc.contrib_head = 'contrib_head'
 end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
@@ -78,11 +80,11 @@ function lwc.register_callback(t)
 end
 
 
-function lwc.save_paragraphs(head, groupcode)
+function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     lwc.callbacks.disable_box_warnings.enable()
 
-    if head.id ~= node.id("par") then
+    if head.id ~= node.id("par") and lwc.context then
         return head
     end
 
@@ -165,18 +167,17 @@ function lwc.remove_widows(head)
         if node.has_attribute(head, lwc.attribute, #paragraphs) then
             if penalty == lwc.club_penalty or penalty == lwc.broken_club_penalty then
                 -- Move last line to next page
-                tex.lists.contrib_head = paragraphs[#paragraphs].node
+                tex.lists[lwc.contrib_head] = paragraphs[#paragraphs].node
                 head.prev.next = nil
 
             elseif penalty == lwc.widow_penalty or penalty == lwc.broken_widow_penalty then
                 -- Insert last line on top of next page
                 local last_line = node.copy_list(node.slide(head))
 
-                node.slide(last_line).next = node.copy_list(tex.lists.contrib_head)
+                node.slide(last_line).next = node.copy_list(tex.lists[lwc.contrib_head])
 
                 node.slide(head).prev.prev.next = nil
-                tex.lists.contrib_head = nil
-                tex.lists.contrib_head = last_line
+                tex.lists[lwc.contrib_head] = last_line
             end
         end
         head = head.next
