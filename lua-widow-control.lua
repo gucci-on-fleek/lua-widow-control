@@ -1,16 +1,29 @@
 lwc = {}
 lwc.name = "lua-widow-control"
 
-if context then
-    lwc.add_to_callback = function (callback, func, name)
-        callbacks.register(callback, func)
-    end
-    lwc.remove_from_callback = function (callback, name)
-        -- callbacks.register(callback, nil)
-    end
+local format = tex.formatname
+
+if format:find('cont') then
+    lwc.context = true
+elseif format:find('latex') then
+    lwc.latex = true
+elseif format == 'luatex' then
+    lwc.plain = true
+end
+
+assert(lwc.context or luatexbase, [[
+    This module requires a supported callback library. Please
+    follow the following format-dependant instructions:
+      - LaTeX: Use a version built after 2015-01-01, or include
+              `\usepackage{luatexbase}' before loading this module.
+      - Plain: Include `\input ltluatex' before loading this module.
+      - ConTeXt: Use the LMTX or MKIV versions.
+]])
+
+if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
-elseif luatexbase then
+elseif lwc.plain or lwc.latex then
     luatexbase.provides_module{
         name = lwc.name,
         date = "2021/06/24",
@@ -22,21 +35,10 @@ elseif luatexbase then
             paragraphs.
         ]]
     }
-    lwc.add_to_callback = luatexbase.add_to_callback
-    lwc.remove_from_callback = luatexbase.remove_from_callback
     lwc.warning = function(str)
         luatexbase.module_warning(lwc.name, str)
     end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
-else
-    error [[
-        This module requires a supported callback library. Please
-        follow the following format-dependant instructions:
-          - LaTeX: Use a version built after 2015-01-01, or include
-                   `\usepackage{luatexbase}' before loading this module.
-          - Plain: Include `\input ltluatex' before loading this module.
-          - ConTeXt: Use the LMTX or MKIV versions.
-    ]]
 end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
@@ -56,10 +58,33 @@ if lwc.club_penalty == lwc.widow_penalty then
         ]]
 end
 
+function lwc.register_callback(t)
+    if lwc.plain or lwc.latex then
+        return {
+            enable = function () luatexbase.add_to_callback(t.callback, t.func, t.name) end,
+            disable = function () luatexbase.remove_from_callback(t.callback, t.name) end,
+        }
+    elseif lwc.context and not t.lowlevel then
+       return {
+            enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name) or function () nodes.tasks.enableaction(t.category, "lwc." .. t.name) end,
+            disable = function () nodes.tasks.disableaction(t.category, "lwc." .. t.name) end,
+        }
+    elseif lwc.context and t.lowlevel then
+        return {
+            enable = function () callback.register(t.callback, t.func) end,
+            disable = function () callback.register(t.callback, nil) end,
+        }
+    end
+end
 
-function lwc.save_paragraphs(head)
+
+function lwc.save_paragraphs(head, groupcode)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
-    lwc.add_to_callback("hpack_quality", function() end, "disable-box-warnings")
+    lwc.callbacks.disable_box_warnings.enable()
+
+    if head.id ~= node.id("par") then
+        return head
+    end
 
     local new_head = node.copy_list(head)
 
@@ -73,7 +98,7 @@ function lwc.save_paragraphs(head)
         emergencystretch = lwc.emergency_stretch
     })
 
-    lwc.remove_from_callback("hpack_quality", "disable-box-warnings")
+    lwc.callbacks.disable_box_warnings.disable()
 
     -- If we can't change the length of a paragraph, assign a very large demerit value
     local long_demerits
@@ -88,14 +113,14 @@ function lwc.save_paragraphs(head)
         node = long_node
     })
 
-    return true
+    return head
 end
 
 function lwc.mark_paragraphs(head)
     node.set_attribute(head, lwc.attribute, #lwc.paragraphs)
     node.set_attribute(node.slide(head), lwc.attribute, -1 * #lwc.paragraphs)
 
-    return true
+    return head
 end
 
 
@@ -163,17 +188,47 @@ function lwc.remove_widows(head)
 end
 
 
+lwc.callbacks = {
+    disable_box_warnings = lwc.register_callback({
+        callback = "hpack_quality",
+        func     = function() end,
+        name     = "disable_box_warnings",
+        lowlevel = true
+    }),
+    remove_widows = lwc.register_callback({
+        callback = "pre_output_filter",
+        func     = lwc.remove_widows,
+        name     = "remove_widows",
+        lowlevel = true
+    }),
+    save_paragraphs = lwc.register_callback({
+        callback = "pre_linebreak_filter",
+        func     = lwc.save_paragraphs,
+        name     = "save_paragraphs",
+        category = "processors",
+        position = "after"
+    }),
+    mark_paragraphs = lwc.register_callback({
+        callback = "post_linebreak_filter",
+        func     = lwc.mark_paragraphs,
+        name     = "mark_paragraphs",
+        category = "finalizers",
+        position = "after"
+    }),
+}
+
+
 function lwc.enable_callbacks()
-    lwc.add_to_callback("pre_output_filter", lwc.remove_widows, "remove-widows")
-    lwc.add_to_callback("pre_linebreak_filter", lwc.save_paragraphs, "save-paragraphs")
-    lwc.add_to_callback("post_linebreak_filter", lwc.mark_paragraphs, "mark-paragraphs")
+    lwc.callbacks.remove_widows.enable()
+    lwc.callbacks.save_paragraphs.enable()
+    lwc.callbacks.mark_paragraphs.enable()
 end
 
 
 function lwc.disable_callbacks()
-    lwc.remove_from_callback("pre_output_filter", "remove-widows")
-    lwc.remove_from_callback("pre_linebreak_filter", "save-paragraphs")
-    lwc.remove_from_callback("post_linebreak_filter", "mark-paragraphs")
+    lwc.callbacks.remove_widows.disable()
+    lwc.callbacks.save_paragraphs.disable()
+    lwc.callbacks.mark_paragraphs.disable()
 end
 
 
