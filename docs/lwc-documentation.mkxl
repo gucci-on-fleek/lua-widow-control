@@ -1,0 +1,196 @@
+\startenvironment[lwc-documentation]
+
+\mainlanguage[en]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Font Selection %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\startluacode
+fonts.handlers.otf.addfeature {
+    name = "emdash_kern", -- Increase sidebearings on em-dash
+    type = "single",
+    data = {
+        ["—"] = { 100, 0, 200, 0 },
+    }
+}
+\stopluacode
+
+\definefontfeature[default][default][
+    protrusion=quality,
+    expansion=quality,
+    onum=yes,
+    script=latn,
+    emdash_kern=yes,
+]
+\setupalign[hz, hanging]
+
+\definefontfeature[lining][onum=no,lnum=yes]
+\define\lining{\feature[+][lining]}
+
+\starttypescript[lwc-fonts]
+    \definetypeface[lwc-fonts] [rm] [serif][pagella] [default]
+    \definetypeface[lwc-fonts] [ss] [sans] [libertinus] [default] [rscale=1.07]
+    \definetypeface[lwc-fonts] [tt] [mono] [plex] [default] [rscale=0.89, features=none]
+    \definetypeface[lwc-fonts] [mm] [math] [pagella] [default]
+\stoptypescript
+
+\setupbodyfont[lwc-fonts, 11pt]
+
+\setupbodyfontenvironment[default][em=italic]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Page Layout %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\setuppapersize[letter]
+
+\setupindenting[yes, 3em]
+\setupinterlinespace[2.75ex]
+
+\input lang-frq.mkxl % For \averagecharwidth
+
+\setuplayout[
+    width=75\averagecharwidth,
+    backspace=\dimexpr(\paperwidth - \makeupwidth) / 2,
+    topspace=\dimexpr\backspace - \headerheight,
+    footerdistance=3\baselineskip,
+    footer=\baselineskip,
+    height=8.75in
+]
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% PDF Settings %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+% PDF/UA
+\setupbackend[format=PDF/UA-1]
+\setupinteraction[state=start, focus=standard]
+\setuptagging[state=start]
+\setupstructure[state=start, method=auto]
+
+% Bookmarks
+\placebookmarks[section, subsection][section, subsection][number=no]
+\setupinteractionscreen[option=bookmark]
+
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Formatting %%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+
+\setuppagenumbering[location=footer, style=\ss\lining]
+
+% Acronym styling
+\definecharacterkerning[acronymkerning][factor=0.05]
+\definealternativestyle[acronymstyle][{\word\sc\switchtobodyfont[1.1em]\setcharacterkerning[acronymkerning]}][]
+\definehighlight[acronym][style=acronymstyle]
+
+\startuniqueMPgraphic{warning}
+path p;
+p := roundedsquare(OverlayWidth, OverlayHeight, 0.25cm);
+fill p withcolor black;
+draw p anglestriped (1, 45, 20) withpen pencircle scaled 10pt withcolor yellow;
+fill p blownup -0.125cm withcolor white;
+draw p blownup -0.125cm;
+setbounds currentpicture to boundingbox OverlayBox;
+\stopuniqueMPgraphic
+\defineoverlay[warning][\useMPgraphic{warning}]
+
+\define[1]\warning{
+    \blank[2ex]
+    \midaligned{\framed[
+        frame=off,
+        background=warning,
+        backgroundoffset=0.25cm,
+        width=\dimexpr\hsize-4em,
+        align=flushleft,
+    ]{%
+        {\ssa\bf Warning}
+        
+        #1
+    }}
+    \blank[2ex]
+}
+
+\setupitemize[style=\lining]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Section Commands %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecharacterkerning[titlekern][factor=0.2]
+
+% Section
+\startsetups[style:section]
+    \setcharacterkerning[titlekern]
+    \switchtobodyfont[adventor]
+    \word
+    \bfb
+    \feature[+][smallcaps]
+    \spaceskip=0.4em
+    \veryraggedcenter
+\stopsetups
+
+\setuphead[section][
+    before={\blank[2ex]},
+    after={\blank[1ex]},
+    textstyle=\setups{style:section},
+    number=no,
+]
+
+% Subsection
+\setuphead[subsection][
+    before={\blank[line]},
+    after=,
+    textstyle=\ss,
+    alternative=margintext,
+    number=no,
+]
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Title Block %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\setupdocument[
+    title={},
+    author={},
+    version={},
+]
+
+\startsetups[titleblock]
+    \startalignment [middle]
+        \begingroup
+            \setups[style:section]\bfc
+            \documentvariable{title}
+            \par
+        \endgroup
+
+        \blank[2ex]
+
+        \begingroup
+            \ssa\lining
+            v\,\documentvariable{version}
+            \par
+        \endgroup
+
+        \dontleavehmode
+        \blackrule[depth=-0.25\baselineskip, height=\dimexpr0.25\baselineskip + 0.4pt, width=8em]
+        \par
+        
+        \from[projecturl]
+        \blank[line]
+
+        \noindentation
+    \stopalignment
+\stopsetups 
+
+\startsetups[document:start]
+    \setup[titleblock]
+
+    \setupinteraction[
+        title=\documentvariable{title},
+        author=\documentvariable{author},
+    ]
+\stopsetups
+
+\stopenvironment

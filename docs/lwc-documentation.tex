@@ -1,0 +1,92 @@
+\environment lwc-documentation
+
+\useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
+
+\def\lwc/{\sans{lua\allowbreak-widow\allowbreak-control}}
+\def\Lwc/{\sans{Lua\allowbreak-widow\allowbreak-control}}
+\def\lwcenable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Enable}}
+\def\lwcdisable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Disable}}
+
+\define[1]\filename{\blank[2*line]\noindent{\ita#1}}
+
+\usemodule[vim]
+
+\definevimtyping[TEX][syntax=tex, lines=split]
+\definevimtyping[LUA][syntax=LUA, lines=split]
+
+\startdocument[
+    title=lua-widow-control,
+    author=Max Chernoff,
+    version=0.0.0,
+]
+\Lwc/ is a plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
+
+\warning{This is a \bold{preliminary} release of \lwc/. So far, it has only been tested with simple text---it has \emph{not} been tested with tables, floats, footnotes, or graphics. In testing, \lwc/ has sometimes randomly discarded paragraphs without any warning or indication. This should not happen anymore (and please report it if it does), but I would still recommend against using \lwc/ on exams, contracts, or other important documents.}
+
+\section{Installation}
+
+Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS} or \TeX distribution, or format.
+
+\subsection{Steps}
+\startitemize[N]
+    \item \goto{Download}[url(projecturl)] \lwc/.
+    \item Copy \type{lua-widow-control.lua} to \type{TEXMFLOCAL/tex/generic/lua-widow-control/}
+    \item Copy \type{lua-widow-control.sty} to \type{TEXMFLOCAL/tex/latex/lua-widow-control/}
+    \item Copy \type{t-lua-widow-control.mkxl} to \type{TEXMFLOCAL/tex/context/third}
+    \item Refresh the filename database with \type{mtxrun --generate} (\ConTeXt), \type{mktexlsr} (\TeX{}Live), or \type{initexmf --update-fndb} (Mik\TeX).
+\stopitemize
+
+\section{Loading the Package}
+
+\subsection{Plain \TeX}
+
+\inlineTEX{\input lua-widow-control.sty}
+
+\subsection{\LaTeX}
+
+\inlineTEX{\usepackage{lua-widow-control}}
+
+\subsection{\ConTeXt}
+
+\inlineTEX{\usemodule[lua-widow-control]}
+
+\section{Usage}
+
+\Lwc/ is enabled as soon as you load it. If you wish, you can disable it with \lwcdisable/. Later, you can reenable it with \lwcenable/
+
+\warning{If \lwc/ is already disabled, running \lwcdisable/ will throw a fatal error. Likewise, running \lwcenable/ while \lwc/ is already enabled may cause unpredictable behavior.
+
+This will be fixed in a future update}
+
+\section{Configuration}
+
+There aren't very many options available yet for \lwc/. Right now, the only configurable option is the \tex{emergencystretch} used when stretching a paragraph. The default value is 3\,em.
+
+There isn't a proper user interface quite yet, but you can adjust this by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("99pt")}} after you load the package.
+
+Admittedly, this is a pretty hostile user interface. This will be fixed in a future update.
+
+\page
+\setuplayout[
+    width=7.5in,
+    backspace=0.5in,
+    height=11in,
+]
+\section{Implementation}
+
+\setupbodyfont[10pt]
+
+
+\filename{lua-widow-control.lua}
+
+\typeLUAfile{../source/lua-widow-control.lua}
+
+\filename{lua-widow-control.sty}
+
+\typeTEXfile{../source/lua-widow-control.sty}
+
+\filename{t-lua-widow-control.mkxl}
+
+\typeTEXfile{../source/t-lua-widow-control.mkxl}
+
+\stopdocument
