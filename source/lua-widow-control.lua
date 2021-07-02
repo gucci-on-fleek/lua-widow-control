@@ -25,7 +25,7 @@ if lwc.context then
     lwc.attribute = attributes.public(lwc.name)
     lwc.contrib_head = 'contribute_head'
 elseif lwc.plain or lwc.latex then
-    luatexbase.provides_module{
+    luatexbase.provides_module {
         name = lwc.name,
         date = "2021/06/24",
         version = "v0.00",
@@ -34,17 +34,15 @@ elseif lwc.plain or lwc.latex then
             widows and orphans from appearing in a document. It does
             so by increasing or decreasing the lengths of previous
             paragraphs.
-        ]]
+        ]],
     }
-    lwc.warning = function(str)
-        luatexbase.module_warning(lwc.name, str)
-    end
+    lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head'
 end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
-lwc.emergency_stretch = tex.sp("3em") -- \emergencystretch value for adjusted paragraphs
+lwc.emergency_stretch = tex.sp("3em") -- \\emergencystretch value for adjusted paragraphs
 lwc.max_demerits = 1000000 -- Demerits assigned when a paragraph can't adjusted
 lwc.club_penalty = tex.clubpenalty
 lwc.widow_penalty = tex.widowpenalty
@@ -60,21 +58,31 @@ if lwc.club_penalty == lwc.widow_penalty then
         ]]
 end
 
+
 function lwc.register_callback(t)
     if lwc.plain or lwc.latex then
         return {
-            enable = function () luatexbase.add_to_callback(t.callback, t.func, t.name) end,
-            disable = function () luatexbase.remove_from_callback(t.callback, t.name) end,
+            enable = function()
+                luatexbase.add_to_callback(t.callback, t.func, t.name)
+            end,
+            disable = function()
+                luatexbase.remove_from_callback(t.callback, t.name)
+            end,
         }
     elseif lwc.context and not t.lowlevel then
-       return {
-            enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name) or function () nodes.tasks.enableaction(t.category, "lwc." .. t.name) end,
-            disable = function () nodes.tasks.disableaction(t.category, "lwc." .. t.name) end,
+        return {
+            enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
+                  or function()
+                    nodes.tasks.enableaction(t.category, "lwc." .. t.name)
+            end,
+            disable = function()
+                nodes.tasks.disableaction(t.category, "lwc." .. t.name)
+            end,
         }
     elseif lwc.context and t.lowlevel then
         return {
-            enable = function () callback.register(t.callback, t.func) end,
-            disable = function () callback.register(t.callback, nil) end,
+            enable = function() callback.register(t.callback, t.func) end,
+            disable = function() callback.register(t.callback, nil) end,
         }
     end
 end
@@ -97,7 +105,7 @@ function lwc.save_paragraphs(head)
 
     local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
-        emergencystretch = lwc.emergency_stretch
+        emergencystretch = lwc.emergency_stretch,
     })
 
     lwc.callbacks.disable_box_warnings.disable()
@@ -110,13 +118,11 @@ function lwc.save_paragraphs(head)
         long_demerits = long_info.demerits
     end
 
-    table.insert(lwc.paragraphs, {
-        demerits = long_demerits,
-        node = long_node
-    })
+    table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
     return head
 end
+
 
 function lwc.mark_paragraphs(head)
     node.set_attribute(head, lwc.attribute, #lwc.paragraphs)
@@ -131,13 +137,16 @@ function lwc.remove_widows(head)
     local penalty = tex.outputpenalty
     local paragraphs = lwc.paragraphs
 
-    if penalty ~= lwc.club_penalty and penalty ~= lwc.widow_penalty and penalty ~= lwc.broken_club_penalty and penalty ~= lwc.broken_widow_penalty then
-        -- We only need to process paragraphs with orphans or widows
+    -- We only need to process paragraphs with orphans or widows
+    if penalty ~= lwc.club_penalty and
+       penalty ~= lwc.widow_penalty and
+       penalty ~= lwc.broken_club_penalty and
+       penalty ~= lwc.broken_widow_penalty then
         return head_save
     end
 
+    -- Callbacks were enabled at a page break
     if #paragraphs == 0 then
-        -- Callbacks were enabled at a page break
         return head_save
     end
 
@@ -153,25 +162,27 @@ function lwc.remove_widows(head)
     local target_node = paragraphs[paragraph_index].node
 
     while head do
+        -- Insert the start of the replacement paragraph
         if node.has_attribute(head, lwc.attribute, paragraph_index) then
-            -- Insert the start of the replacement paragraph
             head.prev.next = target_node
         end
 
+        -- Insert the end of the replacement paragraph
         if node.has_attribute(head, lwc.attribute, -1 * paragraph_index) then
-            -- Insert the end of the replacement paragraph
             node.slide(target_node).next = head.next
         end
 
         -- Start of final paragraph
         if node.has_attribute(head, lwc.attribute, #paragraphs) then
-            if penalty == lwc.club_penalty or penalty == lwc.broken_club_penalty then
-                -- Move last line to next page
+            -- Move last line to next page
+            if penalty == lwc.club_penalty or
+               penalty == lwc.broken_club_penalty then
                 tex.lists[lwc.contrib_head] = paragraphs[#paragraphs].node
                 head.prev.next = nil
 
-            elseif penalty == lwc.widow_penalty or penalty == lwc.broken_widow_penalty then
-                -- Insert last line on top of next page
+            -- Insert last line on top of next page
+            elseif penalty == lwc.widow_penalty or
+                   penalty == lwc.broken_widow_penalty then
                 local last_line = node.copy_list(node.slide(head))
 
                 node.slide(last_line).next = node.copy_list(tex.lists[lwc.contrib_head])
@@ -194,27 +205,27 @@ lwc.callbacks = {
         callback = "hpack_quality",
         func     = function() end,
         name     = "disable_box_warnings",
-        lowlevel = true
+        lowlevel = true,
     }),
     remove_widows = lwc.register_callback({
         callback = "pre_output_filter",
         func     = lwc.remove_widows,
         name     = "remove_widows",
-        lowlevel = true
+        lowlevel = true,
     }),
     save_paragraphs = lwc.register_callback({
         callback = "pre_linebreak_filter",
         func     = lwc.save_paragraphs,
         name     = "save_paragraphs",
         category = "processors",
-        position = "after"
+        position = "after",
     }),
     mark_paragraphs = lwc.register_callback({
         callback = "post_linebreak_filter",
         func     = lwc.mark_paragraphs,
         name     = "mark_paragraphs",
         category = "finalizers",
-        position = "after"
+        position = "after",
     }),
 }
 
