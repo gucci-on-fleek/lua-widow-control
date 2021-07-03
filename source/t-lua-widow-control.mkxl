@@ -1,8 +1,14 @@
+%D \module
+%D   [     file=t-lua-widow-control,
+%D      version=0.0.0,
+%D        title=lua-widow-control,
+%D     subtitle=\ConTeXt module for lua-widow-control,
+%D       author=gucci-on-fleek,
+%D         date=\currentdate,
+%D    copyright=SPDX-FileCopyrightText: 2021 gucci-on-fleek,
+%D      license=SPDX-License-Identifier: MPL-2.0+,
+%D           url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
-% lua-widow-control
-% https://github.com/gucci-on-fleek/lua-widow-control
-% SPDX-License-Identifier: MPL-2.0+
-% SPDX-FileCopyrightText: 2021 gucci-on-fleek
 
 % We can't just set the penalties because they will be reset automatically
 % at \\starttext.
