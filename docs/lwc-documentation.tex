@@ -1,4 +1,8 @@
 \environment lwc-documentation
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
+% SPDX-FileCopyrightText: 2021 gucci-on-fleek
 
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
 
@@ -18,7 +22,7 @@
     version=0.0.0,
 ]
 
-\Lwc/ is a plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
+\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
 
 \warning{This is a \bold{preliminary} release of \lwc/. So far, it has only been tested with simple text---it has \emph{not} been tested with tables, floats, footnotes, or graphics. In testing, \lwc/ has sometimes randomly discarded paragraphs without any warning or indication. This should not happen anymore (and please report it if it does), but I would still recommend against using \lwc/ on exams, contracts, or other important documents.}
 
@@ -64,6 +68,10 @@ There aren't very many options available yet for \lwc/. Right now, the only conf
 There isn't a proper user interface quite yet, but you can adjust this by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("99pt")}} after you load the package.
 
 Admittedly, this is a pretty hostile user interface. This will be fixed in a future update.
+
+\section{License}
+
+\Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is additionally licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater.
 
 \page
 \setuplayout[
