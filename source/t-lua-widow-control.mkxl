@@ -7,8 +7,8 @@
 % We can't just set the penalties because they will be reset automatically
 % at \\starttext.
 \startsetups[*default]
-    \clubpenalty=3
-    \widowpenalty=5
+    \clubpenalty=1
+    \widowpenalty=1
 \stopsetups
 
 \setups[*default]

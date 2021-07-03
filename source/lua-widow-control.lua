@@ -74,17 +74,11 @@ end
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
 lwc.emergency_stretch = tex.sp("3em") -- \\emergencystretch value for adjusted paragraphs
 lwc.max_demerits = 1000000 -- Demerits assigned when a paragraph can't adjusted
-lwc.club_penalty = tex.clubpenalty
-lwc.widow_penalty = tex.widowpenalty
-lwc.broken_club_penalty = tex.clubpenalty + tex.brokenpenalty
-lwc.broken_widow_penalty = tex.widowpenalty + tex.brokenpenalty
 
-if lwc.club_penalty == lwc.widow_penalty then
+if tex.interlinepenalty ~= 0 then
     lwc.warning [[
-        \clubpenalty and \widowpenalty both have the same value.
-        This will prevent the package from distinguishing between
-        orphans and widows and will almost certainly lead to
-        undesirable behavior.
+        \interlinepenalty is set to a non-zero value. This may prevent
+        lua-widow-control from properly functioning.
         ]]
 end
 
@@ -208,10 +202,9 @@ function lwc.remove_widows(head)
 
         If the paragraphs array is empty, then there is nothing that we can do.
       ]]
-    if (penalty ~= lwc.club_penalty and
-        penalty ~= lwc.widow_penalty and
-        penalty ~= lwc.broken_club_penalty and
-        penalty ~= lwc.broken_widow_penalty) or
+    if  penalty >=  10000 or
+        penalty <= -10000 or
+        penalty ==      0 or
         #paragraphs == 0 then
             return head
     end
