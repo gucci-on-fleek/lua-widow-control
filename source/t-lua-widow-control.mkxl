@@ -1,5 +1,7 @@
 \startmodule[lua-widow-control]
 
+% We can't just set the penalties because they will be reset automatically
+% at \\starttext.
 \startsetups[*default]
     \clubpenalty=3
     \widowpenalty=5
@@ -9,13 +11,16 @@
 
 \ctxloadluafile{lua-widow-control}
 
+% Here, we enable font expansion/contraction. It isn't strictly necessary for
+% \lwc/'s functionality; however, it is required for the
+% lengthened paragraphs to not have terrible spacing. 
 \definefontfeature[default][default][expansion=quality]
-
 \setupalign[hz]
 
 \define\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
 \define\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
 
+% Enable \lwc/ by default when the module is loaded.
 \LuaWidowControlEnable
 
 \stopmodule

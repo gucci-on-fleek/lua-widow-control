@@ -31,7 +31,7 @@ fonts.handlers.otf.addfeature {
 \starttypescript[lwc-fonts]
     \definetypeface[lwc-fonts] [rm] [serif][pagella] [default]
     \definetypeface[lwc-fonts] [ss] [sans] [libertinus] [default] [rscale=1.07]
-    \definetypeface[lwc-fonts] [tt] [mono] [plex] [default] [rscale=0.89, features=none]
+    \definetypeface[lwc-fonts] [tt] [mono] [plex] [default] [rscale=0.89]
     \definetypeface[lwc-fonts] [mm] [math] [pagella] [default]
 \stoptypescript
 
@@ -71,7 +71,7 @@ fonts.handlers.otf.addfeature {
 \setupstructure[state=start, method=auto]
 
 % Bookmarks
-\placebookmarks[section, subsection][section, subsection][number=no]
+\placebookmarks[section, subsection, filename][section, subsection, filename][number=no]
 \setupinteractionscreen[option=bookmark]
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -145,6 +145,12 @@ setbounds currentpicture to boundingbox OverlayBox;
     textstyle=\ss,
     alternative=margintext,
     number=no,
+]
+
+\definehead[filename][subsection][
+    alternative=normal,
+    style=\ssita,
+    before={\blank[2*line]},
 ]
 
 %%%%%%%%%%%%%%%%%%%%%%%

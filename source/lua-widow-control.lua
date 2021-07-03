@@ -1,15 +1,27 @@
 lwc = {}
 lwc.name = "lua-widow-control"
 
+--[[
+    \lwc/ is intended to be format-agonistic. It only runs on Lua\TeX{},
+    but there are still some slight differences between formats. Here, we
+    detect the format name then set some flags for later processing.
+  ]]
 local format = tex.formatname
 
-if format:find('cont') then
+if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
     lwc.context = true
-elseif format:find('latex') then
+elseif format:find('latex') then -- lualatex, lualatex-dev, ...
     lwc.latex = true
-elseif format == 'luatex' then
+elseif format == 'luatex' then -- Plain
     lwc.plain = true
 end
+
+--[[
+    This warning is raised in the following circumstances:
+      - When the user manually loads the Lua module without loading Lua\TeX{}Base
+      - When the package is used with an unsupported format
+    Both of these are pretty unlikely.
+  ]]
 
 assert(lwc.context or luatexbase, [[
     This module requires a supported callback library. Please
@@ -17,13 +29,13 @@ assert(lwc.context or luatexbase, [[
       - LaTeX: Use a version built after 2015-01-01, or include
               `\usepackage{luatexbase}' before loading this module.
       - Plain: Include `\input ltluatex' before loading this module.
-      - ConTeXt: Use the LMTX or MKIV versions.
+      - ConTeXt: Use the LMTX version.
 ]])
 
 if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
-    lwc.contrib_head = 'contribute_head'
+    lwc.contrib_head = 'contribute_head' -- For \LuaMetaTeX{}
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
@@ -38,8 +50,12 @@ elseif lwc.plain or lwc.latex then
     }
     lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
-    lwc.contrib_head = 'contrib_head'
+    lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
 end
+
+--[[
+    Here we initialize a bunch of module-level variables and constants.
+  ]]
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
 lwc.emergency_stretch = tex.sp("3em") -- \\emergencystretch value for adjusted paragraphs
@@ -58,7 +74,18 @@ if lwc.club_penalty == lwc.widow_penalty then
         ]]
 end
 
-
+--- Create a table of functions to enable or disable a given callback
+--- @param t table Parameters of the callback to create
+---     callback: str = The \LuaTeX{} callback name
+---     func: function = The function to call
+---     name: str = The name/ID of the callback
+---     category: str = The category for a \ConTeXt{} "Action"
+---     position: str = The "position" for a \ConTeXt{} "Action"
+---     lowlevel: bool = If we should use a lowlevel \LuaTeX{} callback instead of a
+---                      \ConTeXt{} "Action"
+--- @return table t Enablers/Disablers for the callback
+---     enable: function = Enable the callback
+---     disable: function = Disable the callback
 function lwc.register_callback(t)
     if lwc.plain or lwc.latex then
         return {
@@ -71,6 +98,8 @@ function lwc.register_callback(t)
         }
     elseif lwc.context and not t.lowlevel then
         return {
+            -- Register the callback when the table is created,
+            -- but activate it when `enable()` is called.
             enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
                   or function()
                     nodes.tasks.enableaction(t.category, "lwc." .. t.name)
@@ -80,6 +109,12 @@ function lwc.register_callback(t)
             end,
         }
     elseif lwc.context and t.lowlevel then
+        --[[
+            Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
+            with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
+            and unfrozen. Because of this, we need to register some callbacks at the
+            engine level.
+          ]]
         return {
             enable = function() callback.register(t.callback, t.func) end,
             disable = function() callback.register(t.callback, nil) end,
@@ -87,12 +122,13 @@ function lwc.register_callback(t)
     end
 end
 
-
+-- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     lwc.callbacks.disable_box_warnings.enable()
 
     if head.id ~= node.id("par") and lwc.context then
+        -- Not too sure why this is necessary, but \ConTeXt{} crashes without it
         return head
     end
 
@@ -120,10 +156,21 @@ function lwc.save_paragraphs(head)
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
+    --[[
+        \LuaMetaTeX{} crashes if we return `true`. However, page 175 of the \LuaMetaTeX{}
+        manual says:
+
+        "As for all the callbacks that deal with nodes, the return value can be one
+        of three things:
+          - boolean true signals successful processing
+          - <node> signals that the ‘head’ node should be replaced by the returned node
+          - boolean false signals that the ‘head’ node list should be ignored and
+            flushed from memory"
+      ]]
     return head
 end
 
-
+-- Tags the beginning and the end of each paragraph as it is added to the page
 function lwc.mark_paragraphs(head)
     node.set_attribute(head, lwc.attribute, #lwc.paragraphs)
     node.set_attribute(node.slide(head), lwc.attribute, -1 * #lwc.paragraphs)
@@ -131,13 +178,19 @@ function lwc.mark_paragraphs(head)
     return head
 end
 
-
+--[[
+    This function holds the majority of the module's functionality. It is called
+    just after the end of the output routine, before the page is shipped out. If
+    the output penalty indicates that the page was broken at a widow or an orphan,
+    we replace one paragraph with the same paragraph, but lengthened by one line.
+    Then, we can push the bottom line of the page to the next page.
+  ]]
 function lwc.remove_widows(head)
     local head_save = head -- Save the head to return at the end
     local penalty = tex.outputpenalty
     local paragraphs = lwc.paragraphs
 
-    -- We only need to process paragraphs with orphans or widows
+    -- We only need to process pages that have orphans or widows
     if penalty ~= lwc.club_penalty and
        penalty ~= lwc.widow_penalty and
        penalty ~= lwc.broken_club_penalty and
@@ -145,11 +198,22 @@ function lwc.remove_widows(head)
         return head_save
     end
 
-    -- Callbacks were enabled at a page break
+    --[[
+        If the paragraphs array is empty, then there is nothing that we can do.
+
+        This should only happen when \\LuaWidowControlEnable is called at the end
+        of a page.
+      ]]
     if #paragraphs == 0 then
         return head_save
     end
 
+    --[[
+        Find the paragraph on the page with the minimum penalty.
+
+        This would be a 1-liner in Python or JavaScript, but Lua is pretty low-level,
+        so there's quite a bit of code here.
+      ]]
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 

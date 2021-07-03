@@ -7,8 +7,6 @@
 \def\lwcenable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Enable}}
 \def\lwcdisable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Disable}}
 
-\define[1]\filename{\page[preference]\blank[2*line]\noindent{\ita#1}}
-
 \usemodule[vim]
 
 \definevimtyping[TEX][syntax=tex, lines=split, escape=comment]
@@ -19,6 +17,7 @@
     author=Max Chernoff,
     version=0.0.0,
 ]
+
 \Lwc/ is a plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
 
 \warning{This is a \bold{preliminary} release of \lwc/. So far, it has only been tested with simple text---it has \emph{not} been tested with tables, floats, footnotes, or graphics. In testing, \lwc/ has sometimes randomly discarded paragraphs without any warning or indication. This should not happen anymore (and please report it if it does), but I would still recommend against using \lwc/ on exams, contracts, or other important documents.}
@@ -68,13 +67,13 @@ Admittedly, this is a pretty hostile user interface. This will be fixed in a fut
 
 \page
 \setuplayout[
-    width=7in,
-    backspace=0.75in,
-    height=10in,
+    width=middle,
+    backspace=1in,
+    height=9.25in,
 ]
 \section{Implementation}
 
-\setupbodyfont[10.5pt]
+\setupbodyfont[10pt]
 
 \filename{lua-widow-control.lua}
 

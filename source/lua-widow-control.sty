@@ -1,13 +1,15 @@
+% This file can be imported as a \LaTeX{} package, or it can be \\input'ed in
+% Plain \TeX{}, so we need to detect the format for further processing.
 \newif\ifLaTeX
 \expandafter\ifx\csname NeedsTeXFormat\endcsname
     \LaTeXtrue
 \fi
 
 \ifLaTeX
-    \NeedsTeXFormat{LaTeX2e}[2015/01/01]
+    \NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
     \ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
 \else
-    \input ltluatex % luatexbase
+    \input ltluatex % \LuaTeX{}Base
 \fi
 
 \clubpenalty=3
@@ -15,16 +17,20 @@
 
 \directlua{require "lua-widow-control"}
 
+% Here, we enable font expansion/contraction. It isn't strictly necessary for
+% \lwc/'s functionality; however, it is required for the
+% lengthened paragraphs to not have terrible spacing. 
 \ifLaTeX
-    \RequirePackage[final]{microtype} % Required to have decent paragraph breaks with a non-zero looseness value
+    \RequirePackage[final]{microtype}
 \else
-    \expandglyphsinfont\the\font 20 20 5 autoexpand % Plain LuaTeX font expansion
+    \expandglyphsinfont\the\font 20 20 5
     \adjustspacing=2
 \fi
 
 \def\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
 \def\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
 
+% Enable \lwc/ by default when the package is loaded.
 \LuaWidowControlEnable
 
 \endinput
