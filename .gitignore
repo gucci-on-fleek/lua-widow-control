@@ -11,4 +11,3 @@
 *.tuc
 *.vimout
 nogit-**
-tests/*lua-widow-control*
