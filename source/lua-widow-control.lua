@@ -8,6 +8,13 @@ lwc.name = "lua-widow-control"
   ]]
 local format = tex.formatname
 
+-- Save some local copies of the node library to reduce table lookups
+local last = node.slide
+local copy = node.copy_list
+local par_id = node.id("par")
+local set_attribute = node.set_attribute
+local has_attribute = node.has_attribute
+
 if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
     lwc.context = true
 elseif format:find('latex') then -- lualatex, lualatex-dev, ...
@@ -127,15 +134,15 @@ function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     lwc.callbacks.disable_box_warnings.enable()
 
-    if head.id ~= node.id("par") and lwc.context then
+    if head.id ~= par_id and lwc.context then
         -- Not too sure why this is necessary, but \ConTeXt{} crashes without it
         return head
     end
 
-    local new_head = node.copy_list(head)
+    local new_head = copy(head)
 
     -- Prevent ultra-short last lines (TeXBook p. 104)
-    local parfillskip = node.slide(new_head)
+    local parfillskip = last(new_head)
     parfillskip.stretch_order = 0
     parfillskip.stretch = 0.9 * tex.hsize
 
@@ -172,8 +179,8 @@ end
 
 -- Tags the beginning and the end of each paragraph as it is added to the page
 function lwc.mark_paragraphs(head)
-    node.set_attribute(head, lwc.attribute, #lwc.paragraphs)
-    node.set_attribute(node.slide(head), lwc.attribute, -1 * #lwc.paragraphs)
+    set_attribute(head, lwc.attribute, #lwc.paragraphs)
+    set_attribute(last(head), lwc.attribute, -1 * #lwc.paragraphs)
 
     return head
 end
@@ -227,33 +234,23 @@ function lwc.remove_widows(head)
 
     while head do
         -- Insert the start of the replacement paragraph
-        if node.has_attribute(head, lwc.attribute, paragraph_index) then
+        if has_attribute(head, lwc.attribute, paragraph_index) then
             head.prev.next = target_node
         end
 
         -- Insert the end of the replacement paragraph
-        if node.has_attribute(head, lwc.attribute, -1 * paragraph_index) then
-            node.slide(target_node).next = head.next
+        if has_attribute(head, lwc.attribute, -1 * paragraph_index) then
+            last(target_node).next = head.next
         end
 
         -- Start of final paragraph
-        if node.has_attribute(head, lwc.attribute, #paragraphs) then
-            -- Move last line to next page
-            if penalty == lwc.club_penalty or
-               penalty == lwc.broken_club_penalty then
-                tex.lists[lwc.contrib_head] = paragraphs[#paragraphs].node
-                head.prev.next = nil
+        if has_attribute(head, lwc.attribute, #paragraphs) then
+            local last_line = copy(last(head))
 
-            -- Insert last line on top of next page
-            elseif penalty == lwc.widow_penalty or
-                   penalty == lwc.broken_widow_penalty then
-                local last_line = node.copy_list(node.slide(head))
+            last(last_line).next = copy(tex.lists[lwc.contrib_head])
 
-                node.slide(last_line).next = node.copy_list(tex.lists[lwc.contrib_head])
-
-                node.slide(head).prev.prev.next = nil
-                tex.lists[lwc.contrib_head] = last_line
-            end
+            last(head).prev.prev.next = nil
+            tex.lists[lwc.contrib_head] = last_line
         end
         head = head.next
     end
