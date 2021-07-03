@@ -1,0 +1,124 @@
+%!TeX program = LuaLaTeX
+
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2021 gucci-on-fleek
+
+% Pathological test file to look for edge cases. Includes just about everything that I could possibly think of.
+
+\documentclass{article}
+
+\usepackage{lua-widow-control}
+
+\usepackage[english]{babel}
+
+\usepackage{amsmath, etoolbox, pgffor, blindtext, kantlipsum, multicol, longtable}
+
+\newcommand{\pagebreakcommand}{\clearpage}
+
+\allowdisplaybreaks
+\parskip=0pt
+\vfuzz=1pt
+
+\let\aligncontents=\relax
+\foreach \x in {1, ..., 40} {
+    \xappto\aligncontents{\x = \x}
+    \gappto\aligncontents{\\}
+}
+
+\let\tabularcontents=\relax
+\foreach \x in {1, ..., 40} {
+    \xappto\tabularcontents{\x & \x & \x}
+    \gappto\tabularcontents{\\}
+}
+
+\let\longtabularcontents=\relax
+\foreach \x in {1, ..., 200} {
+    \xappto\longtabularcontents{\x & \x & \x}
+    \gappto\longtabularcontents{\\}
+}
+
+\newcommand{\testtable}{%
+    \begin{tabular}{ccc}
+    \hline
+        \tabularcontents
+    \hline
+    \end{tabular}%
+}
+
+\newcommand{\footnotetest}{%
+    \foreach \x in {1, ..., 48} {
+        AAA AAA\footnote{\x}\ 
+    }\clearpage
+}
+
+\begin{document}
+    \begin{align*}
+        \aligncontents
+    \end{align*}
+    \clearpage
+
+    \foreach \x in {4, ..., 8} {
+        \foreach \y in {1, ..., \x} {
+            A\par
+        }
+        \testtable\clearpage
+    }
+
+    \tableofcontents\clearpage
+
+    \LuaWidowControlDisable
+    \footnotetest
+
+    \LuaWidowControlEnable
+    \footnotetest
+
+    \input generic-basic
+
+    \blindmathpaper
+
+    \Blinddocument\clearpage
+
+    \foreach \x in {1, ..., 15} {
+        \begin{figure}[tb]
+            \input zapf
+        \end{figure}
+    }
+
+    \kant[1-164]
+
+    \clearpage 
+
+    \begin{multicols*}{5}
+        \renewcommand{\blindmarkup}[1]{\footnote{#1}}
+        \raggedright
+        \parindent=2em
+        \Blindtext\Blindtext\Blindtext\Blindtext
+    \end{multicols*}
+
+    \begin{longtable}{c|c|c}
+    \hline
+        A & \multicolumn{2}{|c|}{A} \\
+        \endhead
+        \hline
+        \multicolumn{2}{|c|}{Z} & Z \\
+        \hline
+        \endfoot
+        \longtabularcontents
+    \end{longtable}
+
+    \directlua{lwc.emergency_stretch = tex.maxdimen}
+
+    \LuaWidowControlEnable\LuaWidowControlEnable\LuaWidowControlEnable\LuaWidowControlEnable\LuaWidowControlEnable\LuaWidowControlEnable\LuaWidowControlEnable
+    
+    \clearpage
+
+    \brokenpenalty=0
+    \interlinepenalty=3
+    \widowpenalty=0
+    \clubpenalty=0
+
+    \kant[1-50]
+    
+\end{document}

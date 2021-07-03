@@ -232,7 +232,8 @@ function lwc.remove_widows(head)
             node.flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
             paragraph_index, minimum_demerits = i, x.demerits
-        else
+        elseif i > 1 then
+            -- Not sure why `i > 1` is required?
             node.flush_list(paragraphs[i].node)
             paragraphs[i].node = nil
         end
