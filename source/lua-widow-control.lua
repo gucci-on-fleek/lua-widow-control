@@ -43,6 +43,7 @@ if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
     lwc.contrib_head = 'contribute_head' -- For \LuaMetaTeX{}
+    node.flush_list = node.flushlist
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
@@ -193,27 +194,23 @@ end
     Then, we can push the bottom line of the page to the next page.
   ]]
 function lwc.remove_widows(head)
-    local head_save = head -- Save the head to return at the end
     local penalty = tex.outputpenalty
     local paragraphs = lwc.paragraphs
 
-    -- We only need to process pages that have orphans or widows
-    if penalty ~= lwc.club_penalty and
-       penalty ~= lwc.widow_penalty and
-       penalty ~= lwc.broken_club_penalty and
-       penalty ~= lwc.broken_widow_penalty then
-        return head_save
-    end
-
     --[[
-        If the paragraphs array is empty, then there is nothing that we can do.
+        We only need to process pages that have orphans or widows.
 
-        This should only happen when \\LuaWidowControlEnable is called at the end
-        of a page.
+        If the paragraphs array is empty, then there is nothing that we can do.
       ]]
-    if #paragraphs == 0 then
-        return head_save
+    if (penalty ~= lwc.club_penalty and
+        penalty ~= lwc.widow_penalty and
+        penalty ~= lwc.broken_club_penalty and
+        penalty ~= lwc.broken_widow_penalty) or
+        #paragraphs == 0 then
+            return head
     end
+
+    local head_save = head -- Save the head to return at the end
 
     --[[
         Find the paragraph on the page with the minimum penalty.
@@ -224,23 +221,31 @@ function lwc.remove_widows(head)
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
-    for i, x in pairs({table.unpack(paragraphs, 1, #paragraphs - 1)}) do
-        if paragraphs[i].demerits < minimum_demerits then
+    for i, x in pairs(paragraphs) do
+        if paragraphs[i].demerits < minimum_demerits and i < #paragraphs - 1 then
+            node.flush_list(paragraphs[paragraph_index].node)
+            paragraphs[paragraph_index].node = nil
             paragraph_index, minimum_demerits = i, x.demerits
+        else
+            node.flush_list(paragraphs[i].node)
+            paragraphs[i].node = nil
         end
     end
 
     local target_node = paragraphs[paragraph_index].node
+    local clear_flag = false
 
     while head do
         -- Insert the start of the replacement paragraph
         if has_attribute(head, lwc.attribute, paragraph_index) then
             head.prev.next = target_node
+            clear_flag = true
         end
 
         -- Insert the end of the replacement paragraph
         if has_attribute(head, lwc.attribute, -1 * paragraph_index) then
             last(target_node).next = head.next
+            clear_flag = false
         end
 
         -- Start of final paragraph
@@ -252,7 +257,12 @@ function lwc.remove_widows(head)
             last(head).prev.prev.next = nil
             tex.lists[lwc.contrib_head] = last_line
         end
-        head = head.next
+
+        if clear_flag then
+            head = node.free(head)
+        else
+            head = head.next
+        end
     end
 
     lwc.paragraphs = {} -- Clear paragraphs array at the end of the page
