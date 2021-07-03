@@ -37,6 +37,7 @@ end
   ]]
 
 assert(lwc.context or luatexbase, [[
+    
     This module requires a supported callback library. Please
     follow the following format-dependant instructions:
       - LaTeX: Use a version built after 2015-01-01, or include
@@ -56,10 +57,11 @@ elseif lwc.plain or lwc.latex then
         date = "2021/06/24",
         version = "v0.00",
         description = [[
-            This module provides a LuaTeX-based solution to prevent
-            widows and orphans from appearing in a document. It does
-            so by increasing or decreasing the lengths of previous
-            paragraphs.
+
+    This module provides a LuaTeX-based solution to prevent
+    widows and orphans from appearing in a document. It does
+    so by increasing or decreasing the lengths of previous
+    paragraphs.
         ]],
     }
     lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
@@ -77,9 +79,10 @@ lwc.max_demerits = 1000000 -- Demerits assigned when a paragraph can't adjusted
 
 if tex.interlinepenalty ~= 0 then
     lwc.warning [[
-        \interlinepenalty is set to a non-zero value. This may prevent
-        lua-widow-control from properly functioning.
-        ]]
+\interlinepenalty is set to a non-zero value.
+This may prevent lua-widow-control from 
+properly functioning.
+]]
 end
 
 --- Create a table of functions to enable or disable a given callback
