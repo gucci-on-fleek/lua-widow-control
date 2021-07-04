@@ -7,7 +7,7 @@
 %D         date=\currentdate,
 %D    copyright=SPDX-FileCopyrightText: 2021 gucci-on-fleek,
 %D      license=SPDX-License-Identifier: MPL-2.0+,
-%D           url=https://github.com/gucci-on-fleek/lua-widow-control]
+%D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
 
 % We can't just set the penalties because they will be reset automatically
@@ -15,6 +15,9 @@
 \startsetups[*default]
     \clubpenalty=1
     \widowpenalty=1
+    \displaywidowpenalty=0
+    \interlinepenalty=0
+    \brokenpenalty=0
 \stopsetups
 
 \setups[*default]

@@ -18,6 +18,7 @@ local format = tex.formatname
 local last = node.slide
 local copy = node.copy_list
 local par_id = node.id("par")
+local glue_id = node.id("glue")
 local set_attribute = node.set_attribute
 local has_attribute = node.has_attribute
 
@@ -75,7 +76,6 @@ end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
 lwc.emergency_stretch = tex.sp("3em") -- \\emergencystretch value for adjusted paragraphs
-lwc.max_demerits = 1000000 -- Demerits assigned when a paragraph can't adjusted
 
 if tex.interlinepenalty ~= 0 then
     lwc.warning [[
@@ -147,20 +147,25 @@ function lwc.save_paragraphs(head)
 
     -- Prevent ultra-short last lines (TeXBook p. 104)
     local parfillskip = last(new_head)
-    parfillskip.stretch_order = 0
-    parfillskip.stretch = 0.9 * tex.hsize
+    if parfillskip.id == glue_id then
+        parfillskip.stretch_order = 0
+        parfillskip.stretch = 0.9 * tex.hsize
+    end
 
     local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
-        emergencystretch = lwc.emergency_stretch,
+        emergencystretch = lwc.emergencystretch,
     })
+
+    local natural_node, natural_info = tex.linebreak(copy(head))
+    node.flush_list(natural_node)
 
     lwc.callbacks.disable_box_warnings.disable()
 
     -- If we can't change the length of a paragraph, assign a very large demerit value
     local long_demerits
-    if long_info.looseness == 0 then
-        long_demerits = lwc.max_demerits
+    if long_info.prevgraf == natural_info.prevgraf then
+        long_demerits = 1073741823 -- \\maxdimen
     else
         long_demerits = long_info.demerits
     end
@@ -224,7 +229,7 @@ function lwc.remove_widows(head)
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
     for i, x in pairs(paragraphs) do
-        if paragraphs[i].demerits < minimum_demerits and i < #paragraphs - 1 then
+        if paragraphs[i].demerits < minimum_demerits and i <= #paragraphs - 1 then
             node.flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
             paragraph_index, minimum_demerits = i, x.demerits
