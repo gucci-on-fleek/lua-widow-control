@@ -61,7 +61,8 @@ fonts.handlers.otf.addfeature {
     topspace=\dimexpr\backspace - \headerheight,
     footerdistance=3\baselineskip,
     footer=\baselineskip,
-    height=8.75in
+    height=8.75in,
+    margin=\dimexpr\backspace - \margindistance - 0.25cm,
 ]
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,7 +102,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 \defineoverlay[warning][\useMPgraphic{warning}]
 
 \define[1]\warning{
-    \blank[2ex]
+    \blank[3ex]
     \midaligned{\framed[
         frame=off,
         background=warning,
@@ -113,7 +114,7 @@ setbounds currentpicture to boundingbox OverlayBox;
         
         #1
     }}
-    \blank[2ex]
+    \blank[3ex]
 }
 
 \setupitemize[style=\lining]

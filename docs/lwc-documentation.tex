@@ -9,11 +9,14 @@
 \usebtxdataset[lwc-documentation.bib]
 
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
+\useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest][][latest release]
 
 \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
 \def\Lwc/{\sans{Lua-\allowbreak widow-\allowbreak control}}
 \def\lwcenable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Enable}}
 \def\lwcdisable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Disable}}
+\def\estretch/{\tex{emergency\allowbreak stretch}}
+\def\openalty/{\tex{output\allowbreak penalty}}
 
 \usemodule[vim]
 \definevimtyping[TEX][syntax=tex, lines=split, escape=comment]
@@ -31,9 +34,30 @@
 
 \warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in rare scenarios, it may \bold{delete or duplicate} random paragraphs or lines. All known bugs that cause this issue have been corrected; nevertheless, I recommend against using this package for exams, contracts, or any other document where textual changes would be disastrous. This package should be sufficiently stable for use in typical documents.}
 
+\section{Quick Start}
+Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL/} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
+
+For a more detailed explanation of the steps involved and a description of some of the finer points involved with using \lwc/, keep reading.
+
 \subject{Contents}
-\placecontent
-\page
+\placecontent[criterium=all]
+
+\section{Widows and Orphans}
+\subsection{Widows}
+Widows occur when when the last line of a paragraph is on the page after the rest of the paragraph. Widows are quite undesirable since it is usually quite distracting for the reader to find a stray line on the top of a page. Wherever possible, this should be avoided.
+
+\subsection{Orphans}
+Orphans are when the first line of a paragraph occurs on the page before the remainder of they paragraph. They are not nearly as distracting for the reader, but they are still far from ideal.
+
+\subsection{Visual}
+For a visual comparison of widows and orphans, please see \in{Figure}[tab:widow].
+
+\startplacefigure[location={here, top, bottom}, title={A visual comparison of widows and orphans.}, reference=tab:widow]
+    \getbuffer[widow-orphan]
+\stopplacefigure
+
+% \subsection{Previous Work}
+% TODO list other packages
 
 \section{\TeX's Default Behavior}
 
@@ -57,7 +81,7 @@ Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some f
     pagestate=start
 ]
     \veryraggedcenter
-    \setupTABLE[row][first][style=bold, align=middle]
+    \setupTABLE[row][first][style=\ssbf, align=middle]
     \setupTABLE[frame=off, offset=5pt]
     \startTABLE
         \NC Ignore
@@ -84,13 +108,11 @@ Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some f
         \NC\NR
     \stopTABLE
 
-    \placefloatcaption[table][reference=tab:demo, title={A comparison between various automated widow handling techniques.}]
+    \placefloatcaption[table][reference=tab:demo, title={A visual comparison of various automated widow handling techniques.}]
 \stopTEXpage
 
 \subsection{Ignore}
-As you can see, the line of this last paragraph was moved to the last page. This is called a \emph{widow} and it is quite undesirable. It is usually quite distracting for the reader to find a stray line on the top of a page. Wherever possible, this should be avoided.
-
-Orphans are when the first line of a paragraph occurs on the page prior to the remainder of a paragraph. They are not nearly as distracting for the reader, but they are still far from ideal.
+As you can see, the line of this last paragraph is on a separate page from the rest of the paragraph, creating a widow. This is usually pretty distracting for the reader, so it is best avoided.
 
 \subsection{Shorten}
 This page did not leave any widows, but it did shorten the previous page by 1~line. Sometimes this is alright, but usually it looks bad because each page will have different text\-block heights. This can make the pages look quite uneven, especially when typesetting with columns.
@@ -111,13 +133,13 @@ To do so, \lwc/ lengthened the second paragraph by one line. If you look closely
 
 \section{Installation}
 
-Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS} or \TeX{}  distribution, or format.
+Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
 \subsection{Steps}
-\startitemize[N, packed ]
-    \item Download the \goto{latest release}[url(https://github.com/gucci-on-fleek/lua-widow-control/releases/latest)] of \lwc/.
-    \item Unzip or un\type{tar} the release into your \type{TEXMFLOCAL/} directory.
-    \item Refresh the filename database: \startitemize[1, packed ]
+\startitemize[N, packed]
+    \item Download the \from[download] of \lwc/.
+    \item Unzip or un\type{tar} the release into your \type{TEXMFLOCAL/} directory. (You can find its location by running \type{kpsewhich --var-value TEXMFHOME} in a terminal)
+    \item Refresh the filename database: \startitemize[1, packed]
         \item \ConTeXt: \type{mtxrun --generate}
         \item \TeX{}Live: \type{mktexlsr}
         \item Mik\TeX: \type{initexmf --update-fndb}
@@ -148,15 +170,41 @@ This will be fixed in a future update}
 
 \section{Configuration}
 
-There aren't very many options available yet for \lwc/. Right now, the only configurable option is the \tex{emergencystretch} used when stretching a paragraph. The default value is 3\,em.
+There aren't very many options available yet for \lwc/. Right now, there is only a single configurable option.
 
-There isn't a proper user interface quite yet, but you can adjust this by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("99pt")}} after you load the package.
+\subsection{\estretch/}
 
-Admittedly, this is a pretty hostile user interface. This will be fixed in a future update.
+You can configure the \estretch/ used when stretching a paragraph. The default value is 3\,em. \Lwc/ will only use use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so its pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
+
+You can adjust the \estretch/ value used by \lwc/ by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("999pt")}} after you load the package. In a future update, I'll add a proper user interface. 
+
+\section{Known Issues}
+% TODO
+
+\subsection{The Algorithm}
+\Lwc/ uses a fairly simple algorithm to eliminate widows and orphans. It is pretty basic, but there are a few subtleties. Please see \about[sec:implementation] for a full listing of the source code.
+
+\subsection{Paragraph Breaking}
+First, \lwc/ hooks into the paragraph breaking process.
+
+Before a paragraph is broken by \TeX{}, \lwc/ grabs the unbroken paragraph. \Lwc/ then breaks the paragraph 1~line longer than its natural length and stores it for later. 
+
+\Lwc/ does not interfere with how \TeX{} paragraphs into their natural length.
+
+After \TeX{} has broken its paragraph into its natural length, \lwc/ appears once again. Before the broken paragraph is added to the main vertical list, \lwc/ tags the first and last nodes of the paragraph. These tags create a relationship between the previously-saved lengthened paragraph and the start/end of the naturally-typeset paragraph on the page.
+
+\subsection{Page Breaking}
+\Lwc/ intercepts \tex{box255} after the output routine and before it is shipped out. 
+
+First, \lwc/ analyzes the \openalty/ of the page. If the page was broken at a widow or an orphan, the \openalty/ will have been set to the respective values of \tex{widow\allowbreak penalty} and \tex{orphan\allowbreak penalty}. If the \openalty/ is not indicative of a widow or an orphan, \lwc/ will abort and return \tex{box255} unmodified.
+
+At this point, we know that we have a widow or an orphan on the page. Now, we iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Now, we traverse through the page to find the start and the end of the original paragraph so that we can splice in the lengthened paragraph. 
+
+Finally, we pull the last line off of the page and then we place it onto the top of the \emph{recent contributions} list. Now, we can ship out the new, widow-free page.
 
 \section{License}
 
-\Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is additionally licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater.
+\Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is dual-licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater and the \acronym{MPL}.
 
 \section{References}
 
@@ -168,7 +216,7 @@ Admittedly, this is a pretty hostile user interface. This will be fixed in a fut
     backspace=1in,
     height=9.25in,
 ]
-\section{Implementation}
+\section[sec:implementation]{Implementation}
 
 \setupbodyfont[10pt]
 

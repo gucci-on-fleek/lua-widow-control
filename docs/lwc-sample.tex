@@ -89,3 +89,23 @@
 \startbuffer[lwc-code]
     \usepackage{lua-widow-control}
 \stopbuffer
+
+\startbuffer[widow-orphan]
+    % TODO This is all really quite hacky
+    \define[1]\rulewords{\dorecurse{#1}{\blackrule[height=1.5ex, width=1em] \blackrule[height=1.5ex, width=2em] \blackrule[height=1.5ex, width=1.5em] \blackrule[height=1.5ex, width=3em] }}
+
+    \define[2]\fakestart{\framed[width=broad, align=normal, frame=off]{\parfillskip=0pt\spaceskip=0.2em plus 1fill\hskip 5em\rulewords{#1}\blackrule[height=1.5ex, width=#2]}}
+
+    \define[2]\fakeend{\framed[width=broad, align=normal, frame=off]{\parfillskip=5em\spaceskip=0.2em plus 1fill\rulewords{#1}\blackrule[height=1.5ex, width=#2]}}
+
+    \setupTABLE[width=broad, frame=off]
+    \setupTABLE[row][1][align=middle, style=\ssbf]
+    \setupTABLE[row][2][align=low, frame=on]
+    \setupTABLE[row][3][align=high, frame=on]
+    \setupTABLE[column][2][frame=off, width=1em]
+    \startTABLE
+        \NC Widow \NC\NC Orphan \NC\NR
+        \NC\fakestart{5}{1.5em}\NC\NC\fakestart{1}{2em}\NC\NR
+        \NC\fakeend{1}{2em}\NC\NC\fakeend{5}{1.5em}\NC\NR
+    \stopTABLE
+\stopbuffer
