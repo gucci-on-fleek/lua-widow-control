@@ -5,17 +5,21 @@
 % SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
 % SPDX-FileCopyrightText: 2021 gucci-on-fleek
 
+\usemodule[lua-widow-control]
+\usebtxdataset[lwc-documentation.bib]
+
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
 
-\def\lwc/{\sans{lua\allowbreak-widow\allowbreak-control}}
-\def\Lwc/{\sans{Lua\allowbreak-widow\allowbreak-control}}
+\def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
+\def\Lwc/{\sans{Lua-\allowbreak widow-\allowbreak control}}
 \def\lwcenable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Enable}}
 \def\lwcdisable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Disable}}
 
 \usemodule[vim]
-
 \definevimtyping[TEX][syntax=tex, lines=split, escape=comment]
 \definevimtyping[LUA][syntax=LUA, lines=split, escape=comment]
+
+\input lwc-sample
 
 \startdocument[
     title=lua-widow-control,
@@ -25,26 +29,106 @@
 
 \Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
 
-\warning{This is a \bold{preliminary} release of \lwc/. So far, it has only been tested with simple text---it has \emph{not} been tested with tables, floats, footnotes, or graphics. In testing, \lwc/ has sometimes randomly discarded paragraphs without any warning or indication. This should not happen anymore (and please report it if it does), but I would still recommend against using \lwc/ on exams, contracts, or other important documents.}
+\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in rare scenarios, it may \bold{delete or duplicate} random paragraphs or lines. All known bugs that cause this issue have been corrected; nevertheless, I recommend against using this package for exams, contracts, or any other document where textual changes would be disastrous. This package should be sufficiently stable for use in typical documents.}
+
+\subject{Contents}
+\placecontent
+\page
+
+\section{\TeX's Default Behavior}
+
+It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages.\cite[texbook] Therefore, a \emph{very} simplified explanation follows. 
+
+\TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
+
+However, some objects have penalties attached. These penalties make \TeX{} treat the object as if it is longer or shorter for the sake of page breaking. By default, \TeX{} assigns a penalties to the first and last lines of a paragraph (orphans and widows). This makes \TeX{} treat them as if they are larger or smaller than their actual size such that \TeX{} tends not to break them up.
+
+One important note: once \TeX{} begins breaking a page, it only breaking a page. That is, it will never go back and modify any content that has previously been added to its \emph{main vertical list}. That is, page breaking is a localized algorithm, without any backtracking.
+
+\section{Demonstration}
+
+Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors in regards to orphans and widows. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the next page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
+
+\startTEXpage[
+    align=normal,
+    width=100cm,
+    autowidth=force,
+    offset=5pt,
+    pagestate=start
+]
+    \veryraggedcenter
+    \setupTABLE[row][first][style=bold, align=middle]
+    \setupTABLE[frame=off, offset=5pt]
+    \startTABLE
+        \NC Ignore
+        \NC Shorten
+        \NC Stretch
+        \NC \Lwc/ \NC\NR
+
+        \NC \typesetbuffer[ignore][frame=on,page=1]
+        \NC \typesetbuffer[shorten][frame=on,page=1]
+        \NC \typesetbuffer[stretch][frame=on,page=1]
+        \NC \typesetbuffer[lwc][frame=on,page=1]
+        \NC\NR 
+
+        \NC \typesetbuffer[ignore][frame=on,page=2]
+        \NC \typesetbuffer[shorten][frame=on,page=2]
+        \NC \typesetbuffer[stretch][frame=on,page=2]
+        \NC \typesetbuffer[lwc][frame=on,page=2]
+        \NC\NR
+
+        \NC \processTEXbuffer[ignore-code]
+        \NC \processTEXbuffer[shorten-code]
+        \NC \processTEXbuffer[stretch-code]
+        \NC \processTEXbuffer[lwc-code]
+        \NC\NR
+    \stopTABLE
+
+    \placefloatcaption[table][reference=tab:demo, title={A comparison between various automated widow handling techniques.}]
+\stopTEXpage
+
+\subsection{Ignore}
+As you can see, the line of this last paragraph was moved to the last page. This is called a \emph{widow} and it is quite undesirable. It is usually quite distracting for the reader to find a stray line on the top of a page. Wherever possible, this should be avoided.
+
+Orphans are when the first line of a paragraph occurs on the page prior to the remainder of a paragraph. They are not nearly as distracting for the reader, but they are still far from ideal.
+
+\subsection{Shorten}
+This page did not leave any widows, but it did shorten the previous page by 1~line. Sometimes this is alright, but usually it looks bad because each page will have different text\-block heights. This can make the pages look quite uneven, especially when typesetting with columns.
+
+\subsection{Stretch}
+This page also has no widows and it has a flushed bottom margin. However, the space between each paragraph had to be stretched. 
+
+If this page had many equations, headings, and other elements with natural space between them, the stretched out space would be much less noticeable. \TeX{} was designed for mathematical typesetting, so it makes sense that this is its default behavior. However, in a page with mostly text, these paragraph gaps can look unsightly. 
+
+In addition, this method is incompatible with typesetting on a grid, since there is no flexible glue on the page.
+
+\subsection{\lwc/}
+\Lwc/ has none of these issues: it eliminates the widows in a document while keeping a flushed bottom margin and constant paragraph spacing. 
+
+To do so, \lwc/ lengthened the second paragraph by one line. If you look closely, you can see that this stretched the interword spaces. This stretching is noticeable when typesetting in a narrow text block, but it becomes nearly imperceptible with larger widths.
+
+\Lwc/ automatically finds the \quotation{best} paragraph to stretch, so the increase in interword spaces should almost always be minimal.
 
 \section{Installation}
 
 Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS} or \TeX{}  distribution, or format.
 
 \subsection{Steps}
-\startitemize[N]
-    \item \goto{Download}[url(projecturl)] \lwc/.
-    \item Copy \type{lua-widow-control.lua} to \type{TEXMFLOCAL/tex/generic/lua-widow-control/}
-    \item Copy \type{lua-widow-control.sty} to \type{TEXMFLOCAL/tex/latex/lua-widow-control/}
-    \item Copy \type{t-lua-widow-control.mkxl} to \type{TEXMFLOCAL/tex/context/third}
-    \item Refresh the filename database with \type{mtxrun --generate} (\ConTeXt), \type{mktexlsr} (\TeX{}Live), or \type{initexmf --update-fndb} (Mik\TeX).
+\startitemize[N, packed ]
+    \item Download the \goto{latest release}[url(https://github.com/gucci-on-fleek/lua-widow-control/releases/latest)] of \lwc/.
+    \item Unzip or un\type{tar} the release into your \type{TEXMFLOCAL/} directory.
+    \item Refresh the filename database: \startitemize[1, packed ]
+        \item \ConTeXt: \type{mtxrun --generate}
+        \item \TeX{}Live: \type{mktexlsr}
+        \item Mik\TeX: \type{initexmf --update-fndb}
+    \stopitemize
 \stopitemize
 
 \section{Loading the Package}
 
 \subsection{Plain \TeX}
 
-\inlineTEX{\input lua-widow-control.sty}
+\inlineTEX{\input lua-widow-control}
 
 \subsection{\LaTeX}
 
@@ -74,6 +158,10 @@ Admittedly, this is a pretty hostile user interface. This will be fixed in a fut
 
 \Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is additionally licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater.
 
+\section{References}
+
+\placelistofpublications
+
 \page
 \setuplayout[
     width=middle,
@@ -96,6 +184,7 @@ Admittedly, this is a pretty hostile user interface. This will be fixed in a fut
 
 \typeTEXfile{../source/lua-widow-control.sty}
 
+\def\module{\tex{module}}
 \filename{t-lua-widow-control.mkxl}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}

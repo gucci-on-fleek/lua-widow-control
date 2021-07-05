@@ -117,6 +117,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 }
 
 \setupitemize[style=\lining]
+\setupcaptions[headstyle=\ssbf\lining, style=\ss]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Section Commands %%%%%
@@ -156,6 +157,12 @@ setbounds currentpicture to boundingbox OverlayBox;
     style=\ssita,
     before={\blank[2*line]},
 ]
+
+% TOC
+\define[3]\TOCcommand{\midaligned{\llap{#2}\hskip 1em\rlap{#3}}\par} % TODO There should be a higher-level way of doing this.
+
+\setupcombinedlist[content][list=section]
+\setuplist[section][alternative=command, command=\TOCcommand] % `alternative=interactive` doesn't work for some reason
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Title Block %%%%%
@@ -204,3 +211,14 @@ setbounds currentpicture to boundingbox OverlayBox;
 \stopsetups
 
 \stopenvironment
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Bibliography %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usebtxdefinitions[chicago]
+\setupbtxrendering[chicago][numbering=yes, sorttype=used]
+\setupbtx[chicago:cite][alternative=num]
+
+\setupbtx[chicago:cite:num][command=\shiftup, left=, right=, separator:2=\shiftup{,\,}, separator:3=\shiftup{--}, style=\lining]
+\setupbtxlist[style=\lining]

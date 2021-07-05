@@ -7,6 +7,7 @@
 *.out
 *.pdf
 *.synctex.gz
+*.tmp
 *.toc
 *.tuc
 *.vimout
