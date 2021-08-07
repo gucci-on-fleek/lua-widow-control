@@ -18,6 +18,8 @@
 \def\estretch/{\tex{emergency\allowbreak stretch}}
 \def\openalty/{\tex{output\allowbreak penalty}}
 
+\def\titlecite[#1]{\cite[title][#1]\cite[#1]}
+
 \usemodule[vim]
 \definevimtyping[TEX][syntax=tex, lines=split, escape=comment]
 \definevimtyping[LUA][syntax=LUA, lines=split, escape=comment]
@@ -56,18 +58,24 @@ For a visual comparison of widows and orphans, please see \in{Figure}[tab:widow]
     \getbuffer[widow-orphan]
 \stopplacefigure
 
-% \subsection{Previous Work}
-% TODO list other packages
-
 \section{\TeX's Default Behavior}
 
-It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages.\cite[texbook] Therefore, a \emph{very} simplified explanation follows. 
+It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. The \titlecite[texbook] is the best reference for this; however, it goes into much more detail than is required to understand \lwc/. Therefore, a \emph{very} simplified (and likely incorrect) explanation follows. 
 
 \TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
 
 However, some objects have penalties attached. These penalties make \TeX{} treat the object as if it is longer or shorter for the sake of page breaking. By default, \TeX{} assigns a penalties to the first and last lines of a paragraph (orphans and widows). This makes \TeX{} treat them as if they are larger or smaller than their actual size such that \TeX{} tends not to break them up.
 
 One important note: once \TeX{} begins breaking a page, it only breaking a page. That is, it will never go back and modify any content that has previously been added to its \emph{main vertical list}. That is, page breaking is a localized algorithm, without any backtracking.
+
+\section{Previous Work}
+There have been a few previous attempts to improve upon \TeX's builtin widow and orphan-handling abilities; however, none of these have been able to automatically remove widows and orphans without stretching any glue or shortening any pages.
+
+\titlecite[tugboat-strategies] and \titlecite[tugboat-widows] both begin with comprehensive discussions of the methods of preventing widows and orphans. They both agree that widows and orphans are bad and ought to be avoided; however, they each differ in solutions. \italic{Strategies}\cite[tugboat-strategies] proposes an output routine that reduces the length of facing pages by 1 line if necessary to remove widows and orphans while \italic{Managing}\cite[tugboat-widows] proposes that the author manually rewrites or adjusts the \tex{looseness} when needed.
+
+\titlecite[widow-assist] contains a file \type{widow-assist.lua} that automatically detects which paragraphs can be safely shortened or lengthened by 1 line. \titlecite[widows-and-orphans] alerts the author to the pages that contain widows or orphans. Combined, these packages make it very simple for the author to quickly remove widows and orphans by adjusting the \tex{looseness} values; however, it still requires the author to make manual source changes after each revision. 
+
+\Lwc/ is essentially just a combination of \type{widow-assist.lua}\cite[widow-assist] and \sans{widows-and-orphans}:\cite[widows-and-orphans] when the \openalty/ shows that a widow or orphan occurred, Lua is used to find a stretchable paragraph. What \lwc/ adds on top of these packages is automation: \lwc/ eliminates the requirement for any manual adjustments.
 
 \section{Demonstration}
 
@@ -178,8 +186,10 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 
 You can adjust the \estretch/ value used by \lwc/ by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("999pt")}} after you load the package. In a future update, I'll add a proper user interface. 
 
-\section{Known Issues}
-% TODO
+% \section{Known Issues}
+% \startitemize
+%     \item
+% \stopitemize
 
 \subsection{The Algorithm}
 \Lwc/ uses a fairly simple algorithm to eliminate widows and orphans. It is pretty basic, but there are a few subtleties. Please see \about[sec:implementation] for a full listing of the source code.

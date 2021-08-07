@@ -217,9 +217,59 @@ setbounds currentpicture to boundingbox OverlayBox;
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Bibliography %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%
-\usebtxdefinitions[chicago]
-\setupbtxrendering[chicago][numbering=yes, sorttype=used]
-\setupbtx[chicago:cite][alternative=num]
+\usebtxdefinitions[apa]
 
-\setupbtx[chicago:cite:num][command=\shiftup, left=, right=, separator:2=\shiftup{,\,}, separator:3=\shiftup{--}, style=\lining]
-\setupbtxlist[style=\lining]
+\setupbtx[apa:list][
+    stopper:initials=,
+    separator:initials=\btxnbsp,
+    interaction=start,
+]
+
+\setupbtxlabeltext[en][
+   apa:Retrieved={}
+]
+
+\setupbtxrendering[apa][
+    numbering=yes,
+    sorttype=used,
+]
+
+\setupbtx[apa:cite][alternative=num]
+
+\defineshift[citeshift][
+    method=0,
+    dy=-1,
+    unit=ex,
+    continue=yes,
+    style=\tfx\lining,
+]
+
+\setupbtx[apa:cite:num][
+    command=\citeshift,
+    left=,
+    right=,
+    separator:2=\citeshift{,\,},
+    separator:3=\citeshift{--}
+]
+
+\setupbtxlist[apa][
+    alternative=a,
+    before=,
+    after=,
+    style=\lining,
+    margin=0pt,
+]
+
+\unprotect
+\starttexdefinition mutable protected btx:apa:url
+    \goto{
+        \hyphenatedurl{
+            \clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
+        }
+    }[
+        url(
+            \clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
+        )
+    ]
+\stoptexdefinition
+\protect
