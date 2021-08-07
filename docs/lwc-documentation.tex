@@ -5,6 +5,13 @@
 % SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
 % SPDX-FileCopyrightText: 2021 gucci-on-fleek
 
+% This documentation is the first major document that I have typeset with ConTeXt. 
+% I'm still learning, so I'm sure that I have made some poor choices when writing this
+% document. I'm open to any suggestions for improvement though!
+%
+% Also, this document uses a very large number of ConTeXt's features, so the first
+% compile is _very_ slow.
+
 \usemodule[lua-widow-control]
 \usebtxdataset[lwc-documentation.bib]
 
@@ -60,7 +67,8 @@ For a visual comparison of widows and orphans, please see \in{Figure}[tab:widow]
 
 \section{\TeX's Default Behavior}
 
-It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. The \titlecite[texbook] is the best reference for this; however, it goes into much more detail than is required to understand \lwc/. Therefore, a \emph{very} simplified (and likely incorrect) explanation follows. 
+It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. Chapter~15 of \titlecite[texbook] (\quotation{How \TeX{} Makes
+Lines into Pages}) is the best reference for this; however, it goes into much more detail than most users require. Below follows a \emph{very} simplified (and likely incorrect) summary of the page-breaking algorithm as described in \titlecite[texbook].
 
 \TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
 
@@ -68,7 +76,7 @@ However, some objects have penalties attached. These penalties make \TeX{} treat
 
 One important note: once \TeX{} begins breaking a page, it only breaking a page. That is, it will never go back and modify any content that has previously been added to its \emph{main vertical list}. That is, page breaking is a localized algorithm, without any backtracking.
 
-\section{Previous Work}
+\section{Previous~Work}
 There have been a few previous attempts to improve upon \TeX's builtin widow and orphan-handling abilities; however, none of these have been able to automatically remove widows and orphans without stretching any glue or shortening any pages.
 
 \titlecite[tugboat-strategies] and \titlecite[tugboat-widows] both begin with comprehensive discussions of the methods of preventing widows and orphans. They both agree that widows and orphans are bad and ought to be avoided; however, they each differ in solutions. \italic{Strategies}\cite[tugboat-strategies] proposes an output routine that reduces the length of facing pages by 1 line if necessary to remove widows and orphans while \italic{Managing}\cite[tugboat-widows] proposes that the author manually rewrites or adjusts the \tex{looseness} when needed.
@@ -144,10 +152,10 @@ To do so, \lwc/ lengthened the second paragraph by one line. If you look closely
 Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
 \subsection{Steps}
-\startitemize[N, packed]
+\startitemize[N]
     \item Download the \from[download] of \lwc/.
     \item Unzip or un\type{tar} the release into your \type{TEXMFLOCAL/} directory. (You can find its location by running \type{kpsewhich --var-value TEXMFHOME} in a terminal)
-    \item Refresh the filename database: \startitemize[1, packed]
+    \item Refresh the filename database: \startitemize[1]
         \item \ConTeXt: \type{mtxrun --generate}
         \item \TeX{}Live: \type{mktexlsr}
         \item Mik\TeX: \type{initexmf --update-fndb}
@@ -186,12 +194,20 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 
 You can adjust the \estretch/ value used by \lwc/ by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("999pt")}} after you load the package. In a future update, I'll add a proper user interface. 
 
-% \section{Known Issues}
-% \startitemize
-%     \item
-% \stopitemize
+\section{Known Issues}
+\startitemize
+    \item On very small paper, \lwc/ will sometimes expand a paragraph on the page but fail to move the last line to the next page. I have no idea why this happens or how to fix it, but it never seems to happen with normal page sizes.
 
-\subsection{The Algorithm}
+    \item In multicolumn layouts, \lwc/ will remove widows and orphans that occur between pages, but it will not remove widows and orphans between pages. 
+
+    \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are strictly better than widows, so this is still an improvement.
+
+    \item Sometimes a widow or orphan just cannot be eliminated because no paragraph has enough \quotation{stretch}. This can usually be remediated by increasing \estretch/.
+
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \quotation{\tt luatex warning  > tex: left parfill skip is gone}. These are harmless and can be ignored (although I have no idea how to prevent them).
+\stopitemize
+
+\section{The Algorithm}
 \Lwc/ uses a fairly simple algorithm to eliminate widows and orphans. It is pretty basic, but there are a few subtleties. Please see \about[sec:implementation] for a full listing of the source code.
 
 \subsection{Paragraph Breaking}
@@ -199,7 +215,7 @@ First, \lwc/ hooks into the paragraph breaking process.
 
 Before a paragraph is broken by \TeX{}, \lwc/ grabs the unbroken paragraph. \Lwc/ then breaks the paragraph 1~line longer than its natural length and stores it for later. 
 
-\Lwc/ does not interfere with how \TeX{} paragraphs into their natural length.
+\Lwc/ does not interfere with how \TeX{} breaks paragraphs into their natural length.
 
 After \TeX{} has broken its paragraph into its natural length, \lwc/ appears once again. Before the broken paragraph is added to the main vertical list, \lwc/ tags the first and last nodes of the paragraph. These tags create a relationship between the previously-saved lengthened paragraph and the start/end of the naturally-typeset paragraph on the page.
 

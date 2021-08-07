@@ -117,8 +117,14 @@ setbounds currentpicture to boundingbox OverlayBox;
     \blank[3ex]
 }
 
-\setupitemize[style=\lining]
+\setupitemize[each][packed][style=\lining]
 \setupcaptions[headstyle=\ssbf\lining, style=\ss]
+
+\setupdelimitedtext[blockquote][
+    style=\ss,
+    before=\noindentation,
+    after={\blank[0.5*line]}
+]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Section Commands %%%%%
@@ -211,9 +217,6 @@ setbounds currentpicture to boundingbox OverlayBox;
     ]
 \stopsetups
 
-\stopenvironment
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Bibliography %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -258,6 +261,7 @@ setbounds currentpicture to boundingbox OverlayBox;
     after=,
     style=\lining,
     margin=0pt,
+    width=3em,
 ]
 
 \unprotect
@@ -273,3 +277,5 @@ setbounds currentpicture to boundingbox OverlayBox;
     ]
 \stoptexdefinition
 \protect
+
+\stopenvironment
