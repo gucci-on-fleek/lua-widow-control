@@ -75,7 +75,6 @@ end
   ]]
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
-lwc.emergency_stretch = tex.sp("3em") -- \\emergencystretch value for adjusted paragraphs
 
 if tex.interlinepenalty ~= 0 then
     lwc.warning [[
@@ -154,7 +153,7 @@ function lwc.save_paragraphs(head)
 
     local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
-        emergencystretch = lwc.emergencystretch,
+        emergencystretch = tex.dimen.lwcemergencystretch,
     })
 
     local natural_node, natural_info = tex.linebreak(copy(head))

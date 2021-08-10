@@ -11,6 +11,9 @@
 \interlinepenalty=0
 \brokenpenalty=0
 
+\newdimen\lwcemergencystretch
+\lwcemergencystretch=3em
+
 \directlua{require "lua-widow-control"}
 
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
@@ -19,8 +22,8 @@
 \expandglyphsinfont\the\font 20 20 5
 \adjustspacing=2
 
-\def\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
-\def\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+\def\lwcenable{\directlua{lwc.enable_callbacks()}}
+\def\lwcdisable{\directlua{lwc.disable_callbacks()}}
 
 % Enable \lwc/ by default when the package is loaded.
 \LuaWidowControlEnable

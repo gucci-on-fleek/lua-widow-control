@@ -10,6 +10,27 @@
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
 
+\installnamespace{lwc}
+
+\installcommandhandler \????lwc {lwc} \????lwc
+
+\appendtoks\lwcemergencystretch=\lwcparameter{emergencystretch}\to\everysetuplwc
+
+\newdimen\lwcemergencystretch
+\appendtoks
+    \lwcemergencystretch=\lwcparameter{emergencystretch}
+\to\everysetuplwc
+
+\appendtoks
+    \doifelse{\lwcparameter{\c!state}}\v!start{
+        \ctxlua{lwc.enable_callbacks()}
+    }{
+        \ctxlua{lwc.disable_callbacks()}
+    }
+\to\everysetuplwc
+
+\setuplwc[emergencystretch=3em, \c!state=\v!start]
+
 % We can't just set the penalties because they will be reset automatically
 % at \\starttext.
 \startsetups[*default]
@@ -30,10 +51,5 @@
 \definefontfeature[default][default][expansion=quality]
 \setupalign[hz]
 
-\define\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
-\define\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
-
-% Enable \lwc/ by default when the module is loaded.
-\LuaWidowControlEnable
 
 \stopmodule

@@ -6,11 +6,14 @@
 \NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
 \ProvidesPackage{lua-widow-control}[2021/06/24 v0.00]
 
-\clubpenalty=1
-\widowpenalty=1
-\displaywidowpenalty=0
-\interlinepenalty=0
-\brokenpenalty=0
+\setlength{\clubpenalty}{1}
+\setlength{\widowpenalty}{1}
+\setlength{\displaywidowpenalty}{0}
+\setlength{\interlinepenalty}{0}
+\setlength{\brokenpenalty}{0}
+
+\newlength{\lwcemergencystretch}
+\setlength{\lwcemergencystretch}{3em}
 
 \directlua{require "lua-widow-control"}
 
@@ -19,10 +22,10 @@
 % lengthened paragraphs to not have terrible spacing. 
 \RequirePackage[final]{microtype}
 
-\def\LuaWidowControlEnable{\directlua{lwc.enable_callbacks()}}
-\def\LuaWidowControlDisable{\directlua{lwc.disable_callbacks()}}
+\newcommand{\lwcenable}{\directlua{lwc.enable_callbacks()}}
+\newcommand{\lwcdisable}{\directlua{lwc.disable_callbacks()}}
 
 % Enable \lwc/ by default when the package is loaded.
-\LuaWidowControlEnable
+\lwcenable
 
 \endinput
