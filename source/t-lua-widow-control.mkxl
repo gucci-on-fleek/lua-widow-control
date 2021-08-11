@@ -9,12 +9,15 @@
 %D      license=SPDX-License-Identifier: MPL-2.0+,
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
+\unprotect
 
 \installnamespace{lwc}
 
 \installcommandhandler \????lwc {lwc} \????lwc
 
-\appendtoks\lwcemergencystretch=\lwcparameter{emergencystretch}\to\everysetuplwc
+\appendtoks
+    \lwcemergencystretch=\lwcparameter{emergencystretch}
+\to\everysetuplwc
 
 \newdimen\lwcemergencystretch
 \appendtoks
@@ -28,6 +31,8 @@
         \ctxlua{lwc.disable_callbacks()}
     }
 \to\everysetuplwc
+
+\ctxloadluafile{lua-widow-control}
 
 \setuplwc[emergencystretch=3em, \c!state=\v!start]
 
@@ -43,13 +48,11 @@
 
 \setups[*default]
 
-\ctxloadluafile{lua-widow-control}
-
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
 % lengthened paragraphs to not have terrible spacing. 
 \definefontfeature[default][default][expansion=quality]
 \setupalign[hz]
 
-
+\protect
 \stopmodule
