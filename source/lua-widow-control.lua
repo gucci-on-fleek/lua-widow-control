@@ -307,18 +307,31 @@ lwc.callbacks = {
     }),
 }
 
+local enabled = false
 
 function lwc.enable_callbacks()
-    lwc.callbacks.remove_widows.enable()
-    lwc.callbacks.save_paragraphs.enable()
-    lwc.callbacks.mark_paragraphs.enable()
+    if not enabled then
+        lwc.callbacks.remove_widows.enable()
+        lwc.callbacks.save_paragraphs.enable()
+        lwc.callbacks.mark_paragraphs.enable()
+
+        enabled = true
+    else
+        lwc.warning("Already enabled")
+    end
 end
 
 
 function lwc.disable_callbacks()
-    lwc.callbacks.remove_widows.disable()
-    lwc.callbacks.save_paragraphs.disable()
-    lwc.callbacks.mark_paragraphs.disable()
+    if enabled then
+        lwc.callbacks.remove_widows.disable()
+        lwc.callbacks.save_paragraphs.disable()
+        lwc.callbacks.mark_paragraphs.disable()
+
+        enabled = false
+    else
+        lwc.warning("Already disabled")
+    end
 end
 
 
