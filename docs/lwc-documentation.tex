@@ -1,5 +1,5 @@
 %!TeX program = context
-\environment lwc-documentation
+
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
@@ -11,19 +11,20 @@
 %
 % Also, this document uses a very large number of ConTeXt's features, so the first
 % compile is _very_ slow.
+\environment lwc-documentation
 
 \usemodule[lua-widow-control]
 \usebtxdataset[lwc-documentation.bib]
 
+% Abbreviations
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
 \useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest][][latest release]
 
 \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
 \def\Lwc/{\sans{Lua-\allowbreak widow-\allowbreak control}}
-\def\lwcenable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Enable}}
-\def\lwcdisable/{\tex{Lua\allowbreak Widow\allowbreak Control\allowbreak Disable}}
 \def\estretch/{\tex{emergency\allowbreak stretch}}
 \def\openalty/{\tex{output\allowbreak penalty}}
+\def\waos/{widows and orphans}
 
 \def\titlecite[#1]{\cite[title][#1]\cite[#1]}
 
@@ -39,19 +40,19 @@
     version=0.0.0,
 ]
 
-\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
+\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most \waos/ from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
 
-\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in rare scenarios, it may \bold{delete or duplicate} random paragraphs or lines. All known bugs that cause this issue have been corrected; nevertheless, I recommend against using this package for exams, contracts, or any other document where textual changes would be disastrous. This package should be sufficiently stable for use in typical documents.}
+\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in \bold{rare} scenarios, it may delete or duplicate random paragraphs or lines. All known bugs that cause this issue have been corrected; nevertheless, I recommend against using this package for exams or any document where minor textual changes would be disastrous. This package should be sufficiently stable for use in typical documents.}
 
 \section{Quick Start}
-Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL/} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
+Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
 
 For a more detailed explanation of the steps involved and a description of some of the finer points involved with using \lwc/, keep reading.
 
 \subject{Contents}
 \placecontent[criterium=all]
 
-\section{Widows and Orphans}
+\section{\waos/}
 \subsection{Widows}
 Widows occur when when the last line of a paragraph is on the page after the rest of the paragraph. Widows are quite undesirable since it is usually quite distracting for the reader to find a stray line on the top of a page. Wherever possible, this should be avoided.
 
@@ -59,9 +60,9 @@ Widows occur when when the last line of a paragraph is on the page after the res
 Orphans are when the first line of a paragraph occurs on the page before the remainder of they paragraph. They are not nearly as distracting for the reader, but they are still far from ideal.
 
 \subsection{Visual}
-For a visual comparison of widows and orphans, please see \in{Figure}[tab:widow].
+For a visual comparison of \waos/, please see \in{Figure}[tab:widow].
 
-\startplacefigure[location={here, top, bottom}, title={A visual comparison of widows and orphans.}, reference=tab:widow]
+\startplacefigure[location={here, top, bottom}, title={A visual comparison of \waos/.}, reference=tab:widow]
     \getbuffer[widow-orphan]
 \stopplacefigure
 
@@ -72,22 +73,22 @@ Lines into Pages}) is the best reference for this; however, it goes into much mo
 
 \TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
 
-However, some objects have penalties attached. These penalties make \TeX{} treat the object as if it is longer or shorter for the sake of page breaking. By default, \TeX{} assigns a penalties to the first and last lines of a paragraph (orphans and widows). This makes \TeX{} treat them as if they are larger or smaller than their actual size such that \TeX{} tends not to break them up.
+However, some objects have penalties attached. These penalties make \TeX{} treat the object as if it is longer or shorter for the sake of page breaking. By default, \TeX{} assigns a penalties to the first and last lines of a paragraph (\waos/). This makes \TeX{} treat them as if they are larger or smaller than their actual size such that \TeX{} tends not to break them up.
 
 One important note: once \TeX{} begins breaking a page, it only breaking a page. That is, it will never go back and modify any content that has previously been added to its \emph{main vertical list}. That is, page breaking is a localized algorithm, without any backtracking.
 
 \section{Previous~Work}
-There have been a few previous attempts to improve upon \TeX's builtin widow and orphan-handling abilities; however, none of these have been able to automatically remove widows and orphans without stretching any glue or shortening any pages.
+There have been a few previous attempts to improve upon \TeX's builtin widow and orphan-handling abilities; however, none of these have been able to automatically remove \waos/ without stretching any glue or shortening any pages.
 
-\titlecite[tugboat-strategies] and \titlecite[tugboat-widows] both begin with comprehensive discussions of the methods of preventing widows and orphans. They both agree that widows and orphans are bad and ought to be avoided; however, they each differ in solutions. \italic{Strategies}\cite[tugboat-strategies] proposes an output routine that reduces the length of facing pages by 1 line if necessary to remove widows and orphans while \italic{Managing}\cite[tugboat-widows] proposes that the author manually rewrites or adjusts the \tex{looseness} when needed.
+\titlecite[tugboat-strategies] and \titlecite[tugboat-widows] both begin with comprehensive discussions of the methods of preventing \waos/. They both agree that \waos/ are bad and ought to be avoided; however, they each differ in solutions. \italic{Strategies}\cite[tugboat-strategies] proposes an output routine that reduces the length of facing pages by 1 line if necessary to remove \waos/ while \italic{Managing}\cite[tugboat-widows] proposes that the author manually rewrites or adjusts the \tex{looseness} when needed.
 
-\titlecite[widow-assist] contains a file \type{widow-assist.lua} that automatically detects which paragraphs can be safely shortened or lengthened by 1 line. \titlecite[widows-and-orphans] alerts the author to the pages that contain widows or orphans. Combined, these packages make it very simple for the author to quickly remove widows and orphans by adjusting the \tex{looseness} values; however, it still requires the author to make manual source changes after each revision. 
+\titlecite[widow-assist] contains a file \type{widow-assist.lua} that automatically detects which paragraphs can be safely shortened or lengthened by 1 line. \titlecite[widows-and-orphans] alerts the author to the pages that contain widows or orphans. Combined, these packages make it very simple for the author to quickly remove \waos/ by adjusting the \tex{looseness} values; however, it still requires the author to make manual source changes after each revision. 
 
 \Lwc/ is essentially just a combination of \type{widow-assist.lua}\cite[widow-assist] and \sans{widows-and-orphans}:\cite[widows-and-orphans] when the \openalty/ shows that a widow or orphan occurred, Lua is used to find a stretchable paragraph. What \lwc/ adds on top of these packages is automation: \lwc/ eliminates the requirement for any manual adjustments.
 
 \section{Demonstration}
 
-Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors in regards to orphans and widows. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the next page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
+Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors in regards to \waos/. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the next page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
 
 \startTEXpage[
     align=normal,
@@ -176,39 +177,54 @@ Eventually, \lwc/ should be on \acronym{CTAN} and \TeX{}Live; until then, you wi
 
 \inlineTEX{\usemodule[lua-widow-control]}
 
-\section{Usage}
+\section{Advanced Usage}
 
-\Lwc/ is enabled as soon as you load it. If you wish, you can disable it with \lwcdisable/. Later, you can reenable it with \lwcenable/
+\Lwc/ is automatically enabled with the default settings as soon as you load it. Most users should not need to configure \lwc/; however, the packages does provide a few commands.
 
-\warning{If \lwc/ is already disabled, running \lwcdisable/ will throw a fatal error. Likewise, running \lwcenable/ while \lwc/ is already enabled may cause unpredictable behavior.
+\setupTABLE[frame=off]
 
-This will be fixed in a future update}
+\subsection{Plain \TeX{}}
+\startTABLE
+\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
+\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
+\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch = 3em} \NC\NR
+\stopTABLE
 
-\section{Configuration}
+\subsection{\LaTeX{}}
+\startTABLE
+\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
+\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
+\NC \estretch/ \NC \inlineTEX{\setlength{\lwcemergencystretch}{3em}}  \NC\NR
+\stopTABLE
 
-There aren't very many options available yet for \lwc/. Right now, there is only a single configurable option.
+\subsection{\ConTeXt{}}
+\startTABLE
+\NC Enable (default) \NC \inlineTEX{\setuplwc[state = start]}  \NC\NR
+\NC Disable \NC \inlineTEX{\setuplwc[state = stop]}  \NC\NR
+\NC \estretch/ \NC \inlineTEX{\setuplwc[emergencystretch = 3em]} \NC\NR
+\stopTABLE
 
 \subsection{\estretch/}
 
-You can configure the \estretch/ used when stretching a paragraph. The default value is 3\,em. \Lwc/ will only use use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so its pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
+You can configure the \estretch/ used when stretching a paragraph. The default value is 3\,em. 
 
-You can adjust the \estretch/ value used by \lwc/ by placing \inlineTEX{\directlua{lwc.emergency_stretch = tex.sp("999pt")}} after you load the package. In a future update, I'll add a proper user interface. 
+\Lwc/ will only use use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so its pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
 
 \section{Known Issues}
 \startitemize
     \item On very small paper, \lwc/ will sometimes expand a paragraph on the page but fail to move the last line to the next page. I have no idea why this happens or how to fix it, but it never seems to happen with normal page sizes.
 
-    \item In multicolumn layouts, \lwc/ will remove widows and orphans that occur between pages, but it will not remove widows and orphans between pages. 
+    \item In multicolumn layouts, \lwc/ will remove \waos/ that occur between pages, but it will not remove \waos/ between columns.  
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are strictly better than widows, so this is still an improvement.
 
-    \item Sometimes a widow or orphan just cannot be eliminated because no paragraph has enough \quotation{stretch}. This can usually be remediated by increasing \estretch/.
+    \item Sometimes a widow or orphan just cannot be eliminated because no paragraph has enough \quotation{stretch}. This can usually be remediated by increasing \lwc/'s \estretch/.
 
-    \item When running under \LuaMetaTeX, the log may be filled with lines like \quotation{\tt luatex warning  > tex: left parfill skip is gone}. These are harmless and can be ignored (although I have no idea how to prevent them).
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \quotation{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored (although I have no idea how to prevent it).
 \stopitemize
 
 \section{The Algorithm}
-\Lwc/ uses a fairly simple algorithm to eliminate widows and orphans. It is pretty basic, but there are a few subtleties. Please see \about[sec:implementation] for a full listing of the source code.
+\Lwc/ uses a fairly simple algorithm to eliminate \waos/. It is pretty basic, but there are a few subtleties. Please see \about[sec:implementation] for a full listing of the source code.
 
 \subsection{Paragraph Breaking}
 First, \lwc/ hooks into the paragraph breaking process.
