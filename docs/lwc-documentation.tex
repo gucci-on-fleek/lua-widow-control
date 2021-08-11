@@ -16,15 +16,18 @@
 \usemodule[lua-widow-control]
 \usebtxdataset[lwc-documentation.bib]
 
-% Abbreviations
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
 \useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest][][latest release]
 
+% Abbreviations
 \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
 \def\Lwc/{\sans{Lua-\allowbreak widow-\allowbreak control}}
 \def\estretch/{\tex{emergency\allowbreak stretch}}
 \def\openalty/{\tex{output\allowbreak penalty}}
 \def\waos/{widows and orphans}
+\def\wao/{widow and orphan}
+\def\woo/{widow or orphan}
+\let\q=\quotation
 
 \def\titlecite[#1]{\cite[title][#1]\cite[#1]}
 
@@ -40,9 +43,9 @@
     version=0.0.0,
 ]
 
-\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most \waos/ from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. 
+\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most \waos/ from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a \woo/ would otherwise occur. 
 
-\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in \bold{rare} scenarios, it may delete or duplicate random paragraphs or lines. All known bugs that cause this issue have been corrected; nevertheless, I recommend against using this package for exams or any document where minor textual changes would be disastrous. This package should be sufficiently stable for use in typical documents.}
+\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in \bold{rare} scenarios, it could delete or duplicate random paragraphs or lines. There are no current bugs of this nature, and I would consider this package sufficiently stable for use in typical documents; nevertheless, I recommend against using this package for exams or any document where minor textual changes would be disastrous.}
 
 \section{Quick Start}
 Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
@@ -52,7 +55,14 @@ For a more detailed explanation of the steps involved and a description of some 
 \subject{Contents}
 \placecontent[criterium=all]
 
-\section{\waos/}
+\section{Motivation}
+\TeX{} provides top-notch typesetting: even 40 years after its first release, no other program produces higher quality mathematical typesetting, and its paragraph-breaking algorithm is still state-of-the-art. However, its page breaking is not quite as sophisticated as its paragraph breaking and thus suffers from some minor issues.
+
+Unmodified \TeX{} typically has only 2 ways of dealing with \waos/: it can either shorten a page by 1 line, or it can stretch out some vertical whitespace. \TeX{} was designed for mathematical and scientific typesetting, where a typical page has multiple section headings, tables, figures, and equations. For this style of document, \TeX's default behavior works quite well; however, for a prosaic document composed almost entirely of text, there is no vertical whitespace to stretch. 
+
+In my attempts to solve the \wao/ problem for textual documents, I searched for a ready-made solution to no avail. Therefore, \lwc/ was born.
+
+\section{Widows and Orphans}
 \subsection{Widows}
 Widows occur when when the last line of a paragraph is on the page after the rest of the paragraph. Widows are quite undesirable since it is usually quite distracting for the reader to find a stray line on the top of a page. Wherever possible, this should be avoided.
 
@@ -66,10 +76,10 @@ For a visual comparison of \waos/, please see \in{Figure}[tab:widow].
     \getbuffer[widow-orphan]
 \stopplacefigure
 
-\section{\TeX's Default Behavior}
-
-It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. Chapter~15 of \titlecite[texbook] (\quotation{How \TeX{} Makes
-Lines into Pages}) is the best reference for this; however, it goes into much more detail than most users require. Below follows a \emph{very} simplified (and likely incorrect) summary of the page-breaking algorithm as described in \titlecite[texbook].
+\section{\TeX's Pagination}
+\subsection{Algorithm}
+It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. Chapter~15 of \titlecite[texbook] (\q{How \TeX{} Makes
+Lines into Pages}) is the best reference for this; however, it goes into much more detail than most users require. Below follows a \emph{very} simplified (and likely incorrect) summary of the page breaking algorithm as described in \titlecite[texbook].
 
 \TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
 
@@ -77,18 +87,21 @@ However, some objects have penalties attached. These penalties make \TeX{} treat
 
 One important note: once \TeX{} begins breaking a page, it only breaking a page. That is, it will never go back and modify any content that has previously been added to its \emph{main vertical list}. That is, page breaking is a localized algorithm, without any backtracking.
 
-\section{Previous~Work}
-There have been a few previous attempts to improve upon \TeX's builtin widow and orphan-handling abilities; however, none of these have been able to automatically remove \waos/ without stretching any glue or shortening any pages.
+\subsection{Behavior}
+Of course, this algorithm doesn't allow us to intuitively understand how \TeX{} deals with \waos/. 
+
+Due to the penalties attached to \waos/, \TeX{} treats them as if they are longer than they actually are. Widows and orphans with small penalties attached---like \LaTeX's default values of 150---are only treated as slightly taller than 1 line, while \waos/ with large penalties---values near 10\,000---are treated as if they are 2 lines tall. Because potential \wao/ lines are broken as if they are taller than they actually are, \TeX{} will tend to group them together on the same pages.
+
+However, when these lines are moved as a group, \TeX{} will have to make a page with less lines. \about[sec:demo] goes into further detail about how \TeX{} deals with these too-short pages. The main takeaway is that for a page exclusively filled with text, all of \TeX's builtin solutions come with compromises.
+
+\section{Previous Work}
+There have been a few previous attempts to improve upon \TeX's previously-discussed \wao/-handling abilities; however, none of these have been able to automatically remove \waos/ without stretching any glue or shortening any pages.
 
 \titlecite[tugboat-strategies] and \titlecite[tugboat-widows] both begin with comprehensive discussions of the methods of preventing \waos/. They both agree that \waos/ are bad and ought to be avoided; however, they each differ in solutions. \italic{Strategies}\cite[tugboat-strategies] proposes an output routine that reduces the length of facing pages by 1 line if necessary to remove \waos/ while \italic{Managing}\cite[tugboat-widows] proposes that the author manually rewrites or adjusts the \tex{looseness} when needed.
 
 \titlecite[widow-assist] contains a file \type{widow-assist.lua} that automatically detects which paragraphs can be safely shortened or lengthened by 1 line. \titlecite[widows-and-orphans] alerts the author to the pages that contain widows or orphans. Combined, these packages make it very simple for the author to quickly remove \waos/ by adjusting the \tex{looseness} values; however, it still requires the author to make manual source changes after each revision. 
 
-\Lwc/ is essentially just a combination of \type{widow-assist.lua}\cite[widow-assist] and \sans{widows-and-orphans}:\cite[widows-and-orphans] when the \openalty/ shows that a widow or orphan occurred, Lua is used to find a stretchable paragraph. What \lwc/ adds on top of these packages is automation: \lwc/ eliminates the requirement for any manual adjustments.
-
-\section{Demonstration}
-
-Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors in regards to \waos/. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the next page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
+\Lwc/ is essentially just a combination of \type{widow-assist.lua}\cite[widow-assist] and \sans{widows-and-orphans}:\cite[widows-and-orphans] when the \openalty/ shows that a \woo/ occurred, Lua is used to find a stretchable paragraph. What \lwc/ adds on top of these packages is automation: \lwc/ eliminates the requirement for any manual adjustments.
 
 \startTEXpage[
     align=normal,
@@ -128,6 +141,10 @@ Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some f
     \placefloatcaption[table][reference=tab:demo, title={A visual comparison of various automated widow handling techniques.}]
 \stopTEXpage
 
+\section[sec:demo]{Demonstration}
+
+Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors in regards to \waos/. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the previous page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
+
 \subsection{Ignore}
 As you can see, the line of this last paragraph is on a separate page from the rest of the paragraph, creating a widow. This is usually pretty distracting for the reader, so it is best avoided.
 
@@ -146,7 +163,7 @@ In addition, this method is incompatible with typesetting on a grid, since there
 
 To do so, \lwc/ lengthened the second paragraph by one line. If you look closely, you can see that this stretched the interword spaces. This stretching is noticeable when typesetting in a narrow text block, but it becomes nearly imperceptible with larger widths.
 
-\Lwc/ automatically finds the \quotation{best} paragraph to stretch, so the increase in interword spaces should almost always be minimal.
+\Lwc/ automatically finds the \q{best} paragraph to stretch, so the increase in interword spaces should almost always be minimal.
 
 \section{Installation}
 
@@ -218,9 +235,9 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are strictly better than widows, so this is still an improvement.
 
-    \item Sometimes a widow or orphan just cannot be eliminated because no paragraph has enough \quotation{stretch}. This can usually be remediated by increasing \lwc/'s \estretch/.
+    \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. An ideal \q{stretchy} paragraph is fairly long and has fairly short words (so, the opposite of anything in this manual).
 
-    \item When running under \LuaMetaTeX, the log may be filled with lines like \quotation{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored (although I have no idea how to prevent it).
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored (although I have no idea how to prevent it).
 \stopitemize
 
 \section{The Algorithm}
@@ -238,15 +255,19 @@ After \TeX{} has broken its paragraph into its natural length, \lwc/ appears onc
 \subsection{Page Breaking}
 \Lwc/ intercepts \tex{box255} after the output routine and before it is shipped out. 
 
-First, \lwc/ analyzes the \openalty/ of the page. If the page was broken at a widow or an orphan, the \openalty/ will have been set to the respective values of \tex{widow\allowbreak penalty} and \tex{orphan\allowbreak penalty}. If the \openalty/ is not indicative of a widow or an orphan, \lwc/ will abort and return \tex{box255} unmodified.
+First, \lwc/ analyzes the \openalty/ of the page. If the page was broken at a \woo/, the \openalty/ will have been set to the respective values of \tex{widow\allowbreak penalty} and \tex{orphan\allowbreak penalty}. If the \openalty/ is not indicative of a \woo/, \lwc/ will abort and return \tex{box255} unmodified.
 
-At this point, we know that we have a widow or an orphan on the page. Now, we iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Now, we traverse through the page to find the start and the end of the original paragraph so that we can splice in the lengthened paragraph. 
+At this point, we know that we have a \woo/ on the page. Now, we iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Now, we traverse through the page to find the start and the end of the original paragraph so that we can splice in the lengthened paragraph. 
 
 Finally, we pull the last line off of the page and then we place it onto the top of the \emph{recent contributions} list. Now, we can ship out the new, widow-free page.
 
+\section{Contributions}
+
+If you have any issues with \lwc/, please create an issue at the \goto{project's GitHub page}[url(projecturl)]. Or, if you are willing to help with any improvements, \goto{submit a \acronym{PR}}[url(projecturl)].
+
 \section{License}
 
-\Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is dual-licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater and the \acronym{MPL}.
+\Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater as well as the \acronym{MPL}.
 
 \section{References}
 

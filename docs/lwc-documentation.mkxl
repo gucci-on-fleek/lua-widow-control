@@ -102,7 +102,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 \defineoverlay[warning][\useMPgraphic{warning}]
 
 \define[1]\warning{
-    \blank[3ex]
+    \blank[big]
     \midaligned{\framed[
         frame=off,
         background=warning,
@@ -114,7 +114,7 @@ setbounds currentpicture to boundingbox OverlayBox;
         
         #1
     }}
-    \blank[3ex]
+    \blank[big]
 }
 
 \setupitemize[each][packed][style=\lining]
@@ -123,7 +123,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 \setupdelimitedtext[blockquote][
     style=\ss,
     before=\noindentation,
-    after={\blank[0.5*line]}
+    after={\blank[medium]}
 ]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,15 +144,15 @@ setbounds currentpicture to boundingbox OverlayBox;
 \stopsetups
 
 \setuphead[section][
-    before={\blank[2ex]},
-    after={\blank[1ex]},
+    before={\setuplwc[state=stop]\blank[big, preference]},
+    after={\blank[medium, samepage]\setuplwc[state=start]},
     textstyle=\setups{style:section},
     number=no,
 ]
 
 % Subsection
 \setuphead[subsection][
-    before={\blank[line]},
+    before={\blank[medium, preference]},
     after=,
     textstyle=\ss,
     alternative=margintext,
@@ -162,14 +162,24 @@ setbounds currentpicture to boundingbox OverlayBox;
 \definehead[filename][subsection][
     alternative=normal,
     style=\ssita,
-    before={\blank[2*line]},
+    before={\blank[big, preference]},
 ]
 
 % TOC
-\define[3]\TOCcommand{\midaligned{\llap{#2}\hskip 1em\rlap{#3}}\par} % TODO There should be a higher-level way of doing this.
+\define[3]\TOCcommand{
+    \midaligned{
+        \llap{#2}
+        \hskip 1em
+        \rlap{\color[\interactionparameter{color}]{\bf #3}}
+    }
+}
 
 \setupcombinedlist[content][list=section]
-\setuplist[section][alternative=command, command=\TOCcommand] % `alternative=interactive` doesn't work for some reason
+\setuplist[section][
+    alternative=interactive,
+    command=\TOCcommand,
+    after=\par
+]
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Title Block %%%%%
@@ -189,7 +199,7 @@ setbounds currentpicture to boundingbox OverlayBox;
             \par
         \endgroup
 
-        \blank[2ex]
+        \blank[big]
 
         \begingroup
             \ssa\lining
@@ -202,7 +212,7 @@ setbounds currentpicture to boundingbox OverlayBox;
         \par
         
         \from[projecturl]
-        \blank[line]
+        \blank[big]
 
         \noindentation
     \stopalignment
