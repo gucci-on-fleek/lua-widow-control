@@ -1,0 +1,29 @@
+# lua-widow-control
+# https://github.com/gucci-on-fleek/lua-widow-control
+# SPDX-License-Identifier: MPL-2.0+
+# SPDX-FileCopyrightText: 2021 gucci-on-fleek
+
+name: Build and Bundle
+
+on:
+  - push
+  - workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
+
+      - run: |
+          cd "$GITHUB_WORKSPACE"/texmf
+          zip -r lua-widow-control.tds.zip ./*
+
+      - uses: ncipollo/release-action@v1
+        with:
+          prerelease: true
+          artifacts: ./texmf/lua-widow-control.tds.zip
+          tag: release-${{github.sha}}
+          commit: ${{github.sha}}
