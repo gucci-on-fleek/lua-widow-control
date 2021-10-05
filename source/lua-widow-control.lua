@@ -144,11 +144,11 @@ function lwc.save_paragraphs(head)
 
     local new_head = copy(head)
 
-    -- Prevent ultra-short last lines (TeXBook p. 104)
+    -- Prevent ultra-short last lines (TeXBook p. 104), except with narrow columns
     local parfillskip = last(new_head)
-    if parfillskip.id == glue_id then
-        parfillskip.stretch_order = 0
-        parfillskip.stretch = 0.9 * tex.hsize
+    if parfillskip.id == glue_id and tex.hsize > tex.sp("25em") then
+            parfillskip.stretch_order = 0
+            parfillskip.stretch = 0.9 * tex.hsize
     end
 
     local long_node, long_info = tex.linebreak(new_head, {
@@ -168,6 +168,10 @@ function lwc.save_paragraphs(head)
     else
         long_demerits = long_info.demerits
     end
+
+    local prevdepth = node.new("glue")
+    prevdepth.width = -1 * tex.prevdepth
+    last(long_node).next = prevdepth
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
@@ -227,15 +231,15 @@ function lwc.remove_widows(head)
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
-    for i, x in pairs(paragraphs) do
-        if paragraphs[i].demerits < minimum_demerits and i <= #paragraphs - 1 then
+    for i, paragraph in pairs(paragraphs) do
+        if paragraph.demerits < minimum_demerits and i <= #paragraphs - 1 then
             node.flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
-            paragraph_index, minimum_demerits = i, x.demerits
+            paragraph_index, minimum_demerits = i, paragraph.demerits
         elseif i > 1 then
             -- Not sure why `i > 1` is required?
-            node.flush_list(paragraphs[i].node)
-            paragraphs[i].node = nil
+            node.flush_list(paragraph.node)
+            paragraph.node = nil
         end
     end
 

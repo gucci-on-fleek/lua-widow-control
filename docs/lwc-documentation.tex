@@ -235,6 +235,8 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
     \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. An ideal \q{stretchy} paragraph is fairly long and has fairly short words (so, the opposite of anything in this manual).
 
     \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored (although I have no idea how to prevent it).
+
+    \item \Lwc/ will not expand the first paragraph of a document. This should never realistically be an issue.
 \stopitemize
 
 \section{The Algorithm}
