@@ -4,9 +4,9 @@
 %D        title=lua-widow-control,
 %D     subtitle=\ConTeXt module for lua-widow-control,
 %D       author=gucci-on-fleek,
-%D         date=\currentdate,
-%D    copyright=SPDX-FileCopyrightText: 2021 gucci-on-fleek,
-%D      license=SPDX-License-Identifier: MPL-2.0+,
+%D         date=2021-10-04,
+%D    copyright=gucci-on-fleek,
+%D      license=MPL-2.0+,
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
 \unprotect

@@ -1,8 +1,9 @@
-\startenvironment[lwc-documentation]
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2021 gucci-on-fleek
+
+\startenvironment[lwc-documentation]
 
 \mainlanguage[en]
 
@@ -271,7 +272,7 @@ setbounds currentpicture to boundingbox OverlayBox;
     after=,
     style=\lining,
     margin=0pt,
-    width=2em,
+    width=1.5em,
 ]
 
 \unprotect
