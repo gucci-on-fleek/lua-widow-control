@@ -328,7 +328,6 @@ end
 
 function lwc.disable_callbacks()
     if enabled then
-        lwc.callbacks.remove_widows.disable()
         lwc.callbacks.save_paragraphs.disable()
         lwc.callbacks.mark_paragraphs.disable()
 
