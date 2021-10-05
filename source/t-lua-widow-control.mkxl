@@ -15,10 +15,6 @@
 
 \installcommandhandler \????lwc {lwc} \????lwc
 
-\appendtoks
-    \lwcemergencystretch=\lwcparameter{emergencystretch}
-\to\everysetuplwc
-
 \newdimen\lwcemergencystretch
 \appendtoks
     \lwcemergencystretch=\lwcparameter{emergencystretch}
