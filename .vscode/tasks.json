@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ConTeXt Build",
+            "command": "context",
+            "args": [
+                "${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}",
+                "env": {
+                    "TEXMFHOME": "${workspaceFolder}/texmf"
+                }
+            },
+            "presentation": {
+                "reveal": "never"
+            },
+            "problemMatcher": [
+                {
+                    "owner": "ConTeXt",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "pattern": {
+                        "regexp": "^[\\w\\s]*(error|warning)\\s*> (.*) on line (\\d+) in file (.*): (.*)$",
+                        "file": 4,
+                        "line": 3,
+                        "severity": 1,
+                        "message": 5,
+                        "code": 2,
+                    }
+                },
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

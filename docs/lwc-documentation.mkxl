@@ -271,7 +271,7 @@ setbounds currentpicture to boundingbox OverlayBox;
     after=,
     style=\lining,
     margin=0pt,
-    width=3em,
+    width=2em,
 ]
 
 \unprotect
