@@ -41,8 +41,6 @@
 
 \Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt\ package that removes most \waos/ from a document, \emph{without} stretching any glue or shortening any pages. It does so by automatically lengthening a paragraph on a page where a \woo/ would otherwise occur. 
 
-\warning{\Lwc/ uses Lua callbacks to modify the internal structure of each page. This typically causes no issues; however, in \bold{rare} scenarios, it could delete or duplicate random paragraphs or lines. There are no current bugs of this nature, and I would consider this package sufficiently stable for use in typical documents; nevertheless, I recommend against using this package where a missing or duplicated line would be disastrous.}
-
 \section{Quick Start}
 Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
 
@@ -51,12 +49,14 @@ For a more detailed explanation of the steps involved and a description of some 
 \subject{Contents}
 \placecontent[criterium=all]
 
+\warning{\Lwc/ works by modifying the internal structure of each page. In \bold{rare} scenarios, this could delete or duplicate paragraphs or lines when a page break is triggered. All known bugs have been fixed, but I would still caution against using \lwc/ in any document where a single missing line would be disastrous. \Lwc/ should be sufficiently stable to use in typical documents.}
+
 \section{Motivation}
 \TeX{} provides top-notch typesetting: even 40 years after its first release, no other program produces higher quality mathematical typesetting, and its paragraph-breaking algorithm is still state-of-the-art. However, its page breaking is not quite as sophisticated as its paragraph breaking and thus suffers from some minor issues.
 
 Unmodified \TeX{} typically has only 2 ways of dealing with \waos/: it can either shorten a page by 1 line, or it can stretch out some vertical whitespace. \TeX{} was designed for mathematical and scientific typesetting, where a typical page has multiple section headings, tables, figures, and equations. For this style of document, \TeX's default behavior works quite well; however, for prose or any other document composed almost entirely of text, there is no vertical whitespace to stretch. 
 
-In my attempts to solve the \wao/ problem for textual documents, I searched for a ready-made solution to no avail. Therefore, \lwc/ was born.
+Since there were no ready-made and fully-automated solutions to remove \waos/ from prosaic documents, I decided to create \lwc/.
 
 \section{Widows and Orphans}
 \subsection{Widows}
@@ -72,7 +72,7 @@ Orphans are when the first line of a paragraph occurs on the page before the rem
 \section{\TeX's Pagination}
 \subsection{Algorithm}
 It is tricky to understand how \lwc/ works if you aren't familiar with how \TeX{} breaks pages. Chapter~15 of \titlecite[texbook] (\q{How \TeX{} Makes
-Lines into Pages}) is the best reference for this; however, it goes into much more detail than most users require. If you are unable to access \cite[title][texbook], then I can also recommend \sectionmark27 of \titlecite[texbytopic], \goto{available online}[url(https://texdoc.org/serve/texbytopic/0#page=227)] for free. Below follows a simplified (and likely error-ridden) summary of \TeX{}'s page breaking algorithm:
+Lines into Pages}) is the best reference for this; however, it goes into much more detail than most users require. As a supplemental resource, I can also recommend Section~27 of \titlecite[texbytopic], \goto{available online}[url(https://texdoc.org/serve/texbytopic/0#page=227)] for free. Below follows a \emph{very} simplified (and likely error-ridden) summary of \TeX{}'s page breaking algorithm:
 
 \TeX{} fills the page with lines and other objects until the next object will no longer fit. Once no more objects will fit, \TeX{}, will align the bottom of the last line with the bottom of the page by stretching any vertical spaces.
 
@@ -136,20 +136,20 @@ There have been a few previous attempts to improve upon \TeX's previously-discus
 
 \section[sec:demo]{Demonstration}
 
-Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors when \waos/ are involved. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] on the previous page shows a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
+Although \TeX{}'s page breaking algorithm is quite simple, it can lead to some fairly complex behaviors when \waos/ are involved. The usual choices are to either ignore them, stretch some glue, or shorten the page. \in{Table}[tab:demo] has a visual demonstration of some of these behaviors and how \lwc/ differs from the defaults.
 
 \subsection{Ignore}
-As you can see, the line of this last paragraph is on a separate page from the rest of the paragraph, creating a widow. This is usually pretty distracting for the reader, so it is best avoided.
+As you can see, the last line of the page is on a separate page from the rest of its paragraph, creating a widow. This is usually pretty distracting for the reader, so it is best avoided wherever possible.
 
 \subsection{Shorten}
-This page did not leave any widows, but it did shorten the previous page by 1~line. Sometimes this is alright, but usually it looks bad because each page will have different text\-block heights. This can make the pages look quite uneven, especially when typesetting with columns.
+This page did not leave any widows, but it did shorten the previous page by 1~line. Sometimes this is acceptable, but usually it looks bad because each page will have different text-block heights. This can make the pages look quite uneven, especially when typesetting with columns or in a book with facing pages.
 
 \subsection{Stretch}
 This page also has no widows and it has a flushed bottom margin. However, the space between each paragraph had to be stretched. 
 
 If this page had many equations, headings, and other elements with natural space between them, the stretched out space would be much less noticeable. \TeX{} was designed for mathematical typesetting, so it makes sense that this is its default behavior. However, in a page with mostly text, these paragraph gaps can look unsightly. 
 
-In addition, this method is incompatible with typesetting on a grid, since there is no flexible glue on the page.
+In addition, this method is incompatible with typesetting on a grid since all glue stretch is quantized to the height of a line.
 
 \subsection{\lwc/}
 \Lwc/ has none of these issues: it eliminates the widows in a document while keeping a flushed bottom margin and constant paragraph spacing. 
@@ -160,12 +160,19 @@ To do so, \lwc/ lengthened the second paragraph by one line. If you look closely
 
 \section{Installation}
 
-Eventually, \lwc/ will be on \acronym{CTAN} and in \TeX{}Live and Mik\TeX{}; until then, you will need to manually install the package. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
+\subsection{\TeX~Live}
+Run \type{tlmgr install lua-widow-control} in a terminal, or install using the \q{\TeX~Live Manager} \acronym{GUI}.
+
+\subsection{Mik\TeX}
+Mik\TeX{} should automatically install the package when you include it in your document.
+
+\subsection{Manual}
+Currently, \LuaMetaTeX{} (\ConTeXt{} \acronym{MKXL}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX{}Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
 \subsection{Steps}
 \startitemize[N]
-    \item Download the \from[download] of \lwc/.
-    \item Unzip or un\type{tar} the release into your \type{TEXMFLOCAL/} directory. (You can find its location by running \type{kpsewhich --var-value TEXMFHOME} in a terminal)
+    \item Download \type{lua-widow-control.tds.zip} from the \from[download] on GitHub.
+    \item Unzip the release into your \type{TEXMFLOCAL/} directory. (You can find its location by running \type{kpsewhich --var-value TEXMFHOME} in a terminal)
     \item Refresh the filename database: \startitemize[1]
         \item \ConTeXt: \type{mtxrun --generate}
         \item \TeX{}Live: \type{mktexlsr}
@@ -216,23 +223,23 @@ Eventually, \lwc/ will be on \acronym{CTAN} and in \TeX{}Live and Mik\TeX{}; unt
 
 \subsection{\estretch/}
 
-You can configure the \estretch/ used when stretching a paragraph. The default value is 3\,em. 
+You can configure the \estretch/ used when stretching a paragraph. The default value is 3~em. 
 
 \Lwc/ will only use use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so its pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
 
 \section{Known Issues}
 \startitemize
-    \item On very small paper, \lwc/ will sometimes expand a paragraph on the page but fail to move the last line to the next page. I have no idea why this happens or how to fix it, but it never seems to happen with normal page sizes.
+    \item \Lwc/ will rarely fail to correctly move the last line on an expanded page to the next page in documents with \emph{very} small paper sizes. This tends to only occur with paper narrower than $\approx\unit{8 cm}$ or shorter than $\approx\unit{10 cm}$ and should not affect any typical documents.
 
-    \item In multicolumn layouts, \lwc/ will remove \waos/ that occur between pages, but it will not remove \waos/ between columns.  To do so would likely require modifying the output routine, a complicated endeavour well beyond my \TeX{}nical expertise.
+    \item In multicolumn layouts, \lwc/ will remove \waos/ that occur between pages, but it will not remove \waos/ between columns.  To do so would likely require modifying the output routine which would be a very difficult task.
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are better than widows, so this is still an improvement.
 
-    \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. An ideal \q{stretchy} paragraph is fairly long and has fairly short words (so, the opposite of anything in this manual).
+    \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. An ideal \q{stretchy} paragraph is long, has short words, and has a narrow text width.
 
-    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored (although I have no idea how to prevent it).
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored.
 
-    \item \Lwc/ will not expand the first paragraph of a document. This should never realistically be an issue.
+    \item \Lwc/ will not expand the first paragraph of a document. This should never be an issue in any real-world documents.
 \stopitemize
 
 \section{The Algorithm}
@@ -252,7 +259,7 @@ After \TeX{} has broken its paragraph into its natural length, \lwc/ appears onc
 
 First, \lwc/ analyzes the \openalty/ of the page. If the page was broken at a \woo/, the \openalty/ will have been set to the respective values of \tex{widow\allowbreak penalty} and \tex{orphan\allowbreak penalty}. If the \openalty/ is not indicative of a \woo/, \lwc/ will abort and return \tex{box255} unmodified.
 
-At this point, we know that we have a \woo/ on the page. Now, we iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Once we've selected a paragraph to replace, we can traverse through the page to find the original version of this paragraph so that we can splice in the lengthened paragraph. 
+At this point, we know that we have a \woo/ on the page, so we know that we need to lengthen the page by 1~line. We can iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Once we've selected a paragraph to replace, we can now traverse through the page to find the original version of this paragraph so that we can splice in the lengthened paragraph. 
 
 Finally, we pull the last line off of the page and then we place it onto the top of the \emph{recent contributions} list. Now, we can ship out the new, widow-free page.
 
@@ -294,5 +301,9 @@ If you have any issues with \lwc/, please create an issue at the \goto{project's
 \filename{t-lua-widow-control.mkxl}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}
+
+\filename{Demo from \in{Table}[tab:demo]}
+
+\typeTEXfile{lwc-documentation-demo-text.tmp}
 
 \stopdocument
