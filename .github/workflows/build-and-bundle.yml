@@ -13,17 +13,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout the Repository
+        uses: actions/checkout@v2
 
-      - run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
+      - name: Build Documentation
+        run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
 
-      - run: |
+      - name: Bundle the package
+        run: |
           cd "$GITHUB_WORKSPACE"/texmf
-          zip -r lua-widow-control.tds.zip ./*
+          zip -r "$GITHUB_WORKSPACE"/lua-widow-control.tds.zip ./*
+          mkdir "$GITHUB_WORKSPACE"/ctan && cd "$GITHUB_WORKSPACE"/ctan
+          mkdir lua-widow-control
+          find -L "$GITHUB_WORKSPACE"/texmf -type f -exec cp '{}' lua-widow-control \;
+          cp "$GITHUB_WORKSPACE"/lua-widow-control.tds.zip .
+          zip -r "$GITHUB_WORKSPACE"/lua-widow-control.ctan.zip ./*
 
-      - uses: ncipollo/release-action@v1
+      - name: Generate Release
+        uses: ncipollo/release-action@v1
         with:
           prerelease: true
-          artifacts: ./texmf/lua-widow-control.tds.zip
+          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip
           tag: release-${{github.sha}}
           commit: ${{github.sha}}
+          name: Prerelease ${{github.sha}}
+          body: |
+            Automatically generated release for ${{github.sha}}
+
+            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) file that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
+
+            Please note that this is a **prerelease** version of lua-widow-control. Most users should use the [latest release](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest).
