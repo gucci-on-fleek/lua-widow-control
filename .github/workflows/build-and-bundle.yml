@@ -8,6 +8,7 @@ name: Build and Bundle
 on:
   - push
   - workflow_dispatch
+  - pull_request
 
 jobs:
   build:
@@ -31,15 +32,20 @@ jobs:
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
+        if: "! ${{github.base_ref}}" # not a PR
         with:
           prerelease: true
-          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip
+          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf
           tag: release-${{github.sha}}
           commit: ${{github.sha}}
           name: Prerelease ${{github.sha}}
           body: |
-            Automatically generated release for ${{github.sha}}
+            Automatically generated release for ${{github.sha}}  
 
-            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) file that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
+            > Lua-widow-control is a Plain TeX/LaTeX/ConTeXt package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages. Instead, lua-widow-control automatically lengthens a paragraph on a page where a widow or orphan would otherwise occur.
 
             Please note that this is a **prerelease** version of lua-widow-control. Most users should use the [latest release](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest).
+
+            ---
+
+            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) archive that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
