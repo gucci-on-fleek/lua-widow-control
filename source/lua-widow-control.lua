@@ -170,7 +170,11 @@ function lwc.save_paragraphs(head)
         long_demerits = long_info.demerits
     end
 
-    tex.prevdepth = long_info.prevdepth
+    if tex.prevdepth > tex.sp("-999pt") then
+        local prevdepth = node.new("glue")
+        prevdepth.width = -1 * long_info.prevdepth
+        last(long_node).next = prevdepth
+    end
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
