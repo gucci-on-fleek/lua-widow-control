@@ -15,14 +15,6 @@ lwc.name = "lua-widow-control"
   ]]
 local format = tex.formatname
 
--- Save some local copies of the node library to reduce table lookups
-local last = node.slide
-local copy = node.copy_list
-local par_id = node.id("par")
-local glue_id = node.id("glue")
-local set_attribute = node.set_attribute
-local has_attribute = node.has_attribute
-
 if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
     lwc.context = true
 elseif format:find('latex') then -- lualatex, lualatex-dev, ...
@@ -32,12 +24,25 @@ elseif format == 'luatex' then -- Plain
 end
 
 --[[
+    Save some local copies of the node library to reduce table lookups.
+    This is probably a useless micro-optimization, but it can't hurt.
+  ]]
+local last = node.slide
+local copy = node.copy_list
+local par_id = node.id("par")
+local glue_id = node.id("glue")
+local set_attribute = node.set_attribute
+local has_attribute = node.has_attribute
+local flush_list = node.flush_list or node.flushlist
+local min_col_width = tex.sp("25em")
+local maxdimen = 1073741823 -- \\maxdimen in sp
+
+--[[
     This warning is raised in the following circumstances:
       - When the user manually loads the Lua module without loading Lua\TeX{}Base
       - When the package is used with an unsupported format
-    Both of these are pretty unlikely.
+    Both of these are pretty unlikely, but it can't hurt to check.
   ]]
-
 assert(lwc.context or luatexbase, [[
     
     This module requires a supported callback library. Please
@@ -48,11 +53,13 @@ assert(lwc.context or luatexbase, [[
       - ConTeXt: Use the LMTX version.
 ]])
 
+--[[
+    Package/module initialization
+  ]]
 if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
     lwc.contrib_head = 'contribute_head' -- For \LuaMetaTeX{}
-    node.flush_list = node.flushlist
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
@@ -69,11 +76,9 @@ elseif lwc.plain or lwc.latex then
     lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
+else -- uh oh
+    error("Unsupported format. Please use (Lua)LaTeX, Plain (Lua)TeX, or ConTeXt (MKXL/LMTX)")
 end
-
---[[
-    Here we initialize a bunch of module-level variables and constants.
-  ]]
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
 
@@ -84,6 +89,11 @@ This may prevent lua-widow-control from
 properly functioning.
 ]]
 end
+
+
+--[[
+    Function definitions
+  ]]
 
 --- Create a table of functions to enable or disable a given callback
 --- @param t table Parameters of the callback to create
@@ -98,7 +108,7 @@ end
 ---     enable: function = Enable the callback
 ---     disable: function = Disable the callback
 function lwc.register_callback(t)
-    if lwc.plain or lwc.latex then
+    if lwc.plain or lwc.latex then -- Both use \LuaTeX{}Base for callbacks
         return {
             enable = function()
                 luatexbase.add_to_callback(t.callback, t.func, t.name)
@@ -124,7 +134,9 @@ function lwc.register_callback(t)
             Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
             with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
             and unfrozen. Because of this, we need to register some callbacks at the
-            engine level.
+            engine level. This is fragile though, because a future \ConTeXt{} update
+            may decide to register one of these functions, in which case \lwc/ will
+            crash with a cryptic error message.
           ]]
         return {
             enable = function() callback.register(t.callback, t.func) end,
@@ -133,66 +145,64 @@ function lwc.register_callback(t)
     end
 end
 
--- Saves each paragraph, but lengthened by 1 line
+
+--- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     lwc.callbacks.disable_box_warnings.enable()
 
+    -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
     if head.id ~= par_id and lwc.context then
-        -- Not too sure why this is necessary, but \ConTeXt{} crashes without it
         return head
     end
 
+    -- We need to return the unmodified head at the end, so we make a copy here
     local new_head = copy(head)
 
-    -- Prevent ultra-short last lines (TeXBook p. 104), except with narrow columns
+    -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     local parfillskip = last(new_head)
-    if parfillskip.id == glue_id and tex.hsize > tex.sp("25em") then
+    if parfillskip.id == glue_id and tex.hsize > min_col_width then
             parfillskip.stretch_order = 0
-            parfillskip.stretch = 0.9 * tex.hsize
+            parfillskip.stretch = 0.9 * tex.hsize -- Last line must be at least 10% long
     end
 
+    -- Break the paragraph 1 line longer than natural
     local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
         emergencystretch = tex.dimen.lwcemergencystretch,
     })
 
+    -- Break the natural paragraph so we know how long it was
     local natural_node, natural_info = tex.linebreak(copy(head))
-    node.flush_list(natural_node)
+    flush_list(natural_node)
 
     lwc.callbacks.disable_box_warnings.disable()
 
-    -- If we can't change the length of a paragraph, assign a very large demerit value
+    -- If we can't lengthen the paragraph, assign a \emph{very} large demerit value
     local long_demerits
     if long_info.prevgraf == natural_info.prevgraf then
-        long_demerits = 1073741823 -- \\maxdimen
+        long_demerits = maxdimen
     else
         long_demerits = long_info.demerits
     end
 
-    if tex.prevdepth > tex.sp("-999pt") then
-        local prevdepth = node.new("glue")
-        prevdepth.width = -1 * long_info.prevdepth
-        last(long_node).next = prevdepth
-    end
+    -- Offset the accumulated \\prevdepth
+    local prevdepth = node.new("glue")
+    prevdepth.width = -1 * long_info.prevdepth
+    last(long_node).next = prevdepth
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
-    --[[
-        \LuaMetaTeX{} crashes if we return `true`. However, page 175 of the \LuaMetaTeX{}
-        manual says:
-
-        "As for all the callbacks that deal with nodes, the return value can be one
-        of three things:
-          - boolean true signals successful processing
-          - <node> signals that the ‘head’ node should be replaced by the returned node
-          - boolean false signals that the ‘head’ node list should be ignored and
-            flushed from memory"
-      ]]
+    -- \LuaMetaTeX{} crashes if we return `true`, despite p. 175 of its manual.
     return head
 end
 
--- Tags the beginning and the end of each paragraph as it is added to the page
+
+--- Tags the beginning and the end of each paragraph as it is added to the page.
+---
+--- We add an attribute to the first and last node of each paragraph. The ID is
+--- some arbitrary number for \lwc/, and the value corresponds to the
+--- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
     set_attribute(head, lwc.attribute, #lwc.paragraphs)
     set_attribute(last(head), lwc.attribute, -1 * #lwc.paragraphs)
@@ -200,13 +210,14 @@ function lwc.mark_paragraphs(head)
     return head
 end
 
---[[
-    This function holds the majority of the module's functionality. It is called
-    just after the end of the output routine, before the page is shipped out. If
-    the output penalty indicates that the page was broken at a widow or an orphan,
-    we replace one paragraph with the same paragraph, but lengthened by one line.
-    Then, we can push the bottom line of the page to the next page.
-  ]]
+
+--- Remove the widows and orphans from the page, just after the output routine.
+---
+--- This function holds the "meat" of the module. It is called just after the
+--- end of the output routine, before the page is shipped out. If the output
+--- penalty indicates that the page was broken at a widow or an orphan, we
+--- replace one paragraph with the same paragraph, but lengthened by one line.
+--- Then, we can push the bottom line of the page to the next page.
 function lwc.remove_widows(head)
     local penalty = tex.outputpenalty
     local paragraphs = lwc.paragraphs
@@ -216,14 +227,14 @@ function lwc.remove_widows(head)
 
         If the paragraphs array is empty, then there is nothing that we can do.
       ]]
-    if  penalty >=  10000 or
-        penalty <= -10000 or
-        penalty ==      0 or
-        #paragraphs == 0 then
+    if  penalty    >=  10000 or
+        penalty    <= -10000 or
+        penalty    ==      0 or
+       #paragraphs ==      0 then
             return head
     end
 
-    local head_save = head -- Save the head to return at the end
+    local head_save = head -- Save the start of the `head` linked-list
 
     --[[
         Find the paragraph on the page with the minimum penalty.
@@ -234,14 +245,15 @@ function lwc.remove_widows(head)
     local paragraph_index = 1
     local minimum_demerits = paragraphs[paragraph_index].demerits
 
+    -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
         if paragraph.demerits < minimum_demerits and i <= #paragraphs - 1 then
-            node.flush_list(paragraphs[paragraph_index].node)
+            flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
             paragraph_index, minimum_demerits = i, paragraph.demerits
         elseif i > 1 then
             -- Not sure why `i > 1` is required?
-            node.flush_list(paragraph.node)
+            flush_list(paragraph.node)
             paragraph.node = nil
         end
     end
@@ -249,6 +261,7 @@ function lwc.remove_widows(head)
     local target_node = paragraphs[paragraph_index].node
     local clear_flag = false
 
+    -- Loop through all of the nodes on the page
     while head do
         -- Insert the start of the replacement paragraph
         if has_attribute(head, lwc.attribute, paragraph_index) then
@@ -269,6 +282,7 @@ function lwc.remove_widows(head)
             last(last_line).next = copy(tex.lists[lwc.contrib_head])
 
             last(head).prev.prev.next = nil
+            -- Move the last line to the next page
             tex.lists[lwc.contrib_head] = last_line
         end
 
@@ -285,6 +299,7 @@ function lwc.remove_widows(head)
 end
 
 
+-- Add all of the callbacks
 lwc.callbacks = {
     disable_box_warnings = lwc.register_callback({
         callback = "hpack_quality",
@@ -314,8 +329,8 @@ lwc.callbacks = {
     }),
 }
 
-local enabled = false
 
+local enabled = false
 function lwc.enable_callbacks()
     if not enabled then
         lwc.callbacks.remove_widows.enable()
@@ -333,6 +348,11 @@ function lwc.disable_callbacks()
     if enabled then
         lwc.callbacks.save_paragraphs.disable()
         lwc.callbacks.mark_paragraphs.disable()
+        --[[
+            We do \emph{not} disable `remove_widows` callback, since we still want
+            to expand any of the previously-saved paragraphs if we hit an orphan
+            or a widow.
+          ]]
 
         enabled = false
     else
