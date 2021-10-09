@@ -38,7 +38,7 @@ local min_col_width = tex.sp("25em")
 local maxdimen = 1073741823 -- \\maxdimen in sp
 
 --[[
-    This warning is raised in the following circumstances:
+    This error is raised in the following circumstances:
       - When the user manually loads the Lua module without loading Lua\TeX{}Base
       - When the package is used with an unsupported format
     Both of these are pretty unlikely, but it can't hurt to check.
@@ -135,8 +135,8 @@ function lwc.register_callback(t)
             with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
             and unfrozen. Because of this, we need to register some callbacks at the
             engine level. This is fragile though, because a future \ConTeXt{} update
-            may decide to register one of these functions, in which case \lwc/ will
-            crash with a cryptic error message.
+            may decide to register one of these functions, in which case 
+            \lwc/ will crash with a cryptic error message.
           ]]
         return {
             enable = function() callback.register(t.callback, t.func) end,
@@ -193,7 +193,7 @@ function lwc.save_paragraphs(head)
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
 
-    -- \LuaMetaTeX{} crashes if we return `true`, despite p. 175 of its manual.
+    -- \LuaMetaTeX{} crashes if we return `true`
     return head
 end
 
@@ -223,9 +223,8 @@ function lwc.remove_widows(head)
     local paragraphs = lwc.paragraphs
 
     --[[
-        We only need to process pages that have orphans or widows.
-
-        If the paragraphs array is empty, then there is nothing that we can do.
+        We only need to process pages that have orphans or widows. If `paragraphs`
+        is empty, then there is nothing that we can do.
       ]]
     if  penalty    >=  10000 or
         penalty    <= -10000 or

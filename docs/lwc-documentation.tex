@@ -167,7 +167,7 @@ Run \type{tlmgr install lua-widow-control} in a terminal, or install using the \
 Mik\TeX{} should automatically install the package when you include it in your document.
 
 \subsection{Manual}
-Currently, \LuaMetaTeX{} (\ConTeXt{} \acronym{MKXL}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX{}Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
+Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX{}Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
 \subsection{Steps}
 \startitemize[N]
@@ -235,9 +235,9 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are better than widows, so this is still an improvement.
 
-    \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. An ideal \q{stretchy} paragraph is long, has short words, and has a narrow text width.
+    \item Sometimes a \woo/ just cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. Long paragraphs with short words tend to be \q{stretchier} than short paragraphs with long words since these long paragraphs will have more interword glue. Narrow columns also stretch easier than wide columns since you need to expand a paragraph by less to make a new line.
 
-    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored.
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored. % I have no idea how to fix this. The LMTX manual has "\parfillleftskip" in the indices, but that's all that I can find about it.
 
     \item \Lwc/ will not expand the first paragraph of a document. This should never be an issue in any real-world documents.
 \stopitemize

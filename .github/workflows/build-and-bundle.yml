@@ -48,4 +48,4 @@ jobs:
 
             ---
 
-            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) archive that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
+            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) archive that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.pdf` is the compiled package documentation. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
