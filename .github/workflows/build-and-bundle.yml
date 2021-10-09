@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build Documentation
-        run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
+        run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'sed -i "s/splitoffbase/splitoffname/" /context/tex/texmf-modules/tex/context/third/filter/t-filter.mkxl; mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
 
       - name: Bundle the package
         run: |
