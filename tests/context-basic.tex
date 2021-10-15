@@ -20,13 +20,16 @@
 
 \usemodule[lua-widow-control]
 
-\define\pagebreakcommand{\page}
+\let\pagebreakcommand=\page
+\let\texcsname=\tex
 
 \def\lwcenable{\setuplwc[state=start]}
 \def\lwcdisable{\setuplwc[state=stop]}
+\define[1]\printlocation{\write16{===#1:\pagenumber===}}
 
 \showgrid
 
 \starttext
     \input generic-basic
+    \printlocation1
 \stoptext

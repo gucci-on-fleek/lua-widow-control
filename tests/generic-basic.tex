@@ -6,25 +6,27 @@
 \parskip=0pt % Remove stretch component
 
 \def\fillertext{
-    \input knuth
+    You are probably convinced by now that \TeX's line-breaking algorithm has plenty of bells and whistles, perhaps even too many. But there's one more feature, called \quotation{looseness}; some day you might find yourself needing it, when you are fine-tuning the pages of a book. If you set \texcsname{looseness=1}, \TeX\ will try to make the current paragraph one line longer than its optimum length, provided that there is a way to choose such breakpoints without exceeding the tolerance you have specified for the badnesses of individual lines. Similarly, if you set \texcsname{looseness=2}, \TeX\ will try to make the paragraph two lines longer; and \texcsname{looseness=-1} causes an attempt to make it shorter. The general idea is that \TeX\ first finds breakpoints as usual; then if the optimum breakpoints produce $n$~lines, and if the current \texcsname{looseness} is~$l$, \TeX\ will choose the final breakpoints so as to make the final number of lines as close as possible to $n+l$ without exceeding the current tolerance. Furthermore, the final breakpoints will have fewest total demerits. 
 
-    \input bryson
+    For example, you can set \texcsname{looseness=1} if you want to avoid a lonely \quotation{club line} or \quotation{widow line} on some page that does not have sufficiently flexible glue, or if you want the total number of lines in some two-column document to come out to be an even number. It's usually best to choose a paragraph that is already pretty \quotation{full,} i.e., one whose last line doesn't have much white space, since such paragraphs can generally be loosened without much harm. You might also want to insert a tie between the last two words of that paragraph, so that the loosened version will not end with only one \quotation{widow word} on the line; then, people will find it hard to detect the fact that you have tampered with the spacing. On the other hand, \TeX\ can take almost any sufficiently long paragraph and stretch it a bit, without substantial harm.
 
-    \input knuth
+    \TeX\ resets the looseness to zero at the same time as it resets \texcsname{hangindent}, \texcsname{hangafter}, and \texcsname{parshape}. 
 
-    \input bryson
+    If you set \texcsname{looseness=-1000}, will set the current paragraph in the minimum number of lines that can be achieved without violating the tolerance; and, given that number of lines, it will break them optimally. (However, nonzero looseness makes \TeX\ work harder, so this is not recommended if you don't want to pay for the extra computation. You can achieve almost the same result much more efficiently by setting \texcsname{linepenalty=100}, say.)
 
-    \input knuth
+    After line breaking is complete, \TeX\ appends the lines to the current vertical list that encloses the current paragraph, inserting interline glue as explained in Chapter~12; this interline glue will depend on the values of \texcsname{baselineskip}, \texcsname{lineskip}, and \texcsname{lineskiplimit} that are currently in force. \TeX\ will also insert penalties into the vertical list, just before each glob of interline glue, in order to help control page breaks that might have to be made later. For example, a special penalty will be assessed for breaking a page between the first two lines of a paragraph, or just before the last line, so that \quotation{club} or \quotation{widow} lines that are detached from the rest of a paragraph will not appear all alone on a page unless the alternative is worse.
+
+    \printlocation{0}This next paragraph is no longer from \emph{The \TeX{}book}; it is just here as\printlocation{1} a filler paragraph\printlocation{2} that is exactly 3~lines long. To do so, we just need two\printlocation{3} more sentences.\printlocation{4} That was the first second, and this is now the second.\printlocation{5}
 }
 
 \def\widoworphantests{
-    This is a short paragraph. It is exactly two lines long; just enough to make an orphan or a widow.
+    \noindent A lightly-edited excerpt from pages 103--104 of \emph{The \TeX{}book} discussing the use of \texcsname{looseness} to eliminate widows and orphans:
 
     \fillertext
 
     \pagebreakcommand
 
-    This is a short paragraph. It is exactly one line long.
+    \noindent A lightly-edited excerpt from pages 103--104 of \emph{The \TeX{}book}:
 
     \fillertext
 

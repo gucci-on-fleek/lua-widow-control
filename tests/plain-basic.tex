@@ -13,6 +13,10 @@
 \voffset=56pt
 
 \def\pagebreakcommand{\vfill\eject}
+\def\texcsname#1{{\tt\char`\\#1}}
+\def\emph#1{{\it#1}}
+\def\quotation#1{``#1''}
+\def\printlocation#1{\write16{===#1:\the\count0===}}
 
 \input generic-basic
 

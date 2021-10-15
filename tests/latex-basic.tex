@@ -9,7 +9,10 @@
 
 \usepackage{lua-widow-control}
 
-\newcommand{\pagebreakcommand}{\clearpage}
+\let\pagebreakcommand=\clearpage
+\newcommand{\texcsname}[1]{\texttt{\textbackslash#1}}
+\renewcommand{\quotation}[1]{``#1''}
+\newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
 \begin{document}
     \input generic-basic
