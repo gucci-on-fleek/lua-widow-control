@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0+
 # SPDX-FileCopyrightText: 2021 gucci-on-fleek
 
-name: Build and Bundle
+name: Build, Test, and Bundle
 
 on:
   - push
@@ -17,8 +17,41 @@ jobs:
       - name: Checkout the Repository
         uses: actions/checkout@v2
 
+      - name: Pull Docker Images
+        run: >
+          docker pull contextgarden/context:lmtx &
+          docker pull texlive/texlive:latest
+
+      - name: Test the package under TeXLive
+        run: >
+          docker run
+          -v "$GITHUB_WORKSPACE":/mnt
+          -e TEXMFHOME=/mnt/texmf
+          texlive/texlive:latest
+          /bin/sh -c '
+            mktexlsr &&
+            cd /mnt/tests/ &&
+            lualatex ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::LaTeX Test Failed!"; exit 1; } &&
+            luatex ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::Plain TeX Test Failed!"; exit 1; }
+          '
+
       - name: Build Documentation
-        run: docker run -v "$GITHUB_WORKSPACE":/mnt -e TEXMFHOME=/mnt/texmf contextgarden/context:lmtx /bin/sh -c 'sed -i "s/splitoffbase/splitoffname/" /context/tex/texmf-modules/tex/context/third/filter/t-filter.mkxl; mtxrun --generate; cd /mnt/docs; context lwc-documentation.tex'
+        run: >
+          docker run 
+          -v "$GITHUB_WORKSPACE":/mnt
+          -e TEXMFHOME=/mnt/texmf
+          contextgarden/context:lmtx
+          /bin/sh -c '
+            sed -i "s/splitoffbase/splitoffname/" /context/tex/texmf-modules/tex/context/third/filter/t-filter.mkxl;
+            mtxrun --generate;
+            cd /mnt/tests/ &&
+            context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::ConTeXt Test Failed!"; exit 1; } &&
+            cd /mnt/docs;
+            context lwc-documentation.tex
+          '
 
       - name: Bundle the package
         run: |
