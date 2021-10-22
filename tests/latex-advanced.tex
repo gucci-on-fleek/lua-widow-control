@@ -15,7 +15,10 @@
 
 \usepackage{amsmath, etoolbox, pgffor, blindtext, kantlipsum, multicol, longtable}
 
-\newcommand{\pagebreakcommand}{\clearpage}
+\let\pagebreakcommand=\clearpage
+\newcommand{\texcsname}[1]{\texttt{\textbackslash#1}}
+\renewcommand{\quotation}[1]{``#1''}
+\newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
 \allowdisplaybreaks
 \parskip=0pt
@@ -57,6 +60,10 @@
     \begin{align*}
         \aligncontents
     \end{align*}
+    \clearpage
+
+    \tableofcontents
+
     \clearpage
 
     \foreach \x in {4, ..., 8} {
@@ -114,6 +121,43 @@
     
     \clearpage
 
-    \kant[1-50]
+    \part[PART!]{Part}
+    \kant[1-5]
+
+    \section[SECTION!]{Section}
+    \kant[6-10]
+
+    \subsection[SUBSECTION!]{Subsection}
+    \kant[11-15]
+
+    \subsubsection[SUBSUBSECTION!]{Subsubsection}
+    \kant[16-20]
+
+    \paragraph[PARAGRAPH!]{Paragraph}
+    \kant[21-25]
+    
+    \subparagraph[SUBPARAGRAPH!]{Subparagraph}
+    \kant[21-25]
+
+    \part[A]{Part}
+    \kant[26-30]
+
+    \section[B]{Section}
+    \kant[31-35]
+
+    \subsection[C]{Subsection}
+    \kant[36-40]
+
+    \subsubsection[D]{Subsubsection}
+    \kant[41-45]
+
+    \paragraph[E]{Paragraph}
+    \kant[46-50]
+    
+    \subparagraph[F]{Subparagraph}
+    \kant[51-55]
+
+    The End.
+    
     
 \end{document}
