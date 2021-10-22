@@ -47,9 +47,11 @@ jobs:
           /bin/sh -c '
             mktexlsr &&
             cd /mnt/tests/ &&
-            lualatex ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
-            { echo "::error::LaTeX Test Failed!"; exit 1; } &&
-            luatex ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            lualatex --halt-on-error ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::LaTeX Basic Test Failed!"; exit 1; } &&
+            lualatex --halt-on-error ./latex-advanced.tex ||
+            { echo "::error::LaTeX Advanced Test Failed!"; exit 1; } &&
+            luatex --halt-on-error ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
             { echo "::error::Plain TeX Test Failed!"; exit 1; }
           '
 
