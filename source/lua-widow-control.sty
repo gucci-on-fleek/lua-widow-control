@@ -24,10 +24,42 @@
 % lengthened paragraphs to not have terrible spacing. 
 \RequirePackage[final]{microtype}
 
+% Define \TeX{} wrappers for Lua functions
 \newcommand{\lwcenable}{\directlua{lwc.enable_callbacks()}}
 \newcommand{\lwcdisable}{\directlua{lwc.disable_callbacks()}}
+\newcommand{\iflwc}{\directlua{lwc.if_lwc_enabled()}}
 
 % Enable \lwc/ by default when the package is loaded.
 \lwcenable
+
+% Expansion of some parts of the document, such as section headings, is quite
+% undesirable, so we'll disable \lwc/ for certain commands.
+\RequirePackage{etoolbox}
+
+\newcommand{\lwc@patch@warning}[1]{\PackageWarning{lua-widow-control}{%
+    Patching the \protect#1 command failed%
+}}
+
+% We should only reenable \lwc/ at the end if it was already enabled.
+\newif\iflwc@should@reenable
+
+\newcommand{\lwc@patch@pre}{\iflwc%
+    \lwc@should@reenabletrue%
+    \lwcdisable%
+\fi}
+
+\newcommand{\lwc@patch@post}{\iflwc@should@reenable%
+    \lwcenable%
+\fi}
+
+\newcommand{\lwcdisablecmd}[1]{%
+    \ifdefined#1
+        \pretocmd{#1}{\lwc@patch@pre}{}{\lwc@patch@warning{#1}}%
+        \apptocmd{#1}{\lwc@patch@post}{}{\lwc@patch@warning{#1}}%
+    \fi
+}
+
+\lwcdisablecmd{\@sect} % Sectioning
+
 
 \endinput

@@ -145,8 +145,8 @@ setbounds currentpicture to boundingbox OverlayBox;
 \stopsetups
 
 \setuphead[section][
-    before={\setuplwc[state=stop]\blank[big, preference]},
-    after={\blank[medium, samepage]\setuplwc[state=start]},
+    before={\blank[big, preference]},
+    after={\blank[medium, samepage]},
     textstyle=\setups{style:section},
     number=no,
 ]

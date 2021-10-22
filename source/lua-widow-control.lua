@@ -359,5 +359,13 @@ function lwc.disable_callbacks()
     end
 end
 
+function lwc.if_lwc_enabled()
+    if enabled then
+        tex.sprint("\\iftrue")
+    else
+        tex.sprint("\\iffalse")
+    end
+end
+
 
 return lwc

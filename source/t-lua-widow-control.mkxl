@@ -28,6 +28,8 @@
     }
 \to\everysetuplwc
 
+\define\iflwc{\ctxlua{lwc.if_lwc_enabled()}}
+
 \ctxloadluafile{lua-widow-control}
 
 \setuplwc[emergencystretch=3em, \c!state=\v!start]
@@ -49,6 +51,23 @@
 % lengthened paragraphs to not have terrible spacing. 
 \definefontfeature[default][default][expansion=quality]
 \setupalign[hz]
+
+% Expansion of some parts of the document, such as section headings, is quite
+% undesirable, so we'll disable \lwc/ for certain commands.
+% We should only reenable \lwc/ at the end if it was already enabled.
+\newif\iflwc@should@reenable
+
+\define\lwc@patch@pre{\iflwc%
+    \lwc@should@reenabletrue%
+    \setuplwc[state=stop]%
+\fi}
+
+\define\lwc@patch@post{\iflwc@should@reenable%
+    \setuplwc[state=start]%
+\fi}
+
+\prependtoks\lwc@patch@pre\to\everybeforesectionheadhandle % Sectioning
+\prependtoks\lwc@patch@post\to\everyaftersectionheadhandle
 
 \protect
 \stopmodule
