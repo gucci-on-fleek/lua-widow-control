@@ -1,0 +1,56 @@
+%!TeX program = luatex
+
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2021 gucci-on-fleek
+\input lua-widow-control
+
+% Have the same amount of text per column as text per page in the other tests
+\voffset=-50pt
+\vsize=696pt
+
+\def\pagebreakcommand{\vfill\eject}
+\def\texcsname#1{{\tt\char`\\#1}}
+\def\emph#1{{\it#1}}
+\def\quotation#1{``#1''}
+\def\printlocation#1{}
+
+% This following section copied from https://www.ctan.org/pkg/twocolumns,
+% which was itself copied from chapter 23 of the TeXbook.
+\hoffset=-.5in
+\newdimen\fullhsize
+\fullhsize=7.5in \hsize=3.6in
+\def\fullline{\hbox to \fullhsize}
+%
+\def\makeheadline{%
+ \vbox to 0pt{\vskip-22.5pt
+  \fullline{\vbox to8.5pt{}\the\headline}\vss}
+ \nointerlineskip
+}
+%
+\def\makefootline{%
+ \baselineskip=2\normalbaselineskip
+ \fullline{\the\footline}
+}
+%
+\let\lr=L \newbox\leftcolumn
+\output={\if L\lr
+    \global\setbox\leftcolumn=\columnbox \global\let\lr=R
+  \else \doubleformat \global\let\lr=L\fi
+  \ifnum\outputpenalty>-20000 \else\dosupereject\fi}
+\def\doubleformat{\shipout\vbox{\makeheadline
+    \fullline{\box\leftcolumn\hfil\vrule\hfil\columnbox}
+    \makefootline}
+  \advancepageno}
+\def\columnbox{\leftline{\pagebody}}
+%
+\def\endtwocol{%
+ \vfill\supereject
+ \if R\lr \null\vfill\eject\fi
+}
+% End "twocolumns" excerpt.
+
+\input generic-basic
+
+\bye

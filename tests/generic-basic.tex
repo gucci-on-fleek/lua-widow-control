@@ -16,11 +16,11 @@
 
     After line breaking is complete, \TeX\ appends the lines to the current vertical list that encloses the current paragraph, inserting interline glue as explained in Chapter~12; this interline glue will depend on the values of \texcsname{baselineskip}, \texcsname{lineskip}, and \texcsname{lineskiplimit} that are currently in force. \TeX\ will also insert penalties into the vertical list, just before each glob of interline glue, in order to help control page breaks that might have to be made later. For example, a special penalty will be assessed for breaking a page between the first two lines of a paragraph, or just before the last line, so that \quotation{club} or \quotation{widow} lines that are detached from the rest of a paragraph will not appear all alone on a page unless the alternative is worse.
 
-    \printlocation{0}This next paragraph is no longer from \emph{The \TeX{}book}; it is just here as\printlocation{1} a filler paragraph\printlocation{2} that is exactly 3~lines long. To do so, we just need two\printlocation{3} more sentences. That\printlocation{4} was the first second, and this is now the second.\printlocation{5}
+    \printlocation{0}This next paragraph is no longer from \emph{The \TeX{}book}; it is just here as\printlocation{1} a filler paragraph\printlocation{2} that is exactly 2~lines long. To do so, we just need this\printlocation{3} last sentence\printlocation{4} right here.\printlocation{5}
 }
 
 \def\widoworphantests{
-    \noindent A lightly-edited excerpt from pages 103--104 of \emph{The \TeX{}book} discussing the use of \texcsname{looseness} to eliminate widows and orphans:
+    \noindent A lightly-edited excerpt from pages 103--104 of \emph{The \TeX{}book} discussing using \texcsname{looseness} to remove widows and orphans:
 
     \fillertext
 
