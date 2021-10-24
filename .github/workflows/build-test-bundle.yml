@@ -56,7 +56,7 @@ jobs:
             luatex --halt-on-error ./plain-columns.tex ||
             { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
             lualatex --halt-on-error ./latex-columns.tex ||
-            { echo "::error::LaTeX Columns Test Failed!"; exit 1; } &&
+            { echo "::error::LaTeX Columns Test Failed!"; exit 1; }
           '
 
       - name: Bundle the package
@@ -68,13 +68,15 @@ jobs:
           find -L "$GITHUB_WORKSPACE"/texmf -type f -exec cp '{}' lua-widow-control \;
           cp "$GITHUB_WORKSPACE"/lua-widow-control.tds.zip .
           zip -r "$GITHUB_WORKSPACE"/lua-widow-control.ctan.zip ./*
+          cd "$GITHUB_WORKSPACE"/tests
+          zip test-results.zip *.pdf *.log
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
         if: "! ${{github.base_ref}}" # not a PR
         with:
           prerelease: true
-          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf
+          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf, ./tests/test-results.zip
           tag: release-${{github.sha}}
           commit: ${{github.sha}}
           name: Prerelease ${{github.sha}}
@@ -87,4 +89,4 @@ jobs:
 
             ---
 
-            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) archive that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.pdf` is the compiled package documentation. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me).
+            `lua-widow-control.tds.zip` is a [TDS](https://texdoc.org/serve/tds/0) archive that is designed to be unpacked directly in your `TEXMF/` directory tree. `lua-widow-control.pdf` is the compiled package documentation. `lua-widow-control.ctan.zip` is an archive designed to be uploaded to [CTAN](https://www.ctan.org/help/upload-pkg) by the author (me). `test-results.zip` is a zip archive containing the results of the automated tests.
