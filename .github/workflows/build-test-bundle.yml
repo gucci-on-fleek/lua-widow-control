@@ -52,9 +52,11 @@ jobs:
             lualatex --halt-on-error ./latex-advanced.tex ||
             { echo "::error::LaTeX Advanced Test Failed!"; exit 1; } &&
             luatex --halt-on-error ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
-            { echo "::error::Plain TeX Basic Test Failed!"; exit 1; }
+            { echo "::error::Plain TeX Basic Test Failed!"; exit 1; } &&
             luatex --halt-on-error ./plain-columns.tex ||
-            { echo "::error::Plain TeX Columns Test Failed!"; exit 1; }
+            { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
+            lualatex --halt-on-error ./latex-columns.tex ||
+            { echo "::error::LaTeX Columns Test Failed!"; exit 1; } &&
           '
 
       - name: Bundle the package
