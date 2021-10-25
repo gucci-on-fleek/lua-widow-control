@@ -13,7 +13,8 @@
 \usebtxdataset[lwc-documentation.bib]
 
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
-\useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest][][latest release]
+\useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest]
+\useURL[ctan][https://www.ctan.org/pkg/lua-widow-control]
 
 % Abbreviations
 \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
@@ -37,14 +38,14 @@
     title=lua-widow-control,
     author=gucci-on-fleek,
     version=1.0.0, %%version
+    github=https://github.com/gucci-on-fleek/lua-widow-control,
+    ctan=https://www.ctan.org/pkg/lua-widow-control,
 ]
 
 \Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt{} package that removes \waos/ without any user intervention. Using the power of \LuaTeX{}, it does so \emph{without} stretching any glue or shortening any pages. Instead, \lwc/ automatically lengthens a paragraph on a page where a \woo/ would otherwise occur. 
 
 \section{Quick Start}
-Install \lwc/ by unzipping the \from[download] in your \type{TEXMFLOCAL} directory. Rebuild the filename database. Place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
-
-For a more detailed explanation of the steps involved and a description of some of the finer points involved with using \lwc/, keep reading.
+Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} users just need to place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document.
 
 \subject{Contents}
 \placecontent[criterium=all]
@@ -159,23 +160,24 @@ To do so, \lwc/ lengthened the second paragraph by one line. If you look closely
 \Lwc/ automatically finds the \q{best} paragraph to stretch, so the increase in interword spaces should almost always be minimal.
 
 \section{Installation}
+Most up-to-date \TeX~Live and Mik\TeX{} systems should already have \lwc/ installed. However, a manual installation may occasionally be required. 
 
 \subsection{\TeX~Live}
 Run \type{tlmgr install lua-widow-control} in a terminal, or install using the \q{\TeX~Live Manager} \acronym{GUI}.
 
 \subsection{Mik\TeX}
-Mik\TeX{} should automatically install the package when you include it in your document.
+Run \type{mpm --install=lua-widow-control} in a terminal, or install using the \q{Mik\TeX{} Maintenance} \acronym{GUI}.
 
 \subsection{Manual}
-Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX{}Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
+Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX~Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
 \subsection{Steps}
 \startitemize[N]
-    \item Download \type{lua-widow-control.tds.zip} from the \from[download] on GitHub.
+    \item Download \type{lua-widow-control.tds.zip} from \goto{\acronym{CTAN}}[url(ctan)] or \goto{GitHub}[url(download)].
     \item Unzip the release into your \type{TEXMFLOCAL/} directory. (You can find its location by running \type{kpsewhich --var-value TEXMFHOME} in a terminal)
     \item Refresh the filename database: \startitemize[1]
         \item \ConTeXt: \type{mtxrun --generate}
-        \item \TeX{}Live: \type{mktexlsr}
+        \item \TeX~Live: \type{mktexlsr}
         \item Mik\TeX: \type{initexmf --update-fndb}
     \stopitemize
 \stopitemize
@@ -270,6 +272,8 @@ If you have any issues with \lwc/, please create an issue at the \goto{project's
 \section{License}
 
 \Lwc/ is licensed under the \goto{\emph{Mozilla Public License}, version 2.0}[url(https://www.mozilla.org/en-US/MPL/2.0/)] or greater. The documentation is licensed under \goto{\acronym{CC-BY-SA}, version 4.0}[url(https://creativecommons.org/licenses/by-sa/4.0/legalcode)] or greater as well as the \acronym{MPL}.
+
+Please note that a compiled document is absolutely \bold{not} considered to be an \q{Executable Form} as defined by the \acronym{MPL}. The use of \lwc/ in a document does not place \bold{any} obligations on the document's author or distributors. The \acronym{MPL} and \acronym{CC-BY-SA} licenses \bold{only} apply to you if you distribute the \lwc/ source code or documentation. 
 
 \section{References}
 

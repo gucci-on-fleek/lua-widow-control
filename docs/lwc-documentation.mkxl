@@ -190,7 +190,31 @@ setbounds currentpicture to boundingbox OverlayBox;
     title={},
     author={},
     version={},
+    ctan={},
+    github={},
 ]
+
+\startluacode
+local function strip_url(str)
+    local url_table = url.hashed(str)
+    url_table.fragment = nil
+    url_table.scheme = nil
+    url_table.authority = url_table.authority:gsub("^www%.", "")
+    tex.sprint(-2, url.decode(url.construct(url_table)))
+end
+
+interfaces.implement {
+    name = "strip_url",
+    actions = strip_url,
+    arguments = "1 string"
+}
+\stopluacode
+
+\unprotect
+\define[1]\strippedurl{%
+    \goto{\tt\hyphenatedurl{\clf_strip_url{#1}}}[url(#1)]
+}
+\protect
 
 \startsetups[titleblock]
     \startalignment [middle]
@@ -212,7 +236,8 @@ setbounds currentpicture to boundingbox OverlayBox;
         \blackrule[depth=-0.25\baselineskip, height=\dimexpr0.25\baselineskip + 0.4pt, width=8em]
         \par
         
-        \from[projecturl]
+        \strippedurl{\documentvariable{ctan}}
+        \strippedurl{\documentvariable{github}}
         \blank[big]
 
         \noindentation
@@ -277,15 +302,8 @@ setbounds currentpicture to boundingbox OverlayBox;
 
 \unprotect
 \starttexdefinition mutable protected btx:apa:url
-    \goto{
-        \hyphenatedurl{
-            \clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
+    \strippedurl{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
         }
-    }[
-        url(
-            \clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
-        )
-    ]
 \stoptexdefinition
 \protect
 
