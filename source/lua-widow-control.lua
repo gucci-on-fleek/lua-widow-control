@@ -2,7 +2,7 @@
     lua-widow-control
     https://github.com/gucci-on-fleek/lua-widow-control
     SPDX-License-Identifier: MPL-2.0+
-    SPDX-FileCopyrightText: 2021 gucci-on-fleek
+    SPDX-FileCopyrightText: 2021 Max Chernoff
   ]]
 
 lwc = {}
