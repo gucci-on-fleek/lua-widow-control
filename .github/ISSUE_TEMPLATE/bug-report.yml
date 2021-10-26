@@ -1,0 +1,110 @@
+name: Bug Report
+description: Report an issue with lua-widow-control
+assignees:
+  - gucci-on-fleek
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If this is a feature request, please open a "blank" issue.
+
+        If this is a general question, please [start a discussion](https://github.com/gucci-on-fleek/lua-widow-control/discussions/new).
+
+        Otherwise, please provide as much information as possible, and I'll hopefully be able to solve your issue.
+  - type: textarea
+    attributes:
+      label: Issue
+      description: Please _briefly_ describe the issue here.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: |
+        What did you expect to happen? For example:
+        - I expected that lua-widow-control wouldn't crash my TeX program
+        - I expected that lua-widow-control would remove a specific widow/orphan
+        - I expected that lua-widow-control wouldn't delete an entire line from my document
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction
+      description: >
+        Please include an [MWE](https://tex.meta.stackexchange.com/q/228). It should be
+        as small as possible, hopefully no more than 15-20 lines. However, I realize
+        that lua-widow-control can sometimes depend on a very specific paragraph being
+        in very specific positions, so an example may _sometimes_ need to be a little
+        longer, but only if absolutely necessary.
+      render: tex
+      placeholder: |
+        \documentclass{article}
+        \usepackage{lua-widow-control}
+
+        \begin{document}
+            Hello, world!
+        \end{document}
+  - type: textarea
+    attributes:
+      label: Log File
+      description: |
+        Please paste your **complete** log file here.
+
+        _(If you know *exactly* what you are doing, then you can include only the relevant portions, but it's best to be safe and include it all otherwise.)_
+      render: text
+      placeholder: |
+        This is LuaTeX, Version 1.11.2 (TeX Live 2020/W32TeX)  (format=lualatex 2021.6.26)
+        LaTeX2e <2018-12-01>
+        [...]
+        (c:/Users/Max/Stuff/Docker/lua-widow-control/texmf/tex/lualatex/lua-widow-control/lua-widow-control.sty
+        Package: lua-widow-control 2021/10/09 v1.0.0)
+        [...]
+        Here is how much of LuaTeX's memory you used:
+        [...]
+  - type: dropdown
+    attributes:
+      label: Format
+      multiple: true
+      options:
+        - LaTeX
+        - Plain TeX
+        - ConTeXt
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Distribution
+      multiple: true
+      options:
+        - TeX Live
+        - MikTeX
+        - ConTeXt
+  - type: input
+    attributes:
+      label: Distribution Version
+      description: |
+        The version of your TeX distribution.
+        - TeX Live: 2020, 2021, etc.
+        - MikTeX: 21.3, 21.6, etc.
+        - ConTeXt: 2021.09.26, 2021.10.25, etc.
+  - type: input
+    attributes:
+      label: Lua-widow-control Version
+      description: >
+        This should be found in your `.log` file or at the top of one of 
+        lua-widow-control's source files.
+  - type: textarea
+    attributes:
+      label: Other Relevant Packages and Versions
+      description: >
+        This is only needed if you suspect an incompatibility between lua-widow-control
+        and another package.
+  - type: textarea
+    attributes:
+      label: Other
+      description: Add any other relevant information here.
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to fill out this bug report!
