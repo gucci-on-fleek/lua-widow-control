@@ -303,7 +303,7 @@ interfaces.implement {
 \setupbtxlist[apa][
     alternative=a,
     before=,
-    after=,
+    after={\blank[quarterline]},
     style=\lining,
     margin=0pt,
     width=1.5em,

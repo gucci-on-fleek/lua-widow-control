@@ -222,7 +222,7 @@ Since \TeX{} implements column breaking and page breaking through the same inter
 \startTABLE
 \NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
 \NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch = 3em} \NC\NR
+\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch=3em} \NC\NR
 \NC Selectively Disable \NC \inlineTEX{\lwcdisablecmd{\cmd}}  \NC\NR
 \stopTABLE
 
@@ -269,7 +269,7 @@ Under \ConTeXt{}, you need to use a different method to selectively disable \lwc
 
     \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored. % I have no idea how to fix this. The LMTX manual has "\parfillleftskip" in the indices, but that's all that I can find about it.
 
-    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the linked list for the replacement paragraph loops back on itself, meaning that there is neither a beginning nor end to the paragraph. Because of this, there is no way to splice the paragraph into the page, therefore \lwc/'s only option is to stop processing the page, without removing the \woo/.
+    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the replacement paragraph node list loops back on itself. Since there is no \q{end} to the paragraph, \lwc/ cannot splice the paragraph into the page. The only reasonable option in this scenario is to stop processing the page, without removing the \woo/.
 \stopitemize
 
 \section{The Algorithm}
@@ -293,7 +293,7 @@ Since the page is now 1~line longer than it was before, we pull the last line of
 
 \section{Contributions}
 
-If you have any issues with \lwc/, please create an issue at the \goto{project's GitHub page}[url(projecturl)]. Or, if you think that you can solve any of the \about[sec:issues] or add any new features, \goto{submit a \acronym{PR}}[url(projecturl)]. Thanks!
+If you have any issues with \lwc/, please create an issue at the \goto{project's GitHub page}[url(projecturl)]. Or, if you think that you can solve any of the \about[sec:issues] or add any new features, \goto{submit a \acronym{PR}}[url(projecturl)]. \Lwc/ is still a fairly young project, so any assistance will be greatly appreciated. Thanks!
 
 \section{License}
 
