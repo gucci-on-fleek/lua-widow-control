@@ -34,6 +34,7 @@ local glue_id = node.id("glue")
 local set_attribute = node.set_attribute
 local has_attribute = node.has_attribute
 local flush_list = node.flush_list or node.flushlist
+local free = node.free
 local min_col_width = tex.sp("25em")
 local maxdimen = 1073741823 -- \\maxdimen in sp
 
@@ -77,7 +78,11 @@ elseif lwc.plain or lwc.latex then
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
 else -- uh oh
-    error("Unsupported format. Please use (Lua)LaTeX, Plain (Lua)TeX, or ConTeXt (MKXL/LMTX)")
+    error [[
+        Unsupported format.
+
+        Please use (Lua)LaTeX, Plain (Lua)TeX, or ConTeXt (MKXL/LMTX)
+    ]]
 end
 
 lwc.paragraphs = {} -- List to hold the alternate paragraph versions
@@ -163,7 +168,7 @@ function lwc.save_paragraphs(head)
     local parfillskip = last(new_head)
     if parfillskip.id == glue_id and tex.hsize > min_col_width then
             parfillskip.stretch_order = 0
-            parfillskip.stretch = 0.9 * tex.hsize -- Last line must be at least 10% long
+            parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
     end
 
     -- Break the paragraph 1 line longer than natural
@@ -206,6 +211,31 @@ end
 function lwc.mark_paragraphs(head)
     set_attribute(head, lwc.attribute, #lwc.paragraphs)
     set_attribute(last(head), lwc.attribute, -1 * #lwc.paragraphs)
+
+    return head
+end
+
+
+--- A "safe" version of the last/slide function.
+---
+--- Sometimes the node list can form a loop. Since there is no last element
+--- of a looped linked-list, the `last()` function will never terminate. This
+--- function provides a "safe" version of the `last()` function that returns
+--- `nil` if the list is circular.
+local function safe_last(head)
+    local ids = {}
+
+    while head.next do
+        local id = node.is_node(head) -- Returns the internal node id
+
+        if ids[id] then
+            lwc.warning("Circular node list detected!")
+            return nil
+        end
+
+        ids[id] = true
+        head = head.next
+    end
 
     return head
 end
@@ -264,7 +294,16 @@ function lwc.remove_widows(head)
     while head do
         -- Insert the start of the replacement paragraph
         if has_attribute(head, lwc.attribute, paragraph_index) then
+            local current = head
             head.prev.next = target_node
+
+            -- Abort if we've created a loop
+            if not safe_last(target_node) then
+                head.prev.next = current
+                lwc.warning("Widow/Orphan NOT removed!")
+                break
+            end
+
             clear_flag = true
         end
 
@@ -286,7 +325,7 @@ function lwc.remove_widows(head)
         end
 
         if clear_flag then
-            head = node.free(head)
+            head = free(head)
         else
             head = head.next
         end
