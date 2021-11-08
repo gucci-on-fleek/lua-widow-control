@@ -7,7 +7,7 @@
 lua-widow-control
 =================
 
-Lua-widow-control is a Plain TeX/LaTeX/ConTeXt package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages. Instead, lua-widow-control automatically lengthens a paragraph on a page where a widow or orphan would otherwise occur. 
+Lua-widow-control is a Plain TeX/LaTeX/ConTeXt package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages or columns. Instead, lua-widow-control automatically lengthens a paragraph on a page or column where a widow or orphan would otherwise occur. 
 
 Please see the [**full documentation**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lua-widow-control.pdf) for more.
 
@@ -25,13 +25,13 @@ If you are using ConTeXt or want to manually install the package, you may downlo
 |[ConTeXt Garden](https://modules.contextgarden.net/cgi-bin/module.cgi/action=view/id=127)||
 
 ### Usage
-To load the package, add one of the following lines to your preamble:
+To load the package, add the relevant line to your preamble:
 
-|Macro Package|Code                          |
-|-------------|------------------------------|
-|LaTeX        |\usepackage{lua-widow-control}|
-|ConTeXt      |\usemodule[lua-widow-control] |
-|Plain TeX    |\input lua-widow-control      |
+|Macro Package|Code                            |
+|-------------|--------------------------------|
+|LaTeX        |`\usepackage{lua-widow-control}`|
+|ConTeXt      |`\usemodule[lua-widow-control]` |
+|Plain TeX    |`\input lua-widow-control`      |
 
 
 Licence

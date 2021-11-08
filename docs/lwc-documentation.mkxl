@@ -4,6 +4,7 @@
 % SPDX-FileCopyrightText: 2021 Max Chernoff
 
 \startenvironment[lwc-documentation]
+\unprotect
 
 \mainlanguage[en]
 
@@ -85,6 +86,8 @@ fonts.handlers.otf.addfeature {
 %%%%%%%%%%%%%%%%%%%%%%
 
 \setuppagenumbering[location=footer, style=\ss\lining]
+\let\old@tex=\tex
+\def\tex#1{\expandafter\old@tex\normalexpanded{{#1}}} % Allow expansion in the \tex macro (for \allowbreak)
 
 % Acronym styling
 \definecharacterkerning[acronymkerning][factor=0.05]
@@ -103,7 +106,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 \defineoverlay[warning][\useMPgraphic{warning}]
 
 \define[1]\warning{
-    \blank[big]
+    \blank[line]
     \midaligned{\framed[
         frame=off,
         background=warning,
@@ -115,11 +118,17 @@ setbounds currentpicture to boundingbox OverlayBox;
         
         #1
     }}
-    \blank[big]
+    \blank[line]
 }
 
-\setupitemize[each][packed][style=\lining]
-\setupcaptions[headstyle=\ssbf\lining, style=\ss]
+\setupitemize[each][
+    style=\lining,
+    inbetween={\blank[quarterline]},
+]
+\setupcaptions[
+    headstyle=\ssbf\lining,
+    style=\ss,
+]
 
 \setupdelimitedtext[blockquote][
     style=\ss,
@@ -140,7 +149,7 @@ setbounds currentpicture to boundingbox OverlayBox;
     \word
     \bfb
     \feature[+][smallcaps]
-    \spaceskip=0.4em
+    \interwordspace=0.4em
     \veryraggedcenter
 \stopsetups
 
@@ -210,11 +219,9 @@ interfaces.implement {
 }
 \stopluacode
 
-\unprotect
 \define[1]\strippedurl{%
     \goto{\tt\hyphenatedurl{\clf_strip_url{#1}}}[url(#1)]
 }
-\protect
 
 \startsetups[titleblock]
     \startalignment [middle]
@@ -302,11 +309,10 @@ interfaces.implement {
     width=1.5em,
 ]
 
-\unprotect
 \starttexdefinition mutable protected btx:apa:url
     \strippedurl{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
         }
 \stoptexdefinition
-\protect
 
+\protect
 \stopenvironment
