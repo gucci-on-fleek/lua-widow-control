@@ -36,6 +36,7 @@ jobs:
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::ConTeXt Test Failed!"; exit 1; } &&
             cd /mnt/docs;
+            mkdir ./tmp/ &&
             context lwc-documentation.tex
           '
 
