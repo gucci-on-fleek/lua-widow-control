@@ -40,3 +40,6 @@ Licence
 Lua-widow-control is licensed under the [_Mozilla Public License_, version 2.0](https://www.mozilla.org/en-US/MPL/2.0/) or greater. The documentation is additionally licensed under [CC-BY-SA, version 4.0](https://creativecommons.org/licenses/by-sa/4.0/legalcode) or greater.
 
 Please note that a compiled document is absolutely **not** considered to be an "Executable Form" as defined by the MPL. The use of lua-widow-control in a document does not place **any** obligations on the document's author or distributors. The MPL and CC-BY-SA licenses **only** apply to you if you distribute the lua-widow-control source code or documentation. 
+
+---
+_v1.1.0 (2021-11-08)_ <!--%%version %%date-->
