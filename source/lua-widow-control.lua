@@ -64,8 +64,8 @@ if lwc.context then
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
-        date = "2021/11/08", --%%date
-        version = "1.1.0", --%%version
+        date = "2021/11/26", --%%date
+        version = "1.1.1", --%%version
         description = [[
 
     This module provides a LuaTeX-based solution to prevent
