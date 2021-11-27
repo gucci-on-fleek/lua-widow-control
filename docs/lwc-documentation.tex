@@ -44,12 +44,11 @@
 
 \Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt{} package that removes \waos/ without any user intervention. Using the power of \LuaTeX{}, it does so \emph{without} stretching any glue or shortening any pages or columns. Instead, \lwc/ automatically lengthens a paragraph on a page or column where a \woo/ would otherwise occur. 
 
-\subject{Contents}
-\placecontent[criterium=all]
-\page
-
 \section{Quick Start}
 Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} users just need to place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document. For more details, see the \goto{Installation and Usage sections}[sec:install].
+
+\subject{Contents}
+\placecontent[criterium=all]
 
 \section{Motivation}
 \TeX{} provides top-notch typesetting: even 40 years after its first release, no other program produces higher quality mathematical typesetting, and its paragraph-breaking algorithm is still state-of-the-art. However, its page breaking is not quite as sophisticated as its paragraph breaking and thus suffers from some minor issues.
@@ -314,25 +313,30 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 \section[sec:implementation]{Implementation}
 
 \setupbodyfont[10pt]
+\setuphead[subsection][
+    alternative=normal,
+    style=\ssita,
+    before={\blank[big, preference]},
+]
 
-\filename{lua-widow-control.lua}
+\subsection{lua-widow-control.lua}
 
 \typeLUAfile{../source/lua-widow-control.lua}
 
-\filename{lua-widow-control.tex}
+\subsection{lua-widow-control.tex}
 
 \typeTEXfile{../source/lua-widow-control.tex}
 
-\filename{lua-widow-control.sty}
+\subsection{lua-widow-control.sty}
 
 \typeTEXfile{../source/lua-widow-control.sty}
 
 \def\module{\tex{module}}
-\filename{t-lua-widow-control.mkxl}
+\subsection{t-lua-widow-control.mkxl}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}
 
-\filename{Demo from \in{Table}[tab:demo]}
+\subsection{Demo from \in{Table}[tab:demo]}
 
 \typeTEXfile{lwc-documentation-demo-text.tmp}
 
