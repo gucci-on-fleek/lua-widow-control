@@ -32,6 +32,7 @@ fonts.handlers.otf.addfeature {
 \setupalign[hz, hanging]
 
 \definefontfeature[lining][onum=no,lnum=yes]
+\definefontfeature[allsmall][c2sc=yes, smcp=yes]
 \define\lining{\feature[+][lining]}
 
 \starttypescript[lwc-fonts]
@@ -78,7 +79,7 @@ fonts.handlers.otf.addfeature {
 \setupstructure[state=start, method=auto]
 
 % Bookmarks
-\placebookmarks[section, subsection, filename][section, subsection, filename][number=no]
+\placebookmarks[section, subsection][section, subsection][number=no]
 \setupinteractionscreen[option=bookmark]
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -91,7 +92,7 @@ fonts.handlers.otf.addfeature {
 
 % Acronym styling
 \definecharacterkerning[acronymkerning][factor=0.05]
-\definealternativestyle[acronymstyle][{\word\sc\switchtobodyfont[1.1em]\setcharacterkerning[acronymkerning]}][]
+\definealternativestyle[acronymstyle][{\feature[+][allsmall]\switchtobodyfont[1.1em]\setcharacterkerning[acronymkerning]}][]
 \definehighlight[acronym][style=acronymstyle]
 
 \startuniqueMPgraphic{warning}
@@ -146,9 +147,9 @@ setbounds currentpicture to boundingbox OverlayBox;
 \startsetups[style:section]
     \setcharacterkerning[titlekern]
     \switchtobodyfont[adventor]
-    \word
+    \WORD
     \bfb
-    \feature[+][smallcaps]
+    \feature[+][allsmall]
     \interwordspace=0.4em
     \veryraggedcenter
 \stopsetups
@@ -169,26 +170,69 @@ setbounds currentpicture to boundingbox OverlayBox;
     number=no,
 ]
 
-\definehead[filename][subsection][
-    alternative=normal,
-    style=\ssita,
-    before={\blank[big, preference]},
-]
-
 % TOC
-\define[3]\TOCcommand{
-    \midaligned{
-        \llap{#2}
-        \hskip 1em
-        \rlap{\color[\interactionparameter{color}]{\bf #3}}
-    }
+\starttexdefinition protected SectionTOCcommand #1#2#3
+    \startcurrentlistentrywrapper % Make the whole line a link
+        \midaligned{ % Have the title and page number "glued" to the middle
+            \llap{\currentlistentrytitle}
+            \hskip 1em
+            \rlap{\color[\interactionparameter{color}]{\bf \currentlistentrypagenumber}}
+        }
+    \stopcurrentlistentrywrapper
+
+    \par
+
+    \setbox0=\vbox{\framedtext[ % Align the subsection titles under the section title
+        frame=off,
+        width=\dimexpr\textwidth/2 - 0.5em,
+        align={flushright, wide},
+        offset=none,
+        toffset=-\lineheight,
+    ]{
+        \global\firstsubsectiontrue
+        \placelist[subsection][criterium=local]
+    }}
+    \iffirstsubsection
+        \blank[quarterline] % No subsections here
+    \else
+        \box0
+    \fi
+\stoptexdefinition
+
+\newif\iffirstsubsection
+
+\define\tocspace{\hskip 0.5em plus 0.5em minus 0.2em\relax}
+
+\unexpanded\def\toc_link#1{%
+    \startcurrentlistentrywrapper%
+        \hbox{#1}%
+    \stopcurrentlistentrywrapper%
 }
+
+\starttexdefinition protected SubsectionTOCcommand #1#2#3
+    \ss\itx
+    \dontleavehmode
+    \iffirstsubsection
+        \global\firstsubsectionfalse
+        \toc_link{#2}
+    \else
+        \discretionary{}{
+            \toc_link{#2} % No interpunct if the line splits here
+        }{
+            \tocspace{\bfa·}\tocspace\toc_link{#2}
+        }
+    \fi
+\stoptexdefinition
 
 \setupcombinedlist[content][list=section]
 \setuplist[section][
-    alternative=interactive,
-    command=\TOCcommand,
-    after=\par
+    alternative=command,
+    command=\SectionTOCcommand,
+]
+
+\setuplist[subsection][
+    alternative=command,
+    command=\SubsectionTOCcommand,
 ]
 
 %%%%%%%%%%%%%%%%%%%%%%%
