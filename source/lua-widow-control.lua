@@ -60,7 +60,8 @@ assert(lwc.context or luatexbase, [[
 if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
-    lwc.contrib_head = 'contribute_head' -- For \LuaMetaTeX{}
+    lwc.contrib_head = 'contributehead' -- For \LuaMetaTeX{}
+    lwc.stretch_order = "stretchorder"
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
@@ -77,6 +78,7 @@ elseif lwc.plain or lwc.latex then
     lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
+    lwc.stretch_order = "stretch_order"
 else -- uh oh
     error [[
         Unsupported format.
@@ -167,7 +169,7 @@ function lwc.save_paragraphs(head)
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     local parfillskip = last(new_head)
     if parfillskip.id == glue_id and tex.hsize > min_col_width then
-            parfillskip.stretch_order = 0
+            parfillskip[lwc.stretch_order] = 0
             parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
     end
 
