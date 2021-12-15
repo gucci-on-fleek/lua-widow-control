@@ -28,6 +28,7 @@ fonts.handlers.otf.addfeature {
     onum=yes,
     script=latn,
     emdash_kern=yes,
+    trep=yes,
 ]
 \setupalign[hz, hanging]
 
@@ -171,6 +172,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 ]
 
 % TOC
+\def\secondleveltoc{subsection}
 \starttexdefinition protected SectionTOCcommand #1#2#3
     \startcurrentlistentrywrapper % Make the whole line a link
         \midaligned{ % Have the title and page number "glued" to the middle
@@ -190,7 +192,7 @@ setbounds currentpicture to boundingbox OverlayBox;
         toffset=-\lineheight,
     ]{
         \global\firstsubsectiontrue
-        \placelist[subsection][criterium=local]
+        \placelist[\secondleveltoc][criterium=local]
     }}
     \iffirstsubsection
         \blank[quarterline] % No subsections here
@@ -289,8 +291,12 @@ interfaces.implement {
         \blackrule[depth=-0.25\baselineskip, height=\dimexpr0.25\baselineskip + 0.4pt, width=8em]
         \par
         
-        \strippedurl{\documentvariable{ctan}}
-        \strippedurl{\documentvariable{github}}
+        \doifdocumentvariable{ctan}{
+            \strippedurl{\documentvariable{ctan}}
+        }
+        \doifdocumentvariable{github}{
+            \strippedurl{\documentvariable{github}}
+        }
         \blank[big]
 
         \noindentation
