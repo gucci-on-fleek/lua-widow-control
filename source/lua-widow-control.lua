@@ -195,7 +195,7 @@ function lwc.save_paragraphs(head)
 
     -- Offset the accumulated \\prevdepth
     local prevdepth = node.new("glue")
-    prevdepth.width = -1 * long_info.prevdepth
+    prevdepth.width = natural_info.prevdepth - long_info.prevdepth
     last(long_node).next = prevdepth
 
     table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
