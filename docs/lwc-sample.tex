@@ -6,7 +6,7 @@
 \startbuffer[demo-text]
     \definepapersize[smallpaper][
         width=6cm,
-        height=9cm
+        height=8.3cm
     ]\setuppapersize[smallpaper]
 
     \setuplayout[
@@ -23,20 +23,23 @@
 
     \setupbodyfont[9pt]
     \setupindenting[yes, 2em]
-    \setupalign[tolerant]
 
     \definepalet[layout][grid=middlegray]
     \showgrid[nonumber, none, lines]
 
-    \definefontfeature[default][default][expansion=quality]
-    \setupalign[hz]
+    \definefontfeature[default][default][expansion=quality,protrusion=quality]
+
+    \usetypescript[modern-base]
+    \setupbodyfont[reset,modern]
+
+    \setupalign[hz,hanging,tolerant]
 
     \starttext
         \Lwc/ can remove most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. 
         
-        It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. While \TeX{} breaks paragraphs into their natural length, \lwc/ is breaking the paragraph 1~line longer than its natural length. \TeX{}'s paragraph is output to the page, but \lwc/'s paragraph is just stored for later. When a widow or orphan occurs, \lwc/ can take over. It selects the previously-saved paragraph with the least badness; then, it replaces \TeX{}'s paragraph with its saved paragraph. This lengthens the page by 1~line. 
+        It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. While \TeX{} breaks paragraphs into their natural length, \lwc/ is breaking the paragraph 1~line longer than its natural length. \TeX{}'s paragraph is output to the page, but \lwc/'s paragraph is just stored for later. When a widow or orphan occurs, \lwc/ can take over. It selects the previously-saved paragraph with the least badness; then, it replaces \TeX{}'s paragraph with its saved paragraph. This increases the text block height of the page by 1~line.
         
-        Now, the last line of the current page can be pushed to the top of the next page. This removes the widow or the orphan without creating any additional work for the document's author.
+        Now, the last line of the current page can be pushed to the top of the next page. This removes the widow or the orphan without creating any additional work.
     \stoptext
 \stopbuffer
 \savebuffer[list=demo-text]
