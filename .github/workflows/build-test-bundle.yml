@@ -49,15 +49,16 @@ jobs:
           /bin/sh -c '
             mktexlsr &&
             cd /mnt/tests/ &&
-            lualatex --halt-on-error ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            lualatex-dev --halt-on-error ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
             { echo "::error::LaTeX Basic Test Failed!"; exit 1; } &&
-            lualatex --halt-on-error ./latex-advanced.tex ||
+            lualatex-dev --halt-on-error ./latex-advanced.tex &&
+            lualatex-dev --halt-on-error ./latex-advanced.tex ||
             { echo "::error::LaTeX Advanced Test Failed!"; exit 1; } &&
             luatex --halt-on-error ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
             { echo "::error::Plain TeX Basic Test Failed!"; exit 1; } &&
             luatex --halt-on-error ./plain-columns.tex ||
             { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
-            lualatex --halt-on-error ./latex-columns.tex ||
+            lualatex-dev --halt-on-error ./latex-columns.tex ||
             { echo "::error::LaTeX Columns Test Failed!"; exit 1; }
           '
 
