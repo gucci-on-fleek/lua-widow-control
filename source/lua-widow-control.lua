@@ -59,6 +59,7 @@ assert(lwc.context or luatexbase, [[
   ]]
 if lwc.context then
     lwc.warning = logs.reporter("module", lwc.name)
+    lwc.info = logs.reporter("module", lwc.name)
     lwc.attribute = attributes.public(lwc.name)
     lwc.contrib_head = 'contributehead' -- For \LuaMetaTeX{}
     lwc.stretch_order = "stretchorder"
@@ -76,6 +77,7 @@ elseif lwc.plain or lwc.latex then
         ]],
     }
     lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
+    lwc.info = function(str) luatexbase.module_info(lwc.name, str) end
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
     lwc.stretch_order = "stretch_order"
@@ -243,6 +245,7 @@ local function safe_last(head)
 end
 
 
+local page_number = 1
 --- Remove the widows and orphans from the page, just after the output routine.
 ---
 --- This function holds the "meat" of the module. It is called just after the
@@ -262,8 +265,11 @@ function lwc.remove_widows(head)
         penalty    <= -10000 or
         penalty    ==      0 or
        #paragraphs ==      0 then
+            page_number = page_number + 1
             return head
     end
+
+    lwc.info("Widow/orphan detected. Attempting to remove.")
 
     local head_save = head -- Save the start of the `head` linked-list
 
@@ -324,6 +330,13 @@ function lwc.remove_widows(head)
             last(head).prev.prev.next = nil
             -- Move the last line to the next page
             tex.lists[lwc.contrib_head] = last_line
+            lwc.info(
+                "Widow/orphan successfully removed at paragraph "
+                .. paragraph_index
+                .. " on page "
+                .. page_number
+                .. "."
+            )
         end
 
         if clear_flag then
@@ -334,6 +347,7 @@ function lwc.remove_widows(head)
     end
 
     lwc.paragraphs = {} -- Clear paragraphs array at the end of the page
+    page_number = page_number + 1
 
     return head_save
 end
