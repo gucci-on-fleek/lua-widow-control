@@ -22,7 +22,15 @@
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
 % lengthened paragraphs to not have terrible spacing. 
-\RequirePackage[final]{microtype}
+\RequirePackage{etoolbox}
+\AtEndPreamble{
+    \@ifpackageloaded{microtype}{}{ % Only load if not already loaded
+        \RequirePackage[
+            final,
+            activate={true,nocompatibility}
+        ]{microtype}
+    }
+}
 
 % Define \TeX{} wrappers for Lua functions
 \newcommand{\lwcenable}{\directlua{lwc.enable_callbacks()}}
@@ -34,8 +42,6 @@
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
-\RequirePackage{etoolbox}
-
 \newcommand{\lwc@patch@warning}[1]{\PackageWarning{lua-widow-control}{%
     Patching the \protect#1 command failed%
 }}
