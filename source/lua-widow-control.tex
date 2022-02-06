@@ -5,6 +5,13 @@
 
 \wlog{lua-widow-control v1.1.4} %%version
 
+\ifx\directlua\undefined
+    \errmessage{%
+        LuaTeX is required for this package.
+        Make sure to compile with `luatex'%
+    }
+\fi
+
 \input ltluatex % \LuaTeX{}Base
 
 \clubpenalty=1

@@ -7,6 +7,13 @@
 \ProvidesPackage{lua-widow-control}%
     [2022/02/04 v1.1.4] %%version %%date
 
+\ifdefined\directlua\else
+    \PackageError{lua-widow-control}{%
+        LuaTeX is required for this package.\MessageBreak
+        Make sure to compile with `lualatex'%
+    }{}
+\fi
+
 \clubpenalty=1
 \widowpenalty=1
 \displaywidowpenalty=0
