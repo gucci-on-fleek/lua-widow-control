@@ -228,6 +228,7 @@ end
 --- `nil` if the list is circular.
 local function safe_last(head)
     local ids = {}
+    local head_save = head
 
     while head.next do
         local id = node.is_node(head) -- Returns the internal node id
@@ -241,7 +242,7 @@ local function safe_last(head)
         head = head.next
     end
 
-    return head
+    return last(head_save)
 end
 
 
@@ -302,16 +303,13 @@ function lwc.remove_widows(head)
     while head do
         -- Insert the start of the replacement paragraph
         if has_attribute(head, lwc.attribute, paragraph_index) then
-            local current = head
-            head.prev.next = target_node
-
             -- Abort if we've created a loop
             if not safe_last(target_node) then
-                head.prev.next = current
                 lwc.warning("Widow/Orphan NOT removed!")
                 break
             end
 
+            head.prev.next = target_node
             clear_flag = true
         end
 
