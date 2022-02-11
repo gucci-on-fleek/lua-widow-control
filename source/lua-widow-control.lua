@@ -63,6 +63,7 @@ if lwc.context then
     lwc.attribute = attributes.public(lwc.name)
     lwc.contrib_head = 'contributehead' -- For \LuaMetaTeX{}
     lwc.stretch_order = "stretchorder"
+    lwc.pagenum = function () return tex.count["realpageno"] end
 elseif lwc.plain or lwc.latex then
     luatexbase.provides_module {
         name = lwc.name,
@@ -81,6 +82,7 @@ elseif lwc.plain or lwc.latex then
     lwc.attribute = luatexbase.new_attribute(lwc.name)
     lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
     lwc.stretch_order = "stretch_order"
+    lwc.pagenum = function () return tex.count[0] end
 else -- uh oh
     error [[
         Unsupported format.
@@ -224,29 +226,35 @@ end
 ---
 --- Sometimes the node list can form a loop. Since there is no last element
 --- of a looped linked-list, the `last()` function will never terminate. This
---- function provides a "safe" version of the `last()` function that returns
---- `nil` if the list is circular.
+--- function provides a "safe" version of the `last()` function that will break
+--- the loop at the end if the list is circular.
 local function safe_last(head)
     local ids = {}
-    local head_save = head
+    local prev
 
     while head.next do
         local id = node.is_node(head) -- Returns the internal node id
 
         if ids[id] then
-            lwc.warning("Circular node list detected!")
-            return nil
+            lwc.warning [[Circular node list detected!
+This should never happen. I'll try and recover, but your output may be 
+corrupted. As a workaround, disable lua-widow-control for the
+affected paragraph or change the page breaks in your document.]]
+
+            prev.next = nil
+            return prev
         end
 
         ids[id] = true
+        head.prev = prev
+        prev = head
         head = head.next
     end
 
-    return last(head_save)
+    return head
 end
 
 
-local page_number = 1
 --- Remove the widows and orphans from the page, just after the output routine.
 ---
 --- This function holds the "meat" of the module. It is called just after the
@@ -266,7 +274,6 @@ function lwc.remove_widows(head)
         penalty    <= -10000 or
         penalty    ==      0 or
        #paragraphs ==      0 then
-            page_number = page_number + 1
             return head
     end
 
@@ -303,11 +310,7 @@ function lwc.remove_widows(head)
     while head do
         -- Insert the start of the replacement paragraph
         if has_attribute(head, lwc.attribute, paragraph_index) then
-            -- Abort if we've created a loop
-            if not safe_last(target_node) then
-                lwc.warning("Widow/Orphan NOT removed!")
-                break
-            end
+            safe_last(target_node) -- Remove any loops
 
             head.prev.next = target_node
             clear_flag = true
@@ -315,7 +318,7 @@ function lwc.remove_widows(head)
 
         -- Insert the end of the replacement paragraph
         if has_attribute(head, lwc.attribute, -1 * paragraph_index) then
-            last(target_node).next = head.next
+            safe_last(target_node).next = head.next
             clear_flag = false
         end
 
@@ -332,7 +335,7 @@ function lwc.remove_widows(head)
                 "Widow/orphan successfully removed at paragraph "
                 .. paragraph_index
                 .. " on page "
-                .. page_number
+                .. lwc.pagenum()
                 .. "."
             )
         end
@@ -345,7 +348,6 @@ function lwc.remove_widows(head)
     end
 
     lwc.paragraphs = {} -- Clear paragraphs array at the end of the page
-    page_number = page_number + 1
 
     return head_save
 end
