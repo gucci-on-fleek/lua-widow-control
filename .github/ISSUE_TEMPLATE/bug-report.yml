@@ -2,7 +2,7 @@ name: Bug Report
 description: Report an issue with lua-widow-control
 assignees:
   - gucci-on-fleek
-labels: ["bug"]
+labels: ["Minor Bug"]
 body:
   - type: markdown
     attributes:
@@ -37,7 +37,7 @@ body:
         that lua-widow-control can sometimes depend on a very specific paragraph being
         in very specific positions, so an example may _sometimes_ need to be a little
         longer, but only if absolutely necessary.
-      render: tex
+      render: TeX
       placeholder: |
         \documentclass{article}
         \usepackage{lua-widow-control}
@@ -52,7 +52,7 @@ body:
         Please paste your **complete** log file here.
 
         _(If you know *exactly* what you are doing, then you can include only the relevant portions, but it's best to be safe and include it all otherwise.)_
-      render: text
+      render: plain text
       placeholder: |
         This is LuaTeX, Version 1.11.2 (TeX Live 2020/W32TeX)  (format=lualatex 2021.6.26)
         LaTeX2e <2018-12-01>
