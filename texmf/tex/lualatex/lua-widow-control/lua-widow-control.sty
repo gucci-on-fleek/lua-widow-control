@@ -1,1 +1,78 @@
-../../../../source/lua-widow-control.sty
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
+\ProvidesPackage{lua-widow-control}%
+    [2022/02/15 v1.1.5] %%version %%date
+
+\ifdefined\directlua\else
+    \PackageError{lua-widow-control}{%
+        LuaTeX is required for this package.\MessageBreak
+        Make sure to compile with `lualatex'%
+    }{}
+\fi
+
+\clubpenalty=1
+\widowpenalty=1
+\displaywidowpenalty=0
+\interlinepenalty=0
+\brokenpenalty=0
+
+% We can't use \\newlength since that makes a \TeX{} "skip", not a "dimen"
+\newdimen\lwcemergencystretch
+\lwcemergencystretch=3em
+
+\directlua{require "lua-widow-control"}
+
+% Here, we enable font expansion/contraction. It isn't strictly necessary for
+% \lwc/'s functionality; however, it is required for the
+% lengthened paragraphs to not have terrible spacing. 
+\RequirePackage{etoolbox}
+\AtEndPreamble{
+    \@ifpackageloaded{microtype}{}{ % Only load if not already loaded
+        \RequirePackage[
+            final,
+            activate={true,nocompatibility}
+        ]{microtype}
+    }
+}
+
+% Define \TeX{} wrappers for Lua functions
+\newcommand{\lwcenable}{\directlua{lwc.enable_callbacks()}}
+\newcommand{\lwcdisable}{\directlua{lwc.disable_callbacks()}}
+\newcommand{\iflwc}{\directlua{lwc.if_lwc_enabled()}}
+
+% Enable \lwc/ by default when the package is loaded.
+\lwcenable
+
+% Expansion of some parts of the document, such as section headings, is quite
+% undesirable, so we'll disable \lwc/ for certain commands.
+\newcommand{\lwc@patch@warning}[1]{\PackageWarning{lua-widow-control}{%
+    Patching the \protect#1 command failed%
+}}
+
+% We should only reenable \lwc/ at the end if it was already enabled.
+\newif\iflwc@should@reenable
+
+\newcommand{\lwc@patch@pre}{\iflwc%
+    \lwc@should@reenabletrue%
+    \lwcdisable%
+\fi}
+
+\newcommand{\lwc@patch@post}{\iflwc@should@reenable%
+    \lwcenable%
+\fi}
+
+\newcommand{\lwcdisablecmd}[1]{%
+    \ifdefined#1
+        \pretocmd{#1}{\lwc@patch@pre}{}{\lwc@patch@warning{#1}}%
+        \apptocmd{#1}{\lwc@patch@post}{}{\lwc@patch@warning{#1}}%
+    \fi
+}
+
+\lwcdisablecmd{\@sect} % Sectioning
+
+
+\endinput

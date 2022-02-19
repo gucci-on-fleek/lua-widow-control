@@ -1,1 +1,121 @@
-../../../../docs/lwc-sample.tex
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\startbuffer[demo-text]
+    \definepapersize[smallpaper][
+        width=6cm,
+        height=8.3cm
+    ]\setuppapersize[smallpaper]
+
+    \setuplayout[
+        topspace=0.1cm,
+        backspace=0.1cm,
+        width=middle,
+        height=middle,
+        header=0pt,
+        footer=0pt,
+    ]
+
+    \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
+    \def\Lwc/{\sans{Lua-\allowbreak widow-\allowbreak control}}
+
+    \setupbodyfont[9pt]
+    \setupindenting[yes, 2em]
+
+    \definepalet[layout][grid=middlegray]
+    \showgrid[nonumber, none, lines]
+
+    \definefontfeature[default][default][expansion=quality,protrusion=quality]
+
+    \usetypescript[modern-base]
+    \setupbodyfont[reset,modern]
+
+    \setupalign[hz,hanging,tolerant]
+
+    \setuplanguage[en][spacing=packed]
+
+    \starttext
+        \Lwc/ can remove most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages. 
+        
+        It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. While \TeX{} breaks paragraphs into their natural length, \lwc/ is breaking the paragraph 1~line longer than its natural length. \TeX{}'s paragraph is output to the page, but \lwc/'s paragraph is just stored for later. When a widow or orphan occurs, \lwc/ can take over. It selects the previously-saved paragraph with the least badness; then, it replaces \TeX{}'s paragraph with its saved paragraph. This increases the text block height of the page by 1~line.
+        
+        Now, the last line of the current page can be pushed to the top of the next page. This removes the widow or the orphan without creating any additional work.
+    \stoptext
+\stopbuffer
+\savebuffer[list=demo-text]
+
+\startbuffer[shorten]
+    \parskip=0pt
+    \input lwc-documentation-demo-text.tmp
+\stopbuffer
+
+\startbuffer[shorten-code]
+    \parskip=0pt
+
+    \clubpenalty=10000
+    \widowpenalty=10000
+\stopbuffer
+
+\startbuffer[stretch]
+    \parskip=0pt plus 1fill
+    \input lwc-documentation-demo-text.tmp
+\stopbuffer
+
+\startbuffer[stretch-code]
+    \parskip=0pt plus 1fill
+
+    \clubpenalty=10000
+    \widowpenalty=10000
+\stopbuffer
+
+\startbuffer[ignore]
+    \startsetups[*default]
+        \clubpenalty=0
+        \widowpenalty=0
+        \displaywidowpenalty=0
+        \interlinepenalty=0
+        \brokenpenalty=0
+    \stopsetups
+
+    \setups[*default]
+
+    \input lwc-documentation-demo-text.tmp
+\stopbuffer
+
+\startbuffer[ignore-code]
+    \parskip=0pt
+
+    \clubpenalty=0
+    \widowpenalty=0
+\stopbuffer
+
+\startbuffer[lwc]
+    \usemodule[lua-widow-control]
+    \input lwc-documentation-demo-text.tmp
+\stopbuffer
+
+\startbuffer[lwc-code]
+    \usepackage{lua-widow-control}
+\stopbuffer
+
+\startbuffer[widow-orphan]
+    % TODO This is all really quite hacky
+    \define[1]\rulewords{\dorecurse{#1}{\blackrule[height=1.5ex, width=1em] \blackrule[height=1.5ex, width=2em] \blackrule[height=1.5ex, width=1.5em] \blackrule[height=1.5ex, width=3em] }}
+
+    \define[2]\fakestart{\framed[width=broad, align=normal, frame=off]{\parfillskip=0pt\spaceskip=0.2em plus 1fill\hskip 5em\rulewords{#1}\blackrule[height=1.5ex, width=#2]}}
+
+    \define[2]\fakeend{\framed[width=broad, align=normal, frame=off]{\parfillskip=5em\spaceskip=0.2em plus 1fill\rulewords{#1}\blackrule[height=1.5ex, width=#2]}}
+
+    \setupTABLE[width=broad, frame=off]
+    \setupTABLE[row][1][align=middle, style=\ssbf]
+    \setupTABLE[row][2][align=low, frame=on]
+    \setupTABLE[row][3][align=high, frame=on]
+    \setupTABLE[column][2][frame=off, width=1em]
+    \startTABLE
+        \NC Widow \NC\NC Orphan \NC\NR
+        \NC\fakestart{5}{1.5em}\NC\NC\fakestart{1}{2em}\NC\NR
+        \NC\fakeend{1}{2em}\NC\NC\fakeend{5}{1.5em}\NC\NR
+    \stopTABLE
+\stopbuffer

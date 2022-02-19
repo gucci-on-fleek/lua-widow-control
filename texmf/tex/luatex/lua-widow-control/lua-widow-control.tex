@@ -1,1 +1,70 @@
-../../../../source/lua-widow-control.tex
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\wlog{lua-widow-control v1.1.5} %%version
+
+\ifx\directlua\undefined
+    \errmessage{%
+        LuaTeX is required for this package.
+        Make sure to compile with `luatex'%
+    }
+\fi
+
+\input ltluatex % \LuaTeX{}Base
+
+\clubpenalty=1
+\widowpenalty=1
+\displaywidowpenalty=0
+\interlinepenalty=0
+\brokenpenalty=0
+
+\newdimen\lwcemergencystretch
+\lwcemergencystretch=3em
+
+\directlua{require "lua-widow-control"}
+
+% Here, we enable font expansion/contraction. It isn't strictly necessary for
+% \lwc/'s functionality; however, it is required for the
+% lengthened paragraphs to not have terrible spacing. 
+\expandglyphsinfont\the\font 20 20 5
+\adjustspacing=2
+
+% Define \TeX{} wrappers for Lua functions
+\def\lwcenable{\directlua{lwc.enable_callbacks()}}
+\def\lwcdisable{\directlua{lwc.disable_callbacks()}}
+\def\iflwc{\directlua{lwc.if_lwc_enabled()}}
+
+% Enable \lwc/ by default when the package is loaded.
+\lwcenable
+
+% Expansion of some parts of the document, such as section headings, is quite
+% undesirable, so we'll disable \lwc/ for certain commands.
+\catcode`@=11
+
+% We should only reenable \lwc/ at the end if it was already enabled.
+\newif\iflwc@should@reenable
+
+\def\lwc@patch@pre{\iflwc%
+    \lwc@should@reenabletrue%
+    \lwcdisable%
+\fi}
+
+\def\lwc@patch@post{\iflwc@should@reenable%
+    \lwcenable%
+\fi}
+
+\def\lwcdisablecmd#1{%
+    \ifdefined#1
+        \expandafter\def\expandafter#1\expandafter{\lwc@patch@pre #1\lwc@patch@post}
+    \fi
+}
+\catcode`@=12
+
+\begingroup
+    \suppressoutererror=1
+    \lwcdisablecmd{\beginsection} % Sectioning
+\endgroup
+
+\endinput
