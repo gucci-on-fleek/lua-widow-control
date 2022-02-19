@@ -14,13 +14,14 @@ lwc.name = "lua-widow-control"
     detect the format name then set some flags for later processing.
   ]]
 local format = tex.formatname
+local context, latex, plain
 
 if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
-    lwc.context = true
+    context = true
 elseif format:find('latex') then -- lualatex, lualatex-dev, ...
-    lwc.latex = true
+    latex = true
 elseif format == 'luatex' then -- Plain
-    lwc.plain = true
+    plain = true
 end
 
 --[[
@@ -44,27 +45,29 @@ local maxdimen = 1073741823 -- \\maxdimen in sp
       - When the package is used with an unsupported format
     Both of these are pretty unlikely, but it can't hurt to check.
   ]]
-assert(lwc.context or luatexbase, [[
+assert(context or luatexbase, [[
     
     This module requires a supported callback library. Please
     follow the following format-dependant instructions:
       - LaTeX: Use a version built after 2015-01-01, or include
               `\usepackage{luatexbase}' before loading this module.
       - Plain: Include `\input ltluatex' before loading this module.
-      - ConTeXt: Use the LMTX version.
+      - ConTeXt: Use LuaMetaTeX/Mark XL.
 ]])
 
 --[[
     Package/module initialization
   ]]
-if lwc.context then
-    lwc.warning = logs.reporter("module", lwc.name)
-    lwc.info = logs.reporter("module", lwc.name)
-    lwc.attribute = attributes.public(lwc.name)
-    lwc.contrib_head = 'contributehead' -- For \LuaMetaTeX{}
-    lwc.stretch_order = "stretchorder"
-    lwc.pagenum = function () return tex.count["realpageno"] end
-elseif lwc.plain or lwc.latex then
+local warning, info, attribute, contrib_head, stretch_order, pagenum
+
+if context then
+    warning = logs.reporter("module", lwc.name)
+    info = logs.reporter("module", lwc.name)
+    attribute = attributes.public(lwc.name)
+    contrib_head = 'contributehead' -- For \LuaMetaTeX{}
+    stretch_order = "stretchorder"
+    pagenum = function() return tex.count["realpageno"] end
+elseif plain or latex then
     luatexbase.provides_module {
         name = lwc.name,
         date = "2022/02/15", --%%date
@@ -77,12 +80,12 @@ elseif lwc.plain or lwc.latex then
     paragraphs.
         ]],
     }
-    lwc.warning = function(str) luatexbase.module_warning(lwc.name, str) end
-    lwc.info = function(str) luatexbase.module_info(lwc.name, str) end
-    lwc.attribute = luatexbase.new_attribute(lwc.name)
-    lwc.contrib_head = 'contrib_head' -- For \LuaTeX{}
-    lwc.stretch_order = "stretch_order"
-    lwc.pagenum = function () return tex.count[0] end
+    warning = function(str) luatexbase.module_warning(lwc.name, str) end
+    info = function(str) luatexbase.module_info(lwc.name, str) end
+    attribute = luatexbase.new_attribute(lwc.name)
+    contrib_head = 'contrib_head' -- For \LuaTeX{}
+    stretch_order = "stretch_order"
+    pagenum = function() return tex.count[0] end
 else -- uh oh
     error [[
         Unsupported format.
@@ -91,10 +94,10 @@ else -- uh oh
     ]]
 end
 
-lwc.paragraphs = {} -- List to hold the alternate paragraph versions
+local paragraphs = {} -- List to hold the alternate paragraph versions
 
 if tex.interlinepenalty ~= 0 then
-    lwc.warning [[
+    warning [[
 \interlinepenalty is set to a non-zero value.
 This may prevent lua-widow-control from 
 properly functioning.
@@ -118,8 +121,8 @@ end
 --- @return table t Enablers/Disablers for the callback
 ---     enable: function = Enable the callback
 ---     disable: function = Disable the callback
-function lwc.register_callback(t)
-    if lwc.plain or lwc.latex then -- Both use \LuaTeX{}Base for callbacks
+local function register_callback(t)
+    if plain or latex then -- Both use \LuaTeX{}Base for callbacks
         return {
             enable = function()
                 luatexbase.add_to_callback(t.callback, t.func, t.name)
@@ -128,19 +131,19 @@ function lwc.register_callback(t)
                 luatexbase.remove_from_callback(t.callback, t.name)
             end,
         }
-    elseif lwc.context and not t.lowlevel then
+    elseif context and not t.lowlevel then
         return {
             -- Register the callback when the table is created,
             -- but activate it when `enable()` is called.
             enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
-                  or function()
+                or function()
                     nodes.tasks.enableaction(t.category, "lwc." .. t.name)
-            end,
+                end,
             disable = function()
                 nodes.tasks.disableaction(t.category, "lwc." .. t.name)
             end,
         }
-    elseif lwc.context and t.lowlevel then
+    elseif context and t.lowlevel then
         --[[
             Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
             with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
@@ -156,14 +159,13 @@ function lwc.register_callback(t)
     end
 end
 
-
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     lwc.callbacks.disable_box_warnings.enable()
 
     -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
-    if head.id ~= par_id and lwc.context then
+    if head.id ~= par_id and context then
         return head
     end
 
@@ -173,8 +175,8 @@ function lwc.save_paragraphs(head)
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     local parfillskip = last(new_head)
     if parfillskip.id == glue_id and tex.hsize > min_col_width then
-            parfillskip[lwc.stretch_order] = 0
-            parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
+        parfillskip[stretch_order] = 0
+        parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
     end
 
     -- Break the paragraph 1 line longer than natural
@@ -202,12 +204,11 @@ function lwc.save_paragraphs(head)
     prevdepth.width = natural_info.prevdepth - long_info.prevdepth
     last(long_node).next = prevdepth
 
-    table.insert(lwc.paragraphs, {demerits = long_demerits, node = long_node})
+    table.insert(paragraphs, { demerits = long_demerits, node = long_node })
 
     -- \LuaMetaTeX{} crashes if we return `true`
     return head
 end
-
 
 --- Tags the beginning and the end of each paragraph as it is added to the page.
 ---
@@ -215,12 +216,11 @@ end
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
-    set_attribute(head, lwc.attribute, #lwc.paragraphs)
-    set_attribute(last(head), lwc.attribute, -1 * #lwc.paragraphs)
+    set_attribute(head, attribute, #paragraphs)
+    set_attribute(last(head), attribute, -1 * #paragraphs)
 
     return head
 end
-
 
 --- A "safe" version of the last/slide function.
 ---
@@ -236,7 +236,7 @@ local function safe_last(head)
         local id = node.is_node(head) -- Returns the internal node id
 
         if ids[id] then
-            lwc.warning [[Circular node list detected!
+            warning [[Circular node list detected!
 This should never happen. I'll try and recover, but your output may be 
 corrupted. As a workaround, disable lua-widow-control for the
 affected paragraph or change the page breaks in your document.]]
@@ -254,7 +254,6 @@ affected paragraph or change the page breaks in your document.]]
     return head
 end
 
-
 --- Remove the widows and orphans from the page, just after the output routine.
 ---
 --- This function holds the "meat" of the module. It is called just after the
@@ -264,20 +263,19 @@ end
 --- Then, we can push the bottom line of the page to the next page.
 function lwc.remove_widows(head)
     local penalty = tex.outputpenalty
-    local paragraphs = lwc.paragraphs
 
     --[[
         We only need to process pages that have orphans or widows. If `paragraphs`
         is empty, then there is nothing that we can do.
       ]]
-    if  penalty    >=  10000 or
-        penalty    <= -10000 or
-        penalty    ==      0 or
-       #paragraphs ==      0 then
-            return head
+    if penalty >= 10000 or
+        penalty <= -10000 or
+        penalty == 0 or
+        #paragraphs == 0 then
+        return head
     end
 
-    lwc.info("Widow/orphan detected. Attempting to remove.")
+    info("Widow/orphan detected. Attempting to remove.")
 
     local head_save = head -- Save the start of the `head` linked-list
 
@@ -309,7 +307,7 @@ function lwc.remove_widows(head)
     -- Loop through all of the nodes on the page
     while head do
         -- Insert the start of the replacement paragraph
-        if has_attribute(head, lwc.attribute, paragraph_index) then
+        if has_attribute(head, attribute, paragraph_index) then
             safe_last(target_node) -- Remove any loops
 
             head.prev.next = target_node
@@ -317,25 +315,25 @@ function lwc.remove_widows(head)
         end
 
         -- Insert the end of the replacement paragraph
-        if has_attribute(head, lwc.attribute, -1 * paragraph_index) then
+        if has_attribute(head, attribute, -1 * paragraph_index) then
             safe_last(target_node).next = head.next
             clear_flag = false
         end
 
         -- Start of final paragraph
-        if has_attribute(head, lwc.attribute, #paragraphs) then
+        if has_attribute(head, attribute, #paragraphs) then
             local last_line = copy(last(head))
 
-            last(last_line).next = copy(tex.lists[lwc.contrib_head])
+            last(last_line).next = copy(tex.lists[contrib_head])
 
             last(head).prev.prev.next = nil
             -- Move the last line to the next page
-            tex.lists[lwc.contrib_head] = last_line
-            lwc.info(
-                "Widow/orphan successfully removed at paragraph "
+            tex.lists[contrib_head] = last_line
+            info(
+            "Widow/orphan successfully removed at paragraph "
                 .. paragraph_index
                 .. " on page "
-                .. lwc.pagenum()
+                .. pagenum()
                 .. "."
             )
         end
@@ -347,37 +345,36 @@ function lwc.remove_widows(head)
         end
     end
 
-    lwc.paragraphs = {} -- Clear paragraphs array at the end of the page
+    paragraphs = {} -- Clear paragraphs array at the end of the page
 
     return head_save
 end
 
-
 -- Add all of the callbacks
 lwc.callbacks = {
-    disable_box_warnings = lwc.register_callback({
+    disable_box_warnings = register_callback({
         callback = "hpack_quality",
-        func     = function() end,
-        name     = "disable_box_warnings",
+        func = function() end,
+        name = "disable_box_warnings",
         lowlevel = true,
     }),
-    remove_widows = lwc.register_callback({
+    remove_widows = register_callback({
         callback = "pre_output_filter",
-        func     = lwc.remove_widows,
-        name     = "remove_widows",
+        func = lwc.remove_widows,
+        name = "remove_widows",
         lowlevel = true,
     }),
-    save_paragraphs = lwc.register_callback({
+    save_paragraphs = register_callback({
         callback = "pre_linebreak_filter",
-        func     = lwc.save_paragraphs,
-        name     = "save_paragraphs",
+        func = lwc.save_paragraphs,
+        name = "save_paragraphs",
         category = "processors",
         position = "after",
     }),
-    mark_paragraphs = lwc.register_callback({
+    mark_paragraphs = register_callback({
         callback = "post_linebreak_filter",
-        func     = lwc.mark_paragraphs,
-        name     = "mark_paragraphs",
+        func = lwc.mark_paragraphs,
+        name = "mark_paragraphs",
         category = "finalizers",
         position = "after",
     }),
@@ -393,10 +390,9 @@ function lwc.enable_callbacks()
 
         enabled = true
     else
-        lwc.warning("Already enabled")
+        warning("Already enabled")
     end
 end
-
 
 function lwc.disable_callbacks()
     if enabled then
@@ -410,7 +406,7 @@ function lwc.disable_callbacks()
 
         enabled = false
     else
-        lwc.warning("Already disabled")
+        warning("Already disabled")
     end
 end
 
@@ -421,6 +417,5 @@ function lwc.if_lwc_enabled()
         tex.sprint("\\iffalse")
     end
 end
-
 
 return lwc
