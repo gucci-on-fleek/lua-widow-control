@@ -42,7 +42,7 @@
     ctan=https://www.ctan.org/pkg/lua-widow-control,
 ]
 
-\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt{} package that removes \waos/ without any user intervention. Using the power of \LuaTeX{}, it does so \emph{without} stretching any glue or shortening any pages or columns. Instead, \lwc/ automatically lengthens a paragraph on a page or column where a \woo/ would otherwise occur. 
+\Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt{}/Op\TeX{} package that removes \waos/ without any user intervention. Using the power of \LuaTeX{}, it does so \emph{without} stretching any glue or shortening any pages or columns. Instead, \lwc/ automatically lengthens a paragraph on a page or column where a \woo/ would otherwise occur. 
 
 \section{Quick Start}
 Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} users just need to place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document. For more details, see the \goto{Installation and Usage sections}[sec:install].
@@ -192,6 +192,9 @@ Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install
 \subsection{\ConTeXt{}}
 \Lwc/ requires \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}).
 
+\subsection{Op\TeX{}}
+\Lwc/ works with any version of Op\TeX{} and has no dependencies.
+
 
 \section{Loading the Package}
 
@@ -206,6 +209,10 @@ Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install
 \subsection{\ConTeXt}
 
 \inlineTEX{\usemodule[lua-widow-control]}
+
+\subsection{Op\TeX{}}
+
+\inlineTEX{\load[lua-widow-control]}
 
 \section{Columns}
 
@@ -242,6 +249,14 @@ Since \TeX{} implements column breaking and page breaking through the same inter
 \NC          \NC \inlineTEX{\prependtoks\lwc@patch@post\to\everyafterfoo} \NC\NR
 \stopTABLE
 
+\subsection{Op\TeX{}}
+\startTABLE
+\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
+\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
+\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch=3em} \NC\NR
+\NC Selectively Disable \NC \emph{Not Implemented} \NC\NR
+\stopTABLE
+
 \subsection{\estretch/}
 
 You can configure the \estretch/ used when stretching a paragraph. The default value is 3~em. 
@@ -256,6 +271,9 @@ You could just disable then reenable \lwc/ every time that you use the command; 
 \Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, and others. You'll need to patch these yourself.
 
 Under \ConTeXt{}, you need to use a different method to selectively disable \lwc/. Instead of using \tex{lwcdisablecmd}, you should use one of the preexisting \tex{everyfoo} hooks as shown in the table above since patching commands is rarely advisable in \ConTeXt{} 
+
+No commands are provided for selectively disabling \lwc/ with Op\TeX{}. Users must implement this functionality themselves.
+
 \section[sec:issues]{Known Issues}
 \startitemize
     \item \Lwc/ will not expand the first paragraph of a document.
@@ -335,6 +353,10 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 \subsection{t-lua-widow-control.mkxl}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}
+
+\subsection{lua-widow-control.opm}
+
+\typeTEXfile{../source/lua-widow-control.opm}
 
 \subsection{Demo from \in{Table}[tab:demo]}
 
