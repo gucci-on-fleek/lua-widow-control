@@ -1,0 +1,27 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\_codedecl\lwcenable{lua-widow-control <v1.1.5>} %%version
+
+\_clubpenalty=1
+\_widowpenalty=1
+\_displaywidowpenalty=0
+\_interlinepenalty=0
+\_brokenpenalty=0
+
+\_newdimen\lwcemergencystretch
+\lwcemergencystretch=3em
+
+\_directlua{require "lua-widow-control"}
+
+% Define \TeX{} wrappers for Lua functions
+\_def\lwcenable{\_directlua{lwc.enable_callbacks()}}
+\_def\lwcdisable{\_directlua{lwc.disable_callbacks()}}
+\_def\iflwc{\_directlua{lwc.if_lwc_enabled()}}
+
+% Enable \lwc/ by default when the package is loaded.
+\lwcenable
+
+\_endcode

@@ -14,7 +14,7 @@ lwc.name = "lua-widow-control"
     detect the format name then set some flags for later processing.
   ]]
 local format = tex.formatname
-local context, latex, plain
+local context, latex, plain, optex
 
 if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
     context = true
@@ -22,6 +22,8 @@ elseif format:find('latex') then -- lualatex, lualatex-dev, ...
     latex = true
 elseif format == 'luatex' then -- Plain
     plain = true
+elseif format == 'optex' then -- OpTeX
+    optex = true
 end
 
 --[[
@@ -86,11 +88,20 @@ elseif plain or latex then
     contrib_head = 'contrib_head' -- For \LuaTeX{}
     stretch_order = "stretch_order"
     pagenum = function() return tex.count[0] end
+elseif optex then
+    local write_nl = texio.write_nl
+    warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
+    info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
+    attribute = alloc.new_attribute(lwc.name)
+    contrib_head = 'contrib_head'
+    stretch_order = "stretch_order"
+    pagenum = function() return tex.count[0] end
 else -- uh oh
     error [[
         Unsupported format.
 
-        Please use (Lua)LaTeX, Plain (Lua)TeX, or ConTeXt (MKXL/LMTX)
+        Please use (Lua)LaTeX, Plain (Lua)TeX, ConTeXt (MKXL/LMTX),
+        or OpTeX.
     ]]
 end
 
@@ -154,6 +165,15 @@ local function register_callback(t)
         return {
             enable = function() callback.register(t.callback, t.func) end,
             disable = function() callback.register(t.callback, nil) end,
+        }
+    elseif optex then
+        return {
+            enable = function()
+                callback.add_to_callback(t.callback, t.func, t.name)
+            end,
+            disable = function()
+                callback.remove_from_callback(t.callback, t.name)
+            end,
         }
     end
 end

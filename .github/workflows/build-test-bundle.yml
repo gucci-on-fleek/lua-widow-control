@@ -60,6 +60,8 @@ jobs:
             { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
             lualatex-dev --halt-on-error ./latex-columns.tex ||
             { echo "::error::LaTeX Columns Test Failed!"; exit 1; }
+            optex --halt-on-error ./optex-basic.tex ||
+            { echo "::error::OpTeX Basic Test Failed!"; exit 1; }
           '
 
       - name: Bundle the package
