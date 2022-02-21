@@ -96,14 +96,13 @@ end
 
 local paragraphs = {} -- List to hold the alternate paragraph versions
 
-if tex.interlinepenalty ~= 0 then
+if tex.brokenpenalty ~= 0 then
     warning [[
-\interlinepenalty is set to a non-zero value.
-This may prevent lua-widow-control from 
+\brokenpenalty is set to a non-zero value.
+This may prevent lua-widow-control from
 properly functioning.
 ]]
 end
-
 
 --[[
     Function definitions
@@ -262,16 +261,22 @@ end
 --- replace one paragraph with the same paragraph, but lengthened by one line.
 --- Then, we can push the bottom line of the page to the next page.
 function lwc.remove_widows(head)
-    local penalty = tex.outputpenalty
+    local penalty = tex.outputpenalty - tex.interlinepenalty
 
     --[[
         We only need to process pages that have orphans or widows. If `paragraphs`
         is empty, then there is nothing that we can do.
+
+        The list of penalties is from:
+        https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
-    if penalty >= 10000 or
-        penalty <= -10000 or
-        penalty == 0 or
-        #paragraphs == 0 then
+    if (penalty == tex.widowpenalty or
+        penalty == tex.displaywidowpenalty or
+        penalty == tex.clubpenalty or
+        penalty == tex.clubpenalty + tex.widowpenalty or
+        penalty == tex.clubpenalty + tex.displaywidowpenalty) and
+        #paragraphs >= 1 then
+    else
         return head
     end
 
