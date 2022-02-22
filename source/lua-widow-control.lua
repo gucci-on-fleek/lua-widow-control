@@ -45,22 +45,6 @@ local min_col_width = tex.sp("25em")
 local maxdimen = 1073741823 -- \\maxdimen in sp
 
 --[[
-    This error is raised in the following circumstances:
-      - When the user manually loads the Lua module without loading Lua\TeX{}Base
-      - When the package is used with an unsupported format
-    Both of these are pretty unlikely, but it can't hurt to check.
-  ]]
-assert(context or luatexbase, [[
-    
-    This module requires a supported callback library. Please
-    follow the following format-dependant instructions:
-      - LaTeX: Use a version built after 2015-01-01, or include
-              `\usepackage{luatexbase}' before loading this module.
-      - Plain: Include `\input ltluatex' before loading this module.
-      - ConTeXt: Use LuaMetaTeX/Mark XL.
-]])
-
---[[
     Package/module initialization
   ]]
 local warning, info, attribute, contrib_head, stretch_order, pagenum
@@ -191,7 +175,13 @@ end
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
-    lwc.callbacks.disable_box_warnings.enable()
+    local renable_box_warnings
+    if (latex or plain) and
+       #luatexbase.callback_descriptions("hpack_quality") == 0
+    then -- See #18 and michal-h21/linebreaker#3
+        renable_box_warnings = true
+        lwc.callbacks.disable_box_warnings.enable()
+    end
 
     -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
     if head.id ~= par_id and context then
@@ -218,7 +208,9 @@ function lwc.save_paragraphs(head)
     local natural_node, natural_info = tex.linebreak(copy(head))
     flush_list(natural_node)
 
-    lwc.callbacks.disable_box_warnings.disable()
+    if renable_box_warnings then
+        lwc.callbacks.disable_box_warnings.disable()
+    end
 
     -- If we can't lengthen the paragraph, assign a \emph{very} large demerit value
     local long_demerits
