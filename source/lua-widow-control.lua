@@ -101,13 +101,6 @@ end
 
 local paragraphs = {} -- List to hold the alternate paragraph versions
 
-if tex.brokenpenalty ~= 0 then
-    warning [[
-\brokenpenalty is set to a non-zero value.
-This may prevent lua-widow-control from
-properly functioning.
-]]
-end
 
 --[[
     Function definitions
@@ -284,6 +277,10 @@ end
 --- Then, we can push the bottom line of the page to the next page.
 function lwc.remove_widows(head)
     local penalty = tex.outputpenalty - tex.interlinepenalty
+    local widowpenalty = tex.widowpenalty
+    local clubpenalty = tex.clubpenalty
+    local displaywidowpenalty = tex.displaywidowpenalty
+    local brokenpenalty = tex.brokenpenalty
 
     --[[
         We only need to process pages that have orphans or widows. If `paragraphs`
@@ -292,11 +289,17 @@ function lwc.remove_widows(head)
         The list of penalties is from:
         https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
-    if (penalty == tex.widowpenalty or
-        penalty == tex.displaywidowpenalty or
-        penalty == tex.clubpenalty or
-        penalty == tex.clubpenalty + tex.widowpenalty or
-        penalty == tex.clubpenalty + tex.displaywidowpenalty) and
+    if (penalty == widowpenalty or
+        penalty == displaywidowpenalty or
+        penalty == clubpenalty or
+        penalty == clubpenalty + widowpenalty or
+        penalty == clubpenalty + displaywidowpenalty or
+        penalty == brokenpenalty or
+        penalty == brokenpenalty + widowpenalty or
+        penalty == brokenpenalty + displaywidowpenalty or
+        penalty == brokenpenalty + clubpenalty or
+        penalty == brokenpenalty + clubpenalty + widowpenalty or
+        penalty == brokenpenalty + clubpenalty + displaywidowpenalty) and
         #paragraphs >= 1 then
     else
         return head
