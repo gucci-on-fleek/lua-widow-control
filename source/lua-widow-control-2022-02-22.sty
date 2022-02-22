@@ -7,6 +7,14 @@
 \ProvidesPackage{lua-widow-control}%
     [2022/02/22 v1.1.6] %%version %%date
 
+\PackageWarning{lua-widow-control}{%
+    Old LaTeX format detected!\MessageBreak
+    Lua-widow-control prefers a LaTeX format newer than June 2021.\MessageBreak
+    I'll still run the latest Lua code, but I'm using an older version\MessageBreak
+    of the LaTeX code. This means that the key-value interface is\MessageBreak
+    *UNSUPPORTED*.
+}
+
 \ifdefined\directlua\else
     \PackageError{lua-widow-control}{%
         LuaTeX is required for this package.\MessageBreak
