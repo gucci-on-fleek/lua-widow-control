@@ -1,0 +1,25 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
+
+\providecommand\DeclareRelease[3]{}
+\providecommand\DeclareCurrentRelease[2]{}
+
+\DeclareRelease{v1.1.6}{2022-02-22}{lua-widow-control-2022-02-22.sty}
+\DeclareCurrentRelease{v1.2.0}{2022-02-22} %%version %%date
+
+\providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
+\IfFormatAtLeastTF{2021/06/01}{}{\input{lua-widow-control-2022-02-22.sty}}
+\IfFormatAtLeastTF{2021/06/01}{}{\endinput}
+
+\ProvidesExplPackage
+    {lua-widow-control}
+    {2022/02/22} %%date
+    {v1.2.0} %%version
+    {Use Lua to remove widows and orphans}
+
+
+\endinput
