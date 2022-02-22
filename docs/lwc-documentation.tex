@@ -166,6 +166,9 @@ Run \type{tlmgr install lua-widow-control} in a terminal, or install using the \
 \subsection{Mik\TeX}
 Run \type{mpm --install=lua-widow-control} in a terminal, or install using the \q{Mik\TeX{} Maintenance} \acronym{GUI}.
 
+\subsection{\ConTeXt{} \acronym{MKIV} Standalone}
+Run \type{first-setup.sh --modules="lua-widow-control"} in a terminal or install manually.
+
 \subsection{Manual}
 Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install the package. Most other users will be better served by using the \lwc/ supplied by \TeX~Live and Mik\TeX{}; however, all users may manually install the package if desired. The procedure should be fairly similar regardless of your \acronym{OS}, \TeX{}  distribution, or format.
 
@@ -190,7 +193,7 @@ Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install
 \Lwc/ requires \LuaTeX{} ($\ge$ 0.85), \LaTeX{} ($\ge$ 2015/01/01), \sans{microtype} (any version), and \sans{etoolbox} (any version). Any version of \TeX~Live $\ge$ 2016 will meet these requirements.
 
 \subsection{\ConTeXt{}}
-\Lwc/ requires \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}).
+\Lwc/ supports both \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) and \ConTeXt{} \acronym{MKIV} (\LuaTeX{}).
 
 \subsection{Op\TeX{}}
 \Lwc/ works with any version of Op\TeX{} and has no dependencies.
@@ -353,6 +356,10 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 \subsection{t-lua-widow-control.mkxl}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}
+
+\subsection{t-lua-widow-control.mkiv}
+
+\typeTEXfile{../source/t-lua-widow-control.mkiv}
 
 \subsection{lua-widow-control.opm}
 
