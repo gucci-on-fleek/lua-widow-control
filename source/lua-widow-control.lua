@@ -66,8 +66,8 @@ elseif context and not lmtx then
 elseif plain or latex then
     luatexbase.provides_module {
         name = lwc.name,
-        date = "2022/02/15", --%%date
-        version = "1.1.5", --%%version
+        date = "2022/02/22", --%%date
+        version = "1.1.6", --%%version
         description = [[
 
     This module provides a LuaTeX-based solution to prevent

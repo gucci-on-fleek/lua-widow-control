@@ -3,7 +3,7 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\_codedecl\lwcenable{lua-widow-control <v1.1.5>} %%version
+\_codedecl\lwcenable{lua-widow-control <v1.1.6>} %%version
 
 \_clubpenalty=1
 \_widowpenalty=1
