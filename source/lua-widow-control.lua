@@ -14,10 +14,13 @@ lwc.name = "lua-widow-control"
     detect the format name then set some flags for later processing.
   ]]
 local format = tex.formatname
-local context, latex, plain, optex
+local context, latex, plain, optex, lmtx
 
 if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
     context = true
+    if status.luatex_engine == "luametatex" then
+        lmtx = true
+    end
 elseif format:find('latex') then -- lualatex, lualatex-dev, ...
     latex = true
 elseif format == 'luatex' then -- Plain
@@ -32,7 +35,7 @@ end
   ]]
 local last = node.slide
 local copy = node.copy_list
-local par_id = node.id("par")
+local par_id = node.id("par") or node.id("local_par")
 local glue_id = node.id("glue")
 local set_attribute = node.set_attribute
 local has_attribute = node.has_attribute
@@ -62,12 +65,19 @@ assert(context or luatexbase, [[
   ]]
 local warning, info, attribute, contrib_head, stretch_order, pagenum
 
-if context then
+if context and lmtx then
     warning = logs.reporter("module", lwc.name)
     info = logs.reporter("module", lwc.name)
     attribute = attributes.public(lwc.name)
     contrib_head = 'contributehead' -- For \LuaMetaTeX{}
     stretch_order = "stretchorder"
+    pagenum = function() return tex.count["realpageno"] end
+elseif context and not lmtx then
+    warning = logs.reporter("module", lwc.name)
+    info = logs.reporter("module", lwc.name)
+    attribute = attributes.public(lwc.name)
+    contrib_head = 'contrib_head'
+    stretch_order = "stretch_order"
     pagenum = function() return tex.count["realpageno"] end
 elseif plain or latex then
     luatexbase.provides_module {

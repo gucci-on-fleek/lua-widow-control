@@ -1,0 +1,19 @@
+{
+    "Lua.diagnostics.globals": [
+        "tex",
+        "node",
+        "luatexbase",
+        "texio",
+        "context",
+        "logs",
+        "attributes",
+        "callbacks",
+        "nodes",
+        "callback",
+        "token",
+        "lfs",
+        "file",
+        "alloc",
+        "status"
+    ]
+}

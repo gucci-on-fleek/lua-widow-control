@@ -34,7 +34,7 @@ jobs:
             mtxrun --generate;
             cd /mnt/tests/ &&
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt Test Failed!"; exit 1; } &&
+            { echo "::error::ConTeXt LMTX Test Failed!"; exit 1; } &&
             cd /mnt/docs;
             mkdir ./tmp/ &&
             context lwc-documentation.tex
@@ -48,6 +48,7 @@ jobs:
           texlive/texlive:latest
           /bin/sh -c '
             mktexlsr &&
+            mtxrun --generate &
             cd /mnt/tests/ &&
             lualatex-dev --halt-on-error ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
             { echo "::error::LaTeX Basic Test Failed!"; exit 1; } &&
@@ -60,8 +61,10 @@ jobs:
             { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
             lualatex-dev --halt-on-error ./latex-columns.tex ||
             { echo "::error::LaTeX Columns Test Failed!"; exit 1; }
-            optex --halt-on-error ./optex-basic.tex ||
-            { echo "::error::OpTeX Basic Test Failed!"; exit 1; }
+            optex --halt-on-error ./optex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::OpTeX Basic Test Failed!"; exit 1; } &&
+            context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; }
           '
 
       - name: Bundle the package
