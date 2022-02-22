@@ -56,14 +56,20 @@
 % We should only reenable \lwc/ at the end if it was already enabled.
 \newif\iflwc@should@reenable
 
-\newcommand{\lwc@patch@pre}{\iflwc%
-    \lwc@should@reenabletrue%
-    \lwcdisable%
-\fi}
+\newcommand{\lwc@patch@pre}{%
+    \iflwc%
+        \lwc@should@reenabletrue%
+        \lwcdisable%
+    \else%
+        \lwc@should@reenablefalse%
+    \fi%
+}
 
-\newcommand{\lwc@patch@post}{\iflwc@should@reenable%
-    \lwcenable%
-\fi}
+\newcommand{\lwc@patch@post}{%
+    \iflwc@should@reenable%
+        \lwcenable%
+    \fi%
+}
 
 \newcommand{\lwcdisablecmd}[1]{%
     \ifdefined#1

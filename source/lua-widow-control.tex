@@ -46,10 +46,14 @@
 % We should only reenable \lwc/ at the end if it was already enabled.
 \newif\iflwc@should@reenable
 
-\def\lwc@patch@pre{\iflwc%
-    \lwc@should@reenabletrue%
-    \lwcdisable%
-\fi}
+\def\lwc@patch@pre{%
+    \iflwc%
+        \lwc@should@reenabletrue%
+        \lwcdisable%
+    \else%
+        \lwc@should@reenablefalse%
+    \fi%
+}
 
 \def\lwc@patch@post{\iflwc@should@reenable%
     \lwcenable%
