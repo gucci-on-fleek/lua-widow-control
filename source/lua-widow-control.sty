@@ -3,14 +3,19 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
+% Formats built after 2015 include \LuaTeX{}Base, so this is the absolute
+% minimum version that we will run under.
+\NeedsTeXFormat{LaTeX2e}[2015/01/01] 
 
+% For _really_ old formats
 \providecommand\DeclareRelease[3]{}
 \providecommand\DeclareCurrentRelease[2]{}
 
 \DeclareRelease{v1.1.6}{2022-02-22}{lua-widow-control-2022-02-22.sty}
 \DeclareCurrentRelease{v1.2.0}{2022-02-22} %%version %%date
 
+% If this version of LaTeX doesn't support command hooks, then we load
+% the last v1.1.X version of the package.
 \providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
 \IfFormatAtLeastTF{2021/06/01}{}{\input{lua-widow-control-2022-02-22.sty}}
 \IfFormatAtLeastTF{2021/06/01}{}{\endinput}
@@ -21,5 +26,67 @@
     {v1.2.0} %%version
     {Use Lua to remove widows and orphans}
 
+\str_const:Nn \c__lwc_name_str { lua-widow-control }
+
+% Don't let the user proceed unless they are using \LuaTeX{}.
+\msg_new:nnnn
+    { \c__lwc_name_str }
+    { no-luatex }
+    { LuaTeX~ is~ required~ for~ this~ package. }
+    { Make~ sure~ to~ compile~ your~ document~ with~ `lualatex'. }
+
+\sys_if_engine_luatex:F {
+    \msg_critical:nn{\c__lwc_name_str}{no-luatex}
+}
+
+% Set the penalties
+\int_set:Nn \tex_clubpenalty:D  { 1 }
+\int_set:Nn \tex_widowpenalty:D { 1 }
+\int_zero:N \tex_displaywidowpenalty:D
+\int_zero:N \tex_interlinepenalty:D   
+\int_zero:N \tex_brokenpenalty:D      
+
+\dim_new:N  \g__lwc_emergencystretch_dim
+% If the font hasn't been initialized yet, then 1em==0pt. If that is the case, 
+% we set a fallback value.
+\dim_compare:nTF { 1em > \c_zero_dim } {
+    \dim_set:Nn \g__lwc_emergencystretch_dim { 3em } 
+} {
+    \dim_set:Nn \g__lwc_emergencystretch_dim { 30pt } 
+}
+
+\lua_now:n { require "lua-widow-control" }
+
+% Here, we enable font expansion/contraction. It isn't strictly necessary for
+% \lwc/'s functionality; however, it is required for the
+% lengthened paragraphs to not have terrible spacing. 
+\hook_gput_code:nnn { begindocument/before } { \c__lwc_name_str } {
+    \@ifpackageloaded { microtype } {} {
+        \RequirePackage[
+            final,
+            activate = { true, nocompatibility }
+        ]
+        { microtype }
+    }
+}
+
+\cs_new:Npn \__lwc_enable: {
+    \lua_now:n { lwc.enable_callbacks() }
+}
+
+\cs_new:Npn \__lwc_disable: {
+    \lua_now:n { lwc.disable_callbacks() }
+}
+
+\prg_set_conditional:Nnn \__lwc_if_enabled: { T, F, TF } {
+    \lua_now:n { lwc.if_lwc_enabled() }
+        \prg_return_true:
+    \else
+        \prg_return_false:
+    \fi
+}
+
+%%%%%%%%%%%%%%
+\__lwc_enable:
 
 \endinput
