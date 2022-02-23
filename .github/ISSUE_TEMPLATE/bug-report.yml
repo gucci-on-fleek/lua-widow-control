@@ -12,6 +12,8 @@ body:
         If this is a general question, please [start a discussion](https://github.com/gucci-on-fleek/lua-widow-control/discussions/new).
 
         Otherwise, please provide as much information as possible, and I'll hopefully be able to solve your issue.
+
+        (And if this a bug report but this form frustrates you, you can still use a blank issue. If you choose to do so, _please_ give me enough information to work with.)
   - type: textarea
     attributes:
       label: Issue
@@ -69,7 +71,9 @@ body:
       options:
         - LaTeX
         - Plain TeX
-        - ConTeXt
+        - ConTeXt MKIV
+        - ConTeXt MKXL
+        - OpTeX
     validations:
       required: true
   - type: dropdown
