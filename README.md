@@ -35,6 +35,11 @@ To load the package, add the relevant line to your preamble:
 |OpTeX        |`\load[lua-widow-control]`      |
 
 
+Contributing
+------------
+
+Please see [`contributing.md`](https://github.com/gucci-on-fleek/lua-widow-control/blob/master/.github/contributing.md).
+
 Licence
 -------
 
