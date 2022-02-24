@@ -81,10 +81,10 @@
 
     \tableofcontents\clearpage
 
-    \lwcdisable
+    \lwcsetup{enable=false}
     \footnotetest
 
-    \lwcenable
+    \lwcsetup{enable=true}
     \footnotetest
 
     \input generic-basic
@@ -123,7 +123,7 @@
 
     \directlua{lwc.emergency_stretch = tex.maxdimen}
 
-    \lwcenable\lwcenable\lwcenable\lwcenable\lwcenable\lwcenable\lwcenable
+    \lwcsetup{enable=true}\lwcsetup{enable=true}\lwcsetup{enable=true}\lwcsetup{enable=true}\lwcsetup{enable=true}\lwcsetup{enable=true}
     
     \clearpage
 
