@@ -169,7 +169,7 @@ end
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     local renable_box_warnings
-    if (latex or plain) and
+    if (context or optex) or
        #luatexbase.callback_descriptions("hpack_quality") == 0
     then -- See #18 and michal-h21/linebreaker#3
         renable_box_warnings = true
