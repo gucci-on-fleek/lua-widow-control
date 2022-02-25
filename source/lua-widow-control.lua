@@ -421,7 +421,7 @@ function lwc.enable_callbacks()
 
         enabled = true
     else
-        warning("Already enabled")
+        info("Already enabled")
     end
 end
 
@@ -437,7 +437,7 @@ function lwc.disable_callbacks()
 
         enabled = false
     else
-        warning("Already disabled")
+        info("Already disabled")
     end
 end
 

@@ -32,17 +32,30 @@
 % Message and String Constants
 \str_const:Nn \c__lwc_name_str { lua-widow-control }
 
-\msg_new:nnnn
+\msg_new:nnn
     { \c__lwc_name_str }
     { no-luatex }
-    { LuaTeX~ is~ required~ for~ this~ package. }
-    { Make~ sure~ to~ compile~ your~ document~ with~ `lualatex'. }
+    {
+        LuaTeX~ is~ required~ for~ this~ package. \\
+        Make~ sure~ to~ compile~ your~ document~ with~ `lualatex'.
+    }
 
-\msg_new:nnnn
+\msg_new:nnn
     { \c__lwc_name_str }
     { patch-failed }
-    { Patching~ \c_backslash_str #1~ failed. }
-    { Please~ ensure~ that~ \c_backslash_str #1~ exists. }
+    { 
+        Patching~ \c_backslash_str #1~ failed. \\
+        Please~ ensure~ that~ \c_backslash_str #1~ exists. 
+    }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { old-command }
+    { 
+        \c_backslash_str #1~ has~ been~ #2 \\
+        Please~ use~ \c_backslash_str setuplwc \c_left_brace_str #3 
+        \c_right_brace_str\ instead.
+    }
 
 % Don't let the user proceed unless they are using \LuaTeX{}.
 \sys_if_engine_luatex:F {
@@ -116,21 +129,21 @@
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
-\bool_new:N \g__lwc_should_reenable
+\bool_new:N \g__lwc_should_reenable_bool
 
 \cs_new:Npn \__lwc_patch_cmd:c #1 {
     \cs_if_exist:cTF { #1 } {
         \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
             % We should only reenable \lwc/ at the end if it was already enabled.
             \__lwc_if_enabled:TF {
-                \bool_gset_true:N \g__lwc_should_reenable
+                \bool_gset_true:N \g__lwc_should_reenable_bool
                 \__lwc_disable:
             } {
-                \bool_gset_false:N \g__lwc_should_reenable
+                \bool_gset_false:N \g__lwc_should_reenable_bool
             }
         }
         \hook_gput_code:nnn { cmd / #1 / after } { \c__lwc_name_str } {
-            \bool_if:NT { \g__lwc_should_reenable } {
+            \bool_if:NT { \g__lwc_should_reenable_bool } {
                 \__lwc_enable:
             }
         }
@@ -167,5 +180,60 @@
 \ProcessKeysPackageOptions{ \c__lwc_name_str }
 
 \NewDocumentCommand \lwcsetup {m} { \keys_set:nn{\c__lwc_name_str}{#1} }
+
+% Legacy Commands
+\bool_new:N \g__lwc_haswarned_enable_bool
+\NewDocumentCommand \lwcenable { } {
+    \bool_if:NF { \g__lwc_haswarned_enable_bool } {
+        \bool_gset_true:N \g__lwc_haswarned_enable_bool
+        \msg_warning:nnnnn
+            { \c__lwc_name_str }
+            { old-command }
+            { lwcenable }
+            { deprecated. }
+            { enable=true }
+    }
+    \keys_set:nn { \c__lwc_name_str }{ enable = true }
+}
+
+\bool_new:N \g__lwc_haswarned_disable_bool
+\NewDocumentCommand \lwcdisable { } {
+    \bool_if:NF { \g__lwc_haswarned_disable_bool } {
+        \bool_gset_true:N \g__lwc_haswarned_disable_bool
+        \msg_warning:nnnnn
+            { \c__lwc_name_str }
+            { old-command }
+            { lwcdisable }
+            { deprecated. }
+            { enable=false }
+    }
+    \keys_set:nn { \c__lwc_name_str }{ enable = false }
+}
+
+\bool_new:N \g__lwc_haswarned_emergencystretch_bool
+\NewDocumentCommand \lwcemergencystretch { } {
+    \bool_if:NF { \g__lwc_haswarned_emergencystretch_bool } {
+        \bool_gset_true:N \g__lwc_haswarned_emergencystretch_bool
+        \msg_error:nnnnn
+            { \c__lwc_name_str }
+            { old-command }
+            { lwcemergencystretch }
+            { REMOVED! }
+            { emergencystretch=XXXpt }
+    }
+}
+
+\bool_new:N \g__lwc_haswarned_disablecmd_bool
+\NewDocumentCommand \lwcdisablecmd { m } {
+    \bool_if:NF { \g__lwc_haswarned_disablecmd_bool } {
+        \bool_gset_true:N \g__lwc_haswarned_disablecmd_bool
+        \msg_error:nnnnn
+            { \c__lwc_name_str }
+            { old-command }
+            { lwcdisablecmd }
+            { REMOVED! }
+            { disablecmds={\aaa,~ \bbb} }
+    }
+}
 
 \endinput
