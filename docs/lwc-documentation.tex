@@ -190,7 +190,11 @@ Currently, \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) users must manually install
 \Lwc/ requires \LuaTeX{} ($\ge$ 0.85) and the most recent version of \sans{luatexbase} (2015/10/04). Any version of \TeX~Live $\ge$ 2016 will meet these requirements.
 
 \subsection{\LaTeX{}}
-\Lwc/ requires \LuaTeX{} ($\ge$ 0.85), \LaTeX{} ($\ge$ 2015/01/01), \sans{microtype} (any version), and \sans{etoolbox} (any version). Any version of \TeX~Live $\ge$ 2016 will meet these requirements.
+\Lwc/ requires \LuaTeX{} ($\ge$ 0.85), \LaTeX{} ($\ge$ 2021/06/01), and \sans{microtype} (any version). This requires a fully up-to-date version of \TeX~Live 2021 or Mik\TeX{}.
+
+\Lwc/ also supports a \q{legacy} mode for older \LaTeX{} kernels. This uses an older version of the \LaTeX{} code while still using the most recent Lua code. This mode requires \LuaTeX{} ($\ge$ 0.85), \LaTeX{} ($\ge$ 2015/01/01), \sans{microtype} (any version), and \sans{etoolbox} (any version). Any version of \TeX~Live $\ge$ 2016 will meet these requirements.
+
+Please note that when running in legacy mode, you cannot use the key--value interface. Instead, you should follow the \q{Plain~\TeX{}} interface.
 
 \subsection{\ConTeXt{}}
 \Lwc/ supports both \ConTeXt{} \acronym{MKXL} (\LuaMetaTeX{}) and \ConTeXt{} \acronym{MKIV} (\LuaTeX{}).
@@ -236,11 +240,16 @@ Since \TeX{} implements column breaking and page breaking through the same inter
 \stopTABLE
 
 \subsection{\LaTeX{}}
+All options can be set either as package options or with the \inlineTEX{\lwcsetup} command.
 \startTABLE
-\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
-\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\setlength{\lwcemergencystretch}{3em}}  \NC\NR
-\NC Selectively Disable \NC \inlineTEX{\lwcdisablecmd{\cmd}}  \NC\NR
+\NC Enable (default) \NC \inlineTEX{\lwcsetup{enable=true}}  \NC\NR
+\NC Disable \NC \inlineTEX{\lwcsetup{enable=false}}  \NC\NR
+\NC \estretch/ \NC \inlineTEX{\lwcsetup{emergencystretch=3em}}  \NC\NR
+\NC Selectively Disable \NC \inlineTEX{\lwcsetup{disablecmds={\aaa, \bbb}}}  \NC\NR
+\NC Prevent loading \sans{microtype} \NC \inlineTEX{\lwcsetup{microtype=false}}  \NC\NR
+\NC Widow Penalty \NC \inlineTEX{\lwcsetup{widowpenalty=999}}  \NC\NR
+\NC Orphan Penalty \NC \inlineTEX{\lwcsetup{orphanpenalty=999}}  \NC\NR
+\NC Debug Mode \NC \inlineTEX{\lwcsetup{debug=true}}  \NC\NR
 \stopTABLE
 
 \subsection{\ConTeXt{}}
@@ -257,7 +266,6 @@ Since \TeX{} implements column breaking and page breaking through the same inter
 \NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
 \NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
 \NC \estretch/ \NC \inlineTEX{\lwcemergencystretch=3em} \NC\NR
-\NC Selectively Disable \NC \emph{Not Implemented} \NC\NR
 \stopTABLE
 
 \subsection{\estretch/}
@@ -269,9 +277,9 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 \subsection{Selectively Disabling}
 Sometimes, you may want to disable \lwc/ for certain commands where stretching is undesirable. For example, you typically wouldn't want section headings to be stretched. 
 
-You could just disable then reenable \lwc/ every time that you use the command; however, \lwc/ provides a convenience macro that will do this automatically for you. Place \inlineTEX{\lwcdisablecmd{\cmd}} in the preamble, and \lwc/ will not expand any arguments of \tex{cmd} in the document.
+You could just disable then reenable \lwc/ every time that you use the command; however, \lwc/ provides a convenience macro that will do this automatically for you.
 
-\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, and others. You'll need to patch these yourself.
+\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, Op\TeX{}, and others. You'll need to patch these yourself.
 
 Under \ConTeXt{}, you need to use a different method to selectively disable \lwc/. Instead of using \tex{lwcdisablecmd}, you should use one of the preexisting \tex{everyfoo} hooks as shown in the table above since patching commands is rarely advisable in \ConTeXt{} 
 
