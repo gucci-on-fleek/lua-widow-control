@@ -74,7 +74,7 @@ elseif plain or latex or optex then
     if plain or latex then
         luatexbase.provides_module {
             name = lwc.name,
-            date = "2022/02/22", --%%date
+            date = "2022/02/22", --%%slashdate
             version = "1.1.6", --%%version
             description = [[
 

@@ -7,6 +7,6 @@
 
 grep --exclude-dir=.git/ -Erl '%%[v]ersion' | xargs sed -i "/%%[v]ersion/ s/[[:digit:]]\.[[:digit:]]\.[[:digit:]]/$1/"
 
-grep --exclude-dir=.git/ -Erl '%%[d]ate' | xargs sed -Ei "/%%[d]ate/ s/[[:digit:]]{4}.[[:digit:]]{2}.[[:digit:]]{2}/$(date -I)/"
+grep --exclude-dir=.git/ -Erl '%%[d]ashdate' | xargs sed -Ei "/%%[d]ashdate/ s/[[:digit:]]{4}.[[:digit:]]{2}.[[:digit:]]{2}/$(date -I)/"
 
-sed -i '/%%date/ s|-|/|g; /%%date/ s|//|--|' source/lua-widow-control.sty source/lua-widow-control.lua
+grep --exclude-dir=.git/ -Erl '%%[s]lashdate' | xargs sed -Ei "/%%[s]lashdate/ s|[[:digit:]]{4}.[[:digit:]]{2}.[[:digit:]]{2}|$(date +%Y/%m/%d)|"

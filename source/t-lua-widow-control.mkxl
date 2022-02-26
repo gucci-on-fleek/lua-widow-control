@@ -4,7 +4,7 @@
 %D        title=lua-widow-control,
 %D     subtitle=\ConTeXt module for lua-widow-control,
 %D       author=Max Chernoff,
-%D         date=2022-02-22, %%date
+%D         date=2022-02-22, %%dashdate
 %D    copyright=Max Chernoff,
 %D      license=MPL-2.0+,
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
