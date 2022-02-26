@@ -314,6 +314,8 @@ corrupted. As a workaround, disable lua-widow-control for the
 affected paragraph or change the page breaks in your document.]]
 
             prev.next = nil
+            debug_print("safe_last", node.type(head.id) .. " " .. node.type(prev.id))
+
             return prev
         end
 
@@ -397,7 +399,7 @@ function lwc.remove_widows(head)
     local clear_flag = false
 
     -- Loop through all of the nodes on the page with the lwc attribute
-    while true do
+    while head do
         local value
         value, head = find_attribute(head, attribute)
 
