@@ -54,8 +54,8 @@ local par_id = node.id("par") or node.id("local_par")
 local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
 local traverse = node.traverse
-local set_attribute = node.set_attribute
-local has_attribute = node.has_attribute
+local set_attribute = node.set_attribute or node.setattribute
+local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
 local min_col_width = tex.sp("25em")
@@ -395,14 +395,19 @@ function lwc.remove_widows(head)
     local target_node = paragraphs[paragraph_index].node
     local clear_flag = false
 
-    -- Loop through all of the nodes on the page
-    while head do
-        if lwc.debug and has_attribute(head, attribute) then
-            debug_print("output loop", "found " .. has_attribute(head, attribute))
+    -- Loop through all of the nodes on the page with the lwc attribute
+    while true do
+        local value
+        value, head = find_attribute(head, attribute)
+
+        if not head then
+            break
         end
 
+        debug_print("output loop", "found " .. value)
+
         -- Insert the start of the replacement paragraph
-        if has_attribute(head, attribute, paragraph_index) then
+        if value == paragraph_index then
             debug_print("output loop", "start")
             safe_last(target_node) -- Remove any loops
 
@@ -411,14 +416,14 @@ function lwc.remove_widows(head)
         end
 
         -- Insert the end of the replacement paragraph
-        if has_attribute(head, attribute, -1 * paragraph_index) then
+        if value == -1 * paragraph_index then
             debug_print("output loop", "end")
             safe_last(target_node).next = head.next
             clear_flag = false
         end
 
         -- Start of final paragraph
-        if has_attribute(head, attribute, #paragraphs) then
+        if value == #paragraphs then
             debug_print("output loop", "final")
             local last_line = copy(last(head))
 
