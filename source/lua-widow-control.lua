@@ -5,8 +5,23 @@
     SPDX-FileCopyrightText: 2022 Max Chernoff
   ]]
 
-lwc = {}
+lwc = lwc or {}
 lwc.name = "lua-widow-control"
+
+local write_nl = texio.write_nl
+local string_rep = string.rep
+local function debug_print(title, text)
+    if not lwc.debug then return end
+
+    local filler = 15 - #title
+
+    if text then
+        write_nl("log", "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
+    else
+        write_nl("log", "LWC: " .. string_rep(" ", 18) .. title)
+    end
+end
+
 
 --[[
     \lwc/ is intended to be format-agonistic. It only runs on Lua\TeX{},
@@ -37,6 +52,8 @@ local last = node.slide
 local copy = node.copy_list
 local par_id = node.id("par") or node.id("local_par")
 local glue_id = node.id("glue")
+local glyph_id = node.id("glyph")
+local traverse = node.traverse
 local set_attribute = node.set_attribute
 local has_attribute = node.has_attribute
 local flush_list = node.flush_list or node.flushlist
@@ -49,6 +66,7 @@ local maxdimen = 1073741823 -- \\maxdimen in sp
   ]]
 local warning, info, attribute, contrib_head, stretch_order, pagenum, emergencystretch
 if lmtx then
+    debug_print("LMTX")
     contrib_head = 'contributehead'
     stretch_order = "stretchorder"
 else
@@ -57,6 +75,7 @@ else
 end
 
 if context then
+    debug_print("ConTeXt")
     warning = logs.reporter("module", lwc.name)
     info = logs.reporter("module", lwc.name)
     attribute = attributes.public(lwc.name)
@@ -72,6 +91,7 @@ elseif plain or latex or optex then
     end
 
     if plain or latex then
+        debug_print("Plain/LaTeX")
         luatexbase.provides_module {
             name = lwc.name,
             date = "2022/02/22", --%%slashdate
@@ -87,6 +107,7 @@ paragraphs.]],
         info = function(str) luatexbase.module_info(lwc.name, str) end
         attribute = luatexbase.new_attribute(lwc.name)
     elseif optex then
+        debug_print("OpTeX")
         local write_nl = texio.write_nl
         warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
         info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
@@ -101,6 +122,10 @@ else -- uh oh
 end
 
 local paragraphs = {} -- List to hold the alternate paragraph versions
+
+local function get_location()
+    return "At " .. pagenum() .. "/" .. #paragraphs
+end
 
 
 --[[
@@ -166,6 +191,29 @@ local function register_callback(t)
     end
 end
 
+local function get_chars(head)
+    if not lwc.debug then return end
+
+    local chars = ""
+    for n in traverse(head) do
+        if n.id == glyph_id then
+            if n.char < 127 then
+                chars = chars .. string.char(n.char)
+            else
+                chars = chars .. "#"
+            end
+        elseif n.id == glue_id then
+            chars = chars .. " "
+        end
+        if #chars > 25 then
+            break
+        end
+    end
+
+    debug_print(get_location(), chars)
+end
+
+
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
@@ -179,6 +227,7 @@ function lwc.save_paragraphs(head)
 
     -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
     if head.id ~= par_id and context then
+        debug_print("save_paragraphs", "not given par")
         return head
     end
 
@@ -221,6 +270,12 @@ function lwc.save_paragraphs(head)
 
     table.insert(paragraphs, { demerits = long_demerits, node = long_node })
 
+    get_chars(head)
+    debug_print(get_location(), "nat  lines    " .. natural_info.prevgraf)
+    debug_print(get_location(), "nat  demerits " .. natural_info.demerits)
+    debug_print(get_location(), "long lines    " .. long_info.prevgraf)
+    debug_print(get_location(), "long demerits " .. long_info.demerits)
+
     -- \LuaMetaTeX{} crashes if we return `true`
     return head
 end
@@ -231,6 +286,7 @@ end
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
+    debug_print("mark_paragraphs", get_location())
     set_attribute(head, attribute, #paragraphs)
     set_attribute(last(head), attribute, -1 * #paragraphs)
 
@@ -283,6 +339,8 @@ function lwc.remove_widows(head)
     local displaywidowpenalty = tex.displaywidowpenalty
     local brokenpenalty = tex.brokenpenalty
 
+    debug_print("outputpenalty", tex.outputpenalty .. " " .. #paragraphs)
+
     --[[
         We only need to process pages that have orphans or widows. If `paragraphs`
         is empty, then there is nothing that we can do.
@@ -332,13 +390,19 @@ function lwc.remove_widows(head)
         end
     end
 
+    debug_print("selected para", pagenum() .. "/" .. paragraph_index)
     local target_node = paragraphs[paragraph_index].node
     local clear_flag = false
 
     -- Loop through all of the nodes on the page
     while head do
+        if lwc.debug and has_attribute(head, attribute) then
+            debug_print("output loop", "found " .. has_attribute(head, attribute))
+        end
+
         -- Insert the start of the replacement paragraph
         if has_attribute(head, attribute, paragraph_index) then
+            debug_print("output loop", "start")
             safe_last(target_node) -- Remove any loops
 
             head.prev.next = target_node
@@ -347,12 +411,14 @@ function lwc.remove_widows(head)
 
         -- Insert the end of the replacement paragraph
         if has_attribute(head, attribute, -1 * paragraph_index) then
+            debug_print("output loop", "end")
             safe_last(target_node).next = head.next
             clear_flag = false
         end
 
         -- Start of final paragraph
         if has_attribute(head, attribute, #paragraphs) then
+            debug_print("output loop", "final")
             local last_line = copy(last(head))
 
             last(last_line).next = copy(tex.lists[contrib_head])
@@ -414,6 +480,7 @@ lwc.callbacks = {
 
 local enabled = false
 function lwc.enable_callbacks()
+    debug_print("callbacks", "enabling")
     if not enabled then
         lwc.callbacks.remove_widows.enable()
         lwc.callbacks.save_paragraphs.enable()
@@ -426,6 +493,7 @@ function lwc.enable_callbacks()
 end
 
 function lwc.disable_callbacks()
+    debug_print("callbacks", "disabling")
     if enabled then
         lwc.callbacks.save_paragraphs.disable()
         lwc.callbacks.mark_paragraphs.disable()
@@ -442,6 +510,7 @@ function lwc.disable_callbacks()
 end
 
 function lwc.if_lwc_enabled()
+    debug_print("iflwc")
     if enabled then
         tex.sprint("\\iftrue")
     else
