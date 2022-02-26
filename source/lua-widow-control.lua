@@ -47,55 +47,56 @@ local maxdimen = 1073741823 -- \\maxdimen in sp
 --[[
     Package/module initialization
   ]]
-local warning, info, attribute, contrib_head, stretch_order, pagenum
-
-if context and lmtx then
-    warning = logs.reporter("module", lwc.name)
-    info = logs.reporter("module", lwc.name)
-    attribute = attributes.public(lwc.name)
-    contrib_head = 'contributehead' -- For \LuaMetaTeX{}
+local warning, info, attribute, contrib_head, stretch_order, pagenum, emergencystretch
+if lmtx then
+    contrib_head = 'contributehead'
     stretch_order = "stretchorder"
-    pagenum = function() return tex.count["realpageno"] end
-elseif context and not lmtx then
+else
+    contrib_head = 'contrib_head'
+    stretch_order = "stretch_order"
+end
+
+if context then
     warning = logs.reporter("module", lwc.name)
     info = logs.reporter("module", lwc.name)
     attribute = attributes.public(lwc.name)
-    contrib_head = 'contrib_head'
-    stretch_order = "stretch_order"
     pagenum = function() return tex.count["realpageno"] end
-elseif plain or latex then
-    luatexbase.provides_module {
-        name = lwc.name,
-        date = "2022/02/22", --%%date
-        version = "1.1.6", --%%version
-        description = [[
+    emergencystretch = "lwcemergencystretch"
+elseif plain or latex or optex then
+    pagenum = function() return tex.count[0] end
 
-    This module provides a LuaTeX-based solution to prevent
-    widows and orphans from appearing in a document. It does
-    so by increasing or decreasing the lengths of previous
-    paragraphs.
-        ]],
-    }
-    warning = function(str) luatexbase.module_warning(lwc.name, str) end
-    info = function(str) luatexbase.module_info(lwc.name, str) end
-    attribute = luatexbase.new_attribute(lwc.name)
-    contrib_head = 'contrib_head' -- For \LuaTeX{}
-    stretch_order = "stretch_order"
-    pagenum = function() return tex.count[0] end
-elseif optex then
-    local write_nl = texio.write_nl
-    warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
-    info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
-    attribute = alloc.new_attribute(lwc.name)
-    contrib_head = 'contrib_head'
-    stretch_order = "stretch_order"
-    pagenum = function() return tex.count[0] end
+    if tex.isdimen("g__lwc_emergencystretch_dim") then
+        emergencystretch = "g__lwc_emergencystretch_dim"
+    else
+        emergencystretch = "lwcemergencystretch"
+    end
+
+    if plain or latex then
+        luatexbase.provides_module {
+            name = lwc.name,
+            date = "2022/02/22", --%%date
+            version = "1.1.6", --%%version
+            description = [[
+
+This module provides a LuaTeX-based solution to prevent
+widows and orphans from appearing in a document. It does
+so by increasing or decreasing the lengths of previous
+paragraphs.]],
+        }
+        warning = function(str) luatexbase.module_warning(lwc.name, str) end
+        info = function(str) luatexbase.module_info(lwc.name, str) end
+        attribute = luatexbase.new_attribute(lwc.name)
+    elseif optex then
+        local write_nl = texio.write_nl
+        warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
+        info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
+        attribute = alloc.new_attribute(lwc.name)
+    end
 else -- uh oh
     error [[
         Unsupported format.
 
-        Please use (Lua)LaTeX, Plain (Lua)TeX, ConTeXt (MKXL/LMTX),
-        or OpTeX.
+        Please use (Lua)LaTeX, Plain (Lua)TeX, ConTeXt or OpTeX.
     ]]
 end
 
@@ -194,7 +195,7 @@ function lwc.save_paragraphs(head)
     -- Break the paragraph 1 line longer than natural
     local long_node, long_info = tex.linebreak(new_head, {
         looseness = 1,
-        emergencystretch = tex.dimen.lwcemergencystretch,
+        emergencystretch = tex.getdimen(emergencystretch),
     })
 
     -- Break the natural paragraph so we know how long it was
@@ -420,7 +421,7 @@ function lwc.enable_callbacks()
 
         enabled = true
     else
-        warning("Already enabled")
+        info("Already enabled")
     end
 end
 
@@ -436,7 +437,7 @@ function lwc.disable_callbacks()
 
         enabled = false
     else
-        warning("Already disabled")
+        info("Already disabled")
     end
 end
 

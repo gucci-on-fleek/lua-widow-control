@@ -3,82 +3,217 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
-\ProvidesPackage{lua-widow-control}%
-    [2022/02/22 v1.1.6] %%version %%date
+% Formats built after 2015 include \LuaTeX{}Base, so this is the absolute
+% minimum version that we will run under.
+\NeedsTeXFormat{LaTeX2e}[2015/01/01] 
 
-\ifdefined\directlua\else
-    \PackageError{lua-widow-control}{%
-        LuaTeX is required for this package.\MessageBreak
-        Make sure to compile with `lualatex'%
-    }{}
-\fi
+% For _really_ old formats
+\providecommand\DeclareRelease[3]{}
+\providecommand\DeclareCurrentRelease[2]{}
 
-\clubpenalty=1
-\widowpenalty=1
-\displaywidowpenalty=0
-\interlinepenalty=0
-\brokenpenalty=0
+\DeclareRelease{v1.1.6}{2022-02-22}{lua-widow-control-2022-02-22.sty}
+\DeclareCurrentRelease{v1.2.0}{2022-02-22} %%version %%date
 
-% We can't use \\newlength since that makes a \TeX{} "skip", not a "dimen"
-\newdimen\lwcemergencystretch
-\lwcemergencystretch=3em
+% If this version of LaTeX doesn't support command hooks, then we load
+% the last v1.1.X version of the package.
+\providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
+\IfFormatAtLeastTF{2020/10/01}{}{\input{lua-widow-control-2022-02-22.sty}}
+\IfFormatAtLeastTF{2020/10/01}{}{\endinput}
 
-\directlua{require "lua-widow-control"}
+\ProvidesExplPackage
+    {lua-widow-control}
+    {2022/02/22} %%date
+    {v1.2.0} %%version
+    {Use Lua to remove widows and orphans}
+
+% Unconditional Package Loads
+\RequirePackage { l3keys2e }
+
+% Message and String Constants
+\str_const:Nn \c__lwc_name_str { lua-widow-control }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { no-luatex }
+    {
+        LuaTeX~ is~ required~ for~ this~ package. \\
+        Make~ sure~ to~ compile~ your~ document~ with~ `lualatex'.
+    }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { patch-failed }
+    { 
+        Patching~ \c_backslash_str #1~ failed. \\
+        Please~ ensure~ that~ \c_backslash_str #1~ exists. 
+    }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { old-format-patch }
+    { 
+        Patching~ not~ supported~ with~ old~ LaTeX. \\
+        Please~ use~ a~ LaTeX~ format~ >=~ 2021/06/01.
+    }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { old-command }
+    { 
+        \c_backslash_str #1~ has~ been~ REMOVED! \\
+        Please~ use~ \c_backslash_str setuplwc \c_left_brace_str #2 
+        \c_right_brace_str\ instead.
+    }
+
+% Don't let the user proceed unless they are using \LuaTeX{}.
+\sys_if_engine_luatex:F {
+    \msg_critical:nn { \c__lwc_name_str } { no-luatex }
+}
+
+% Define (most of) the keys
+\keys_define:nn { \c__lwc_name_str } {
+    emergencystretch .dim_gset:N = \g__lwc_emergencystretch_dim,
+    emergencystretch .value_required:n = true,
+    emergencystretch .initial:n        = 3em,
+
+    widowpenalty .int_gset:N       = \tex_widowpenalty:D,
+    widowpenalty .value_required:n = true,
+    widowpenalty .initial:n        = 1,
+
+    orphanpenalty .code:n = \int_gset:Nn \tex_clubpenalty:D  { #1 }
+                            \int_gset:Nn \@clubpenalty       { #1 },
+    orphanpenalty .value_required:n = true,
+    orphanpenalty .initial:n        = 1,
+
+    microtype .bool_gset:N      = \g__lwc_use_microtype_bool,
+    microtype .value_required:n = true,
+    microtype .initial:n        = true,
+    microtype .usage:n          = preamble,
+
+    disablecmds .clist_gset:N     = \g__lwc_disablecmds_cl,
+    disablecmds .value_required:n = false,
+    disablecmds .initial:n        = { \@sect },
+    disablecmds .usage:n          = preamble,
+}
+
+% Zero out some penalties
+\int_zero:N \tex_displaywidowpenalty:D
+\int_zero:N \tex_interlinepenalty:D   
+\int_zero:N \tex_brokenpenalty:D 
+
+% Load the Lua code
+\lua_now:n { require "lua-widow-control" }
 
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
-% lengthened paragraphs to not have terrible spacing. 
-\RequirePackage{etoolbox}
-\AtEndPreamble{
-    \@ifpackageloaded{microtype}{}{ % Only load if not already loaded
-        \RequirePackage[
-            final,
-            activate={true,nocompatibility}
-        ]{microtype}
+% lengthened paragraphs to not have terrible spacing.
+\bool_if:NT \g__lwc_use_microtype_bool {
+    \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+        \@ifpackageloaded { microtype } {} {
+            \RequirePackage[
+                final,
+                activate = { true, nocompatibility }
+            ]
+            { microtype }
+        }
     }
 }
 
-% Define \TeX{} wrappers for Lua functions
-\newcommand{\lwcenable}{\directlua{lwc.enable_callbacks()}}
-\newcommand{\lwcdisable}{\directlua{lwc.disable_callbacks()}}
-\newcommand{\iflwc}{\directlua{lwc.if_lwc_enabled()}}
-
-% Enable \lwc/ by default when the package is loaded.
-\lwcenable
-
-% Expansion of some parts of the document, such as section headings, is quite
-% undesirable, so we'll disable \lwc/ for certain commands.
-\newcommand{\lwc@patch@warning}[1]{\PackageWarning{lua-widow-control}{%
-    Patching the \protect#1 command failed%
-}}
-
-% We should only reenable \lwc/ at the end if it was already enabled.
-\newif\iflwc@should@reenable
-
-\newcommand{\lwc@patch@pre}{%
-    \iflwc%
-        \lwc@should@reenabletrue%
-        \lwcdisable%
-    \else%
-        \lwc@should@reenablefalse%
-    \fi%
+% Core Function Definitions
+\cs_new:Npn \__lwc_enable: {
+    \lua_now:n { lwc.enable_callbacks() }
 }
 
-\newcommand{\lwc@patch@post}{%
-    \iflwc@should@reenable%
-        \lwcenable%
-    \fi%
+\cs_new:Npn \__lwc_disable: {
+    \lua_now:n { lwc.disable_callbacks() }
 }
 
-\newcommand{\lwcdisablecmd}[1]{%
-    \ifdefined#1
-        \pretocmd{#1}{\lwc@patch@pre}{}{\lwc@patch@warning{#1}}%
-        \apptocmd{#1}{\lwc@patch@post}{}{\lwc@patch@warning{#1}}%
+\prg_set_conditional:Nnn \__lwc_if_enabled: { T, F, TF } {
+    \lua_now:n { lwc.if_lwc_enabled() }
+        \prg_return_true:
+    \else
+        \prg_return_false:
     \fi
 }
 
-\lwcdisablecmd{\@sect} % Sectioning
+% Expansion of some parts of the document, such as section headings, is quite
+% undesirable, so we'll disable \lwc/ for certain commands.
+\bool_new:N \g__lwc_should_reenable_bool
 
+\cs_new:Npn \__lwc_patch_cmd:c #1 {
+    \IfFormatAtLeastTF {2021/06/01 } {
+        \cs_if_exist:cTF { #1 } {
+            \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
+                % We should only reenable \lwc/ at the end if it was already enabled.
+                \__lwc_if_enabled:TF {
+                    \bool_gset_true:N \g__lwc_should_reenable_bool
+                    \__lwc_disable:
+                } {
+                    \bool_gset_false:N \g__lwc_should_reenable_bool
+                }
+            }
+            \hook_gput_code:nnn { cmd / #1 / after } { \c__lwc_name_str } {
+                \bool_if:NT { \g__lwc_should_reenable_bool } {
+                    \__lwc_enable:
+                }
+            }
+        } {
+            \msg_warning:nnc
+                { \c__lwc_name_str }
+                { patch-failed }
+                { #1 }
+        }
+    } {
+        \msg_warning:nn
+                { \c__lwc_name_str }
+                { old-format-patch }
+    }
+}
+
+\cs_new:Npn \__lwc_patch_cmd:N #1 {
+    \__lwc_patch_cmd:c { \cs_to_str:N #1 }
+}
+
+\hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+    \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:N
+}
+
+% Define some final keys
+\keys_define:nn { \c__lwc_name_str } {
+    enable .choice:,
+    enable / true  .code:n       = \__lwc_enable:,
+    enable / false .code:n       = \__lwc_disable:,
+    enable .initial:n            = true,
+
+    debug .choice:,
+    debug / true  .code:n       = \lua_now:n { lwc.debug = true },
+    debug / false .code:n       = \lua_now:n { lwc.debug = false },
+    debug .initial:n            = false,
+}
+
+% Add the user interface for the keys
+\ProcessKeysPackageOptions{ \c__lwc_name_str }
+
+\NewDocumentCommand \lwcsetup {m} { \keys_set:nn{\c__lwc_name_str}{#1} }
+
+% Legacy Commands
+\NewDocumentCommand \lwcemergencystretch { } {
+    \msg_error:nnnnn
+        { \c__lwc_name_str }
+        { old-command }
+        { lwcemergencystretch }
+        { emergencystretch=XXXpt }
+}
+
+\NewDocumentCommand \lwcdisablecmd { m } {
+    \msg_error:nnnn
+        { \c__lwc_name_str }
+        { old-command }
+        { lwcdisablecmd }
+        { disablecmds={\aaa,~ \bbb} }
+}
+
+\cs_new_eq:NN \lwcenable  \__lwc_enable:
+\cs_new_eq:NN \lwcdisable \__lwc_disable:
 
 \endinput
