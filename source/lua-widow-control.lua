@@ -348,7 +348,8 @@ function lwc.remove_widows(head)
         The list of penalties is from:
         https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
-    if (penalty == widowpenalty or
+    if  penalty ~= 0 and
+       (penalty == widowpenalty or
         penalty == displaywidowpenalty or
         penalty == clubpenalty or
         penalty == clubpenalty + widowpenalty or
@@ -550,7 +551,7 @@ function silence_luatexbase()
                         func(text)
                     end
                 end
-        )
+            )
             return
         end
     end

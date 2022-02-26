@@ -76,7 +76,8 @@
     emergencystretch .value_required:n = true,
     emergencystretch .initial:n        = 3em,
 
-    widowpenalty .int_gset:N       = \tex_widowpenalty:D,
+    widowpenalty .code:n = \int_gset:Nn \tex_widowpenalty:D        { #1 }
+                           \int_gset:Nn \tex_displaywidowpenalty:D { #1 },
     widowpenalty .value_required:n = true,
     widowpenalty .initial:n        = 1,
 
@@ -95,11 +96,6 @@
     disablecmds .initial:n        = { \@sect },
     disablecmds .usage:n          = preamble,
 }
-
-% Zero out some penalties
-\int_zero:N \tex_displaywidowpenalty:D
-\int_zero:N \tex_interlinepenalty:D   
-\int_zero:N \tex_brokenpenalty:D 
 
 % Load the Lua code
 \lua_now:n { require "lua-widow-control" }

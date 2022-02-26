@@ -7,9 +7,7 @@
 
 \_clubpenalty=1
 \_widowpenalty=1
-\_displaywidowpenalty=0
-\_interlinepenalty=0
-\_brokenpenalty=0
+\_displaywidowpenalty=1
 
 \_newdimen\lwcemergencystretch
 \lwcemergencystretch=3em
