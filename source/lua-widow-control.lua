@@ -115,11 +115,9 @@ paragraphs.]],
         attribute = alloc.new_attribute(lwc.name)
     end
 else -- uh oh
-    error [[
-        Unsupported format.
+    error [[Unsupported format.
 
-        Please use (Lua)LaTeX, Plain (Lua)TeX, ConTeXt or OpTeX.
-    ]]
+Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
 local paragraphs = {} -- List to hold the alternate paragraph versions
@@ -309,9 +307,8 @@ local function safe_last(head)
 
         if ids[id] then
             warning [[Circular node list detected!
-This should never happen. I'll try and recover, but your output may be 
-corrupted. As a workaround, disable lua-widow-control for the
-affected paragraph or change the page breaks in your document.]]
+This should never happen. I'll try and 
+recover, but your output may be corrupted.]]
 
             prev.next = nil
             debug_print("safe_last", node.type(head.id) .. " " .. node.type(prev.id))
