@@ -308,8 +308,8 @@ local function safe_last(head)
         if ids[id] then
             warning [[Circular node list detected!
 This should never happen. I'll try and 
-recover, but your output may be corrupted.]]
-
+recover, but your output may be corrupted.
+(Internal Error)]]
             prev.next = nil
             debug_print("safe_last", node.type(head.id) .. " " .. node.type(prev.id))
 
@@ -498,7 +498,6 @@ local enabled = false
 function lwc.enable_callbacks()
     debug_print("callbacks", "enabling")
     if not enabled then
-        lwc.callbacks.remove_widows.enable()
         lwc.callbacks.save_paragraphs.enable()
         lwc.callbacks.mark_paragraphs.enable()
 
@@ -534,8 +533,22 @@ function lwc.if_lwc_enabled()
     end
 end
 
--- This uses the debug library: probably a terrible idea
-function silence_luatexbase()
+--- Silence the luatexbase "Enabling/Removing <callback>" info messages
+---
+--- Every time that a paragraph is typeset, \lwc/ hooks in
+--- and typesets the paragraph 1 line longer. Some of these longer paragraphs
+--- will have pretty bad badness values, so TeX will issue an over/underfull
+--- hbox warning. To block these warnings, we hook into the `hpack_quality`
+--- callback and disable it so that no warning is generated.
+---
+--- However, each time that we enable/disable the null `hpack_quality` callback,
+--- luatexbase puts an info message in the log. This completely fills the log file
+--- with useless error messages, so we disable it here.
+---
+--- This uses the Lua `debug` library to internally modify the log upvalue in the
+--- `add_to_callback` function. This is almost certainly a terrible idea, but I don't
+--- know of a better way.
+local function silence_luatexbase()
     local nups = debug.getinfo(luatexbase.add_to_callback).nups
 
     for x = 1, nups do
@@ -557,8 +570,12 @@ function silence_luatexbase()
     end
 end
 
+
+-- Activate \lwc/
 if plain or latex then
     silence_luatexbase()
 end
+
+lwc.callbacks.remove_widows.enable()
 
 return lwc
