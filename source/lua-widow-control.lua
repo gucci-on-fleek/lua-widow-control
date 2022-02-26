@@ -55,6 +55,7 @@ local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
 local traverse = node.traverse
 local set_attribute = node.set_attribute or node.setattribute
+local has_attribute = node.has_attribute or node.hasattribute
 local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
@@ -422,8 +423,19 @@ function lwc.remove_widows(head)
             clear_flag = false
         end
 
+        if clear_flag then
+            head = free(head)
+        else
+            head = head.next
+        end
+    end
+
+    head = last(head_save)
+    while head do
+        local value = has_attribute(head, attribute)
+
         -- Start of final paragraph
-        if value == #paragraphs then
+        if value and value > 0  then
             debug_print("output loop", "final")
             local last_line = copy(last(head))
 
@@ -439,13 +451,11 @@ function lwc.remove_widows(head)
                 .. pagenum()
                 .. "."
             )
+
+            break
         end
 
-        if clear_flag then
-            head = free(head)
-        else
-            head = head.next
-        end
+        head = head.prev
     end
 
     paragraphs = {} -- Clear paragraphs array at the end of the page
