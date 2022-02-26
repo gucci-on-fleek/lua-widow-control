@@ -449,4 +449,28 @@ function lwc.if_lwc_enabled()
     end
 end
 
+-- This uses the debug library: probably a terrible idea
+function silence_luatexbase()
+    local nups = debug.getinfo(luatexbase.add_to_callback).nups
+
+    for x = 1, nups do
+        local name, func = debug.getupvalue(luatexbase.add_to_callback, x)
+        if name == "luatexbase_log" then
+            debug.setupvalue(
+                luatexbase.add_to_callback,
+                x,
+                function(text)
+                    if text:match("^Inserting") or text:match("^Removing") then
+                        return
+                    else
+                        func(text)
+                    end
+                end
+        )
+            return
+        end
+    end
+end
+silence_luatexbase()
+
 return lwc
