@@ -17,8 +17,8 @@
 % If this version of LaTeX doesn't support command hooks, then we load
 % the last v1.1.X version of the package.
 \providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
-\IfFormatAtLeastTF{2021/06/01}{}{\input{lua-widow-control-2022-02-22.sty}}
-\IfFormatAtLeastTF{2021/06/01}{}{\endinput}
+\IfFormatAtLeastTF{2020/10/01}{}{\input{lua-widow-control-2022-02-22.sty}}
+\IfFormatAtLeastTF{2020/10/01}{}{\endinput}
 
 \ProvidesExplPackage
     {lua-widow-control}
@@ -46,6 +46,14 @@
     { 
         Patching~ \c_backslash_str #1~ failed. \\
         Please~ ensure~ that~ \c_backslash_str #1~ exists. 
+    }
+
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { old-format-patch }
+    { 
+        Patching~ not~ supported~ with~ old~ LaTeX. \\
+        Please~ use~ a~ LaTeX~ format~ >=~ 2021/06/01.
     }
 
 \msg_new:nnn
@@ -133,26 +141,32 @@
 \bool_new:N \g__lwc_should_reenable_bool
 
 \cs_new:Npn \__lwc_patch_cmd:c #1 {
-    \cs_if_exist:cTF { #1 } {
-        \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
-            % We should only reenable \lwc/ at the end if it was already enabled.
-            \__lwc_if_enabled:TF {
-                \bool_gset_true:N \g__lwc_should_reenable_bool
-                \__lwc_disable:
-            } {
-                \bool_gset_false:N \g__lwc_should_reenable_bool
+    \IfFormatAtLeastTF {2021/06/01 } {
+        \cs_if_exist:cTF { #1 } {
+            \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
+                % We should only reenable \lwc/ at the end if it was already enabled.
+                \__lwc_if_enabled:TF {
+                    \bool_gset_true:N \g__lwc_should_reenable_bool
+                    \__lwc_disable:
+                } {
+                    \bool_gset_false:N \g__lwc_should_reenable_bool
+                }
             }
-        }
-        \hook_gput_code:nnn { cmd / #1 / after } { \c__lwc_name_str } {
-            \bool_if:NT { \g__lwc_should_reenable_bool } {
-                \__lwc_enable:
+            \hook_gput_code:nnn { cmd / #1 / after } { \c__lwc_name_str } {
+                \bool_if:NT { \g__lwc_should_reenable_bool } {
+                    \__lwc_enable:
+                }
             }
+        } {
+            \msg_warning:nnc
+                { \c__lwc_name_str }
+                { patch-failed }
+                { #1 }
         }
     } {
-        \msg_warning:nnc
-            { \c__lwc_name_str }
-            { patch-failed }
-            { #1 }
+        \msg_warning:nn
+                { \c__lwc_name_str }
+                { old-format-patch }
     }
 }
 
