@@ -540,6 +540,9 @@ function silence_luatexbase()
         end
     end
 end
-silence_luatexbase()
+
+if plain or latex then
+    silence_luatexbase()
+end
 
 return lwc
