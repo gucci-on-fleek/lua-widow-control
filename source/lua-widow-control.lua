@@ -361,6 +361,7 @@ function lwc.remove_widows(head)
         penalty == brokenpenalty + clubpenalty + displaywidowpenalty) and
         #paragraphs >= 1 then
     else
+        paragraphs = {}
         return head
     end
 
