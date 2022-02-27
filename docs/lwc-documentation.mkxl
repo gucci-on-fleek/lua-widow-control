@@ -138,6 +138,8 @@ setbounds currentpicture to boundingbox OverlayBox;
     after={\blank[medium]}
 ]
 
+\define[1]\meta{\m{\langle}\italic{#1}\m{\rangle}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Section Commands %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
