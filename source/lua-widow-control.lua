@@ -421,7 +421,7 @@ function lwc.remove_widows(head)
         if value == -1 * paragraph_index then
             debug_print("output loop", "end")
             safe_last(target_node).next = head.next
-            clear_flag = false
+            break
         end
 
         if clear_flag then
