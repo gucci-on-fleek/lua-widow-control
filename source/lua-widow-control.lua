@@ -428,33 +428,22 @@ function lwc.remove_widows(head)
         end
     end
 
-    head = last(head_save)
-    while head do
-        local value = has_attribute(head, attribute)
+    -- Start of final paragraph
+    debug_print("final para")
+    local last_line = copy(last(head_save))
 
-        -- Start of final paragraph
-        if value and value > 0  then
-            debug_print("output loop", "final")
-            local last_line = copy(last(head))
+    last(last_line).next = copy(tex.lists[contrib_head])
 
-            last(last_line).next = copy(tex.lists[contrib_head])
-
-            last(head).prev.prev.next = nil
-            -- Move the last line to the next page
-            tex.lists[contrib_head] = last_line
-            info(
-            "Widow/orphan successfully removed at paragraph "
-                .. paragraph_index
-                .. " on page "
-                .. pagenum()
-                .. "."
-            )
-
-            break
-        end
-
-        head = head.prev
-    end
+    last(head_save).prev.prev.next = nil
+    -- Move the last line to the next page
+    tex.lists[contrib_head] = last_line
+    info(
+    "Widow/orphan successfully removed at paragraph "
+        .. paragraph_index
+        .. " on page "
+        .. pagenum()
+        .. "."
+    )
 
     paragraphs = {} -- Clear paragraphs array at the end of the page
 
