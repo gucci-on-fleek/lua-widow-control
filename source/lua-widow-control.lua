@@ -333,6 +333,8 @@ end
 --- replace one paragraph with the same paragraph, but lengthened by one line.
 --- Then, we can push the bottom line of the page to the next page.
 function lwc.remove_widows(head)
+    local head_save = head -- Save the start of the `head` linked-list
+
     local penalty = tex.outputpenalty - tex.interlinepenalty
     local widowpenalty = tex.widowpenalty
     local clubpenalty = tex.clubpenalty
@@ -369,7 +371,34 @@ function lwc.remove_widows(head)
 
     info("Widow/orphan detected. Attempting to remove.")
 
-    local head_save = head -- Save the start of the `head` linked-list
+    -- Start of final paragraph
+    debug_print("remove_widows", "moving last line")
+
+    head = last(head_save).prev
+    local big_penalty_found, last_line
+    while head do
+        if head.id == glue_id then
+            -- Ignore any glue nodes
+        elseif head.id == penalty_id and head.penalty == 10000 then
+            -- Infinite break penalty
+            big_penalty_found = true
+        elseif big_penalty_found and head.id == hlist_id then
+            -- Line before the penalty
+            break
+        else
+            -- Not found
+            head = last(head_save)
+            break
+        end
+        head = head.prev
+    end
+
+    last_line = copy(head)
+    last(last_line).next = copy(tex.lists[contrib_head])
+
+    head.prev.prev.next = nil
+    -- Move the last line to the next page
+    tex.lists[contrib_head] = last_line
 
     --[[
         Find the paragraph on the page with the minimum penalty.
@@ -395,9 +424,10 @@ function lwc.remove_widows(head)
 
     debug_print("selected para", pagenum() .. "/" .. paragraph_index)
     local target_node = paragraphs[paragraph_index].node
-    local clear_flag = false
+    local free_next_nodes = false
 
     -- Loop through all of the nodes on the page with the lwc attribute
+    head = head_save
     while head do
         local value
         value, head = find_attribute(head, attribute)
@@ -406,59 +436,31 @@ function lwc.remove_widows(head)
             break
         end
 
-        debug_print("output loop", "found " .. value)
+        debug_print("remove_widows", "found " .. value)
 
         -- Insert the start of the replacement paragraph
         if value == paragraph_index then
-            debug_print("output loop", "start")
+            debug_print("remove_widows", "replacement start")
             safe_last(target_node) -- Remove any loops
 
             head.prev.next = target_node
-            clear_flag = true
+            free_next_nodes = true
         end
 
         -- Insert the end of the replacement paragraph
         if value == -1 * paragraph_index then
-            debug_print("output loop", "end")
+            debug_print("remove_widows", "replacement end")
             safe_last(target_node).next = head.next
             break
         end
 
-        if clear_flag then
+        if free_next_nodes then
             head = free(head)
         else
             head = head.next
         end
     end
 
-    -- Start of final paragraph
-    debug_print("final para")
-    head = last(head_save).prev
-
-    local big_penalty_found, last_line
-    while head do
-        if head.id == glue_id then
-            -- Ignore any glue nodes
-        elseif head.id == penalty_id and head.penalty == 10000 then
-            -- Infinite break penalty
-            big_penalty_found = true
-        elseif big_penalty_found and head.id == hlist_id then
-            -- Line before the penalty
-            break
-        else
-            -- Not found
-            head = last(head_save)
-            break
-        end
-        head = head.prev
-    end
-
-    last_line = copy(head)
-    last(last_line).next = copy(tex.lists[contrib_head])
-
-    head.prev.prev.next = nil
-    -- Move the last line to the next page
-    tex.lists[contrib_head] = last_line
     info(
     "Widow/orphan successfully removed at paragraph "
         .. paragraph_index
