@@ -53,6 +53,8 @@ local copy = node.copy_list
 local par_id = node.id("par") or node.id("local_par")
 local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
+local penalty_id = node.id("penalty")
+local hlist_id = node.id("hlist")
 local traverse = node.traverse
 local set_attribute = node.set_attribute or node.setattribute
 local has_attribute = node.has_attribute or node.hasattribute
@@ -347,6 +349,7 @@ function lwc.remove_widows(head)
         https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
     if  penalty ~= 0 and
+        penalty <  10000 and
        (penalty == widowpenalty or
         penalty == displaywidowpenalty or
         penalty == clubpenalty or
@@ -430,11 +433,30 @@ function lwc.remove_widows(head)
 
     -- Start of final paragraph
     debug_print("final para")
-    local last_line = copy(last(head_save))
+    head = last(head_save).prev
 
+    local big_penalty_found, last_line
+    while head do
+        if head.id == glue_id then
+            -- Ignore any glue nodes
+        elseif head.id == penalty_id and head.penalty == 10000 then
+            -- Infinite break penalty
+            big_penalty_found = true
+        elseif big_penalty_found and head.id == hlist_id then
+            -- Line before the penalty
+            break
+        else
+            -- Not found
+            head = last(head_save)
+            break
+        end
+        head = head.prev
+    end
+
+    last_line = copy(head)
     last(last_line).next = copy(tex.lists[contrib_head])
 
-    last(head_save).prev.prev.next = nil
+    head.prev.prev.next = nil
     -- Move the last line to the next page
     tex.lists[contrib_head] = last_line
     info(
