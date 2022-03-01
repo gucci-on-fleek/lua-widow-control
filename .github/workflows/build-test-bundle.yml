@@ -66,7 +66,9 @@ jobs:
             optex --halt-on-error ./optex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
             { echo "::error::OpTeX Basic Test Failed!"; exit 1; } &&
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; }
+            { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; } &&
+            lualatex-dev --halt-on-error ./latex-headings.tex | grep === | diff -ws /mnt/tests/headings-expected.txt - ||
+            { echo "::error::LaTeX Headings Test Failed!"; exit 1; }
           '
 
       - name: Bundle the package

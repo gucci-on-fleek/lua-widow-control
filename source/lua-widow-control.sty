@@ -95,6 +95,11 @@
     disablecmds .value_required:n = false,
     disablecmds .initial:n        = { \@sect },
     disablecmds .usage:n          = preamble,
+
+    nobreak .choice:,
+    nobreak / keep  .code:n = \lua_now:n { lwc.nobreak_behaviour = "keep" },
+    nobreak / split .code:n = \lua_now:n { lwc.nobreak_behaviour = "split"         },
+    nobreak / warn  .code:n = \lua_now:n { lwc.nobreak_behaviour = "warn"          },
 }
 
 % Load the Lua code

@@ -7,6 +7,7 @@
 
 lwc = lwc or {}
 lwc.name = "lua-widow-control"
+lwc.nobreak_behaviour = "keep"
 
 local write_nl = texio.write_nl
 local string_rep = string.rep
@@ -384,7 +385,16 @@ function lwc.remove_widows(head)
             big_penalty_found = true
         elseif big_penalty_found and head.id == hlist_id then
             -- Line before the penalty
-            break
+            if lwc.nobreak_behaviour == "keep" then
+                break
+            elseif lwc.nobreak_behaviour == "split" then
+                head = last(head_save)
+                break
+            elseif lwc.nobreak_behaviour == "warn" then
+                warning("Widow/Orphan NOT removed on page " .. pagenum())
+                paragraphs = {}
+                return head_save
+            end
         else
             -- Not found
             head = last(head_save)

@@ -37,6 +37,10 @@
 \to\everysetuplwc
 
 \appendtoks
+    \ctxlua{lwc.nobreak_behaviour = "\lwcparameter{nobreak}"}
+\to\everysetuplwc
+
+\appendtoks
     % We can't just set the penalties because they will be reset automatically
     % at \\starttext.
     \startsetups[*default]
@@ -58,6 +62,7 @@
     debug=\v!stop,
     orphanpenalty=1,
     widowpenalty=1,
+    nobreak=keep,
 ]
 
 
