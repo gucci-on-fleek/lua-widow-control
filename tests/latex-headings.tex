@@ -10,17 +10,19 @@
 \usepackage[debug=true]{lua-widow-control}
 \usepackage[textwidth=345pt, textheight=550pt, showframe]{geometry}
 
-\def\section#1{\vskip0pt plus 1ex\noindent\textbf{\Large#1}\vskip0pt plus 1ex\nobreak}
+\def\section#1{\vskip0pt plus 1ex\noindent\textbf{\interlinepenalty=10000\Large#1}\vskip0pt plus 1ex\nobreak}
 
 \newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
 \def\sentence{A really long and stretchy paragraph. }
 
+\def\sectionname{Section Heading\printlocation{2}}
+
 \def\text{\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence
 
 \sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence \sentence \sentence \sentence \sentence \sentence \printlocation{1} Filler.
 
-\section{Section Heading\printlocation{2}}
+\section{\sectionname}
 A \printlocation{3} paragraph with exactly two lines. A paragraph with exactly two lines. A paragraph with exactly two lines. A paragraph with exactly two \printlocation{4} lines.
 
 \clearpage}
@@ -35,5 +37,9 @@ A \printlocation{3} paragraph with exactly two lines. A paragraph with exactly t
     \text
 
     \lwcsetup{nobreak = warn}
+    \text
+
+    \lwcsetup{nobreak = keep}
+    \def\sectionname{Long\printlocation{X} long long long long long long long long long long long\printlocation{2}}
     \text
 \end{document}

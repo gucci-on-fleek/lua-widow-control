@@ -376,17 +376,18 @@ function lwc.remove_widows(head)
     debug_print("remove_widows", "moving last line")
 
     head = last(head_save).prev
-    local big_penalty_found, last_line
+    local big_penalty_found, last_line, hlist_head
     while head do
         if head.id == glue_id then
             -- Ignore any glue nodes
-        elseif head.id == penalty_id and head.penalty == 10000 then
+        elseif head.id == penalty_id and head.penalty >= 10000 then
             -- Infinite break penalty
             big_penalty_found = true
         elseif big_penalty_found and head.id == hlist_id then
             -- Line before the penalty
             if lwc.nobreak_behaviour == "keep" then
-                break
+                hlist_head = head
+                big_penalty_found = false
             elseif lwc.nobreak_behaviour == "split" then
                 head = last(head_save)
                 break
@@ -397,7 +398,11 @@ function lwc.remove_widows(head)
             end
         else
             -- Not found
-            head = last(head_save)
+            if hlist_head then
+                head = hlist_head
+            else
+                head = last(head_save)
+            end
             break
         end
         head = head.prev
