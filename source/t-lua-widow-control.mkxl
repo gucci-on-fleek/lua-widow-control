@@ -41,6 +41,10 @@
 \to\everysetuplwc
 
 \appendtoks
+    \ctxlua{lwc.max_demerits = \lwcparameter{maxdemerits}}
+\to\everysetuplwc
+
+\appendtoks
     % We can't just set the penalties because they will be reset automatically
     % at \\starttext.
     \startsetups[*default]
@@ -63,6 +67,7 @@
     orphanpenalty=1,
     widowpenalty=1,
     nobreak=keep,
+    maxdemerits=1073741823, % \\maxdimen
 ]
 
 

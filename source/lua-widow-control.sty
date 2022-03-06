@@ -183,6 +183,8 @@
     debug / true  .code:n       = \lua_now:n { lwc.debug = true },
     debug / false .code:n       = \lua_now:n { lwc.debug = false },
     debug .initial:n            = false,
+
+    max-demerits .code:n        = \lua_now:n { lwc.max_demerits = #1 },
 }
 
 % Add the user interface for the keys

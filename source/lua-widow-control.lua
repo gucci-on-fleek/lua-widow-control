@@ -8,6 +8,7 @@
 lwc = lwc or {}
 lwc.name = "lua-widow-control"
 lwc.nobreak_behaviour = "keep"
+lwc.max_demerits = 0x40000000 - 1
 
 local write_nl = texio.write_nl
 local string_rep = string.rep
@@ -63,7 +64,7 @@ local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
 local min_col_width = tex.sp("25em")
-local maxdimen = 1073741823 -- \\maxdimen in sp
+local maxdimen = 0x40000000 - 1 -- \\maxdimen in sp
 
 --[[
     Package/module initialization
@@ -372,6 +373,45 @@ function lwc.remove_widows(head)
 
     info("Widow/orphan detected. Attempting to remove.")
 
+    --[[
+        Find the paragraph on the page with the least demerits.
+      ]]
+    local paragraph_index = 1
+    local best_demerits = paragraphs[paragraph_index].demerits
+
+    -- We find the current "best" replacement, then free the unused ones
+    for i, paragraph in pairs(paragraphs) do
+        if paragraph.demerits < best_demerits and i <= #paragraphs - 1 then
+            -- Clear the old best paragraph
+            flush_list(paragraphs[paragraph_index].node)
+            paragraphs[paragraph_index].node = nil
+            -- Set the new best paragraph
+            paragraph_index, best_demerits = i, paragraph.demerits
+        elseif i > 1 then
+            -- Not sure why `i > 1` is required?
+            flush_list(paragraph.node)
+            paragraph.node = nil
+        end
+    end
+
+    if best_demerits > lwc.max_demerits then
+        -- If the best replacement is too bad, we can't do anything
+        warning("Widow/Orphan NOT removed on page " .. pagenum())
+        paragraphs = {}
+        return head_save
+    end
+
+    debug_print(
+        "selected para",
+        pagenum() ..
+        "/" ..
+        paragraph_index ..
+        " (" ..
+        best_demerits ..
+        ")"
+    )
+    local target_node = paragraphs[paragraph_index].node
+
     -- Start of final paragraph
     debug_print("remove_widows", "moving last line")
 
@@ -415,30 +455,6 @@ function lwc.remove_widows(head)
     -- Move the last line to the next page
     tex.lists[contrib_head] = last_line
 
-    --[[
-        Find the paragraph on the page with the minimum penalty.
-
-        This would be a 1-liner in Python or JavaScript, but Lua is pretty low-level,
-        so there's quite a bit of code here.
-      ]]
-    local paragraph_index = 1
-    local minimum_demerits = paragraphs[paragraph_index].demerits
-
-    -- We find the current "best" replacement, then free the unused ones
-    for i, paragraph in pairs(paragraphs) do
-        if paragraph.demerits < minimum_demerits and i <= #paragraphs - 1 then
-            flush_list(paragraphs[paragraph_index].node)
-            paragraphs[paragraph_index].node = nil
-            paragraph_index, minimum_demerits = i, paragraph.demerits
-        elseif i > 1 then
-            -- Not sure why `i > 1` is required?
-            flush_list(paragraph.node)
-            paragraph.node = nil
-        end
-    end
-
-    debug_print("selected para", pagenum() .. "/" .. paragraph_index)
-    local target_node = paragraphs[paragraph_index].node
     local free_next_nodes = false
 
     -- Loop through all of the nodes on the page with the lwc attribute
