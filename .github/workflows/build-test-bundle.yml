@@ -68,7 +68,9 @@ jobs:
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; } &&
             lualatex-dev --halt-on-error ./latex-headings.tex | grep === | diff -ws /mnt/tests/headings-expected.txt - ||
-            { echo "::error::LaTeX Headings Test Failed!"; exit 1; }
+            { echo "::error::LaTeX Headings Test Failed!"; exit 1; } &&
+            lualatex --halt-on-error ./latex-old.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::LaTeX Old Test Failed!"; exit 1; }
           '
 
       - name: Bundle the package
