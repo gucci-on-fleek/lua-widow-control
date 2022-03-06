@@ -72,9 +72,9 @@
 
 % Define (most of) the keys
 \keys_define:nn { \c__lwc_name_str } {
-    emergencystretch .dim_gset:N = \g__lwc_emergencystretch_dim,
+    emergencystretch .dim_gset:N       = \g__lwc_emergencystretch_dim,
     emergencystretch .value_required:n = true,
-    emergencystretch .initial:n        = 3em,
+    emergencystretch .initial:x        = \dim_max:nn { 3em } { 30pt },
 
     widowpenalty .code:n = \int_gset:Nn \tex_widowpenalty:D        { #1 }
                            \int_gset:Nn \tex_displaywidowpenalty:D { #1 },
@@ -97,9 +97,9 @@
     disablecmds .usage:n          = preamble,
 
     nobreak .choice:,
-    nobreak / keep  .code:n = \lua_now:n { lwc.nobreak_behaviour = "keep" },
-    nobreak / split .code:n = \lua_now:n { lwc.nobreak_behaviour = "split"         },
-    nobreak / warn  .code:n = \lua_now:n { lwc.nobreak_behaviour = "warn"          },
+    nobreak / keep  .code:n = \lua_now:n { lwc.nobreak_behaviour = "keep"  },
+    nobreak / split .code:n = \lua_now:n { lwc.nobreak_behaviour = "split" },
+    nobreak / warn  .code:n = \lua_now:n { lwc.nobreak_behaviour = "warn"  },
 }
 
 % Load the Lua code
@@ -175,16 +175,33 @@
 % Define some final keys
 \keys_define:nn { \c__lwc_name_str } {
     enable .choice:,
-    enable / true  .code:n       = \__lwc_enable:,
-    enable / false .code:n       = \__lwc_disable:,
-    enable .initial:n            = true,
+    enable / true  .code:n     = \__lwc_enable:,
+    enable / false .code:n     = \__lwc_disable:,
+    enable .initial:n          = true,
+    enable .default:n          = true,
+    enable .value_required:n   = false,
+
+    disable .code:n            = \__lwc_disable:,
+    disable .value_forbidden:n = true,
 
     debug .choice:,
-    debug / true  .code:n       = \lua_now:n { lwc.debug = true },
-    debug / false .code:n       = \lua_now:n { lwc.debug = false },
-    debug .initial:n            = false,
+    debug / true  .code:n = \lua_now:n { lwc.debug = true },
+    debug / false .code:n = \lua_now:n { lwc.debug = false },
 
-    max-demerits .code:n        = \lua_now:n { lwc.max_demerits = #1 },
+    max-demerits .code:n           = \lua_now:n { lwc.max_demerits = #1 },
+    max-demerits .value_required:n = true,
+
+    strict .meta:n = { emergencystretch = 0pt,
+                       max-demerits     = 20000,
+                       nobreak          = warn, 
+                     },
+    strict .value_forbidden:n = true,
+
+    default .meta:n = { emergencystretch = 3em,
+                        max-demerits     = 1073741823, % \\maxdimen
+                        nobreak          = keep, 
+                      },
+    default .value_forbidden:n = true,  
 }
 
 % Add the user interface for the keys
@@ -202,11 +219,11 @@
 }
 
 \NewDocumentCommand \lwcdisablecmd { m } {
-    \msg_error:nnnn
+    \msg_error:nnxx
         { \c__lwc_name_str }
         { old-command }
         { lwcdisablecmd }
-        { disablecmds={\aaa,~ \bbb} }
+        { disablecmds={\c_backslash_str aaa,~ \c_backslash_str bbb} }
 }
 
 \cs_new_eq:NN \lwcenable  \__lwc_enable:
