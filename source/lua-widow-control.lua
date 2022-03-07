@@ -225,6 +225,11 @@ local function get_chars(head)
 end
 
 
+function lwc.paragraph_cost(demerits, lines)
+    return demerits / (2 * math.sqrt(lines))
+end
+
+
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
@@ -278,13 +283,24 @@ function lwc.save_paragraphs(head)
     prevdepth.width = natural_info.prevdepth - long_info.prevdepth
     last(long_node).next = prevdepth
 
-    table.insert(paragraphs, { demerits = long_demerits, node = long_node })
+    table.insert(paragraphs, {
+        demerits = lwc.paragraph_cost(long_demerits, long_info.prevgraf),
+        node = long_node
+    })
 
     get_chars(head)
     debug_print(get_location(), "nat  lines    " .. natural_info.prevgraf)
-    debug_print(get_location(), "nat  demerits " .. natural_info.demerits)
+    debug_print(
+        get_location(),
+        "nat  demerits " ..
+        lwc.paragraph_cost(natural_info.demerits, natural_info.prevgraf)
+    )
     debug_print(get_location(), "long lines    " .. long_info.prevgraf)
-    debug_print(get_location(), "long demerits " .. long_info.demerits)
+    debug_print(
+        get_location(),
+        "long demerits " ..
+        lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
+    )
 
     -- \LuaMetaTeX{} crashes if we return `true`
     return head
@@ -402,13 +418,6 @@ function lwc.remove_widows(head)
         end
     end
 
-    if best_demerits > tex.getcount(max_demerits) then
-        -- If the best replacement is too bad, we can't do anything
-        warning("Widow/Orphan NOT removed on page " .. pagenum())
-        paragraphs = {}
-        return head_save
-    end
-
     debug_print(
         "selected para",
         pagenum() ..
@@ -418,6 +427,14 @@ function lwc.remove_widows(head)
         best_demerits ..
         ")"
     )
+
+    if best_demerits > tex.getcount(max_demerits) then
+        -- If the best replacement is too bad, we can't do anything
+        warning("Widow/Orphan NOT removed on page " .. pagenum())
+        paragraphs = {}
+        return head_save
+    end
+
     local target_node = paragraphs[paragraph_index].node
 
     -- Start of final paragraph
