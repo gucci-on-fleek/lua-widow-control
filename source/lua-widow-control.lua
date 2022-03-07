@@ -59,11 +59,10 @@ local penalty_id = node.id("penalty")
 local hlist_id = node.id("hlist")
 local traverse = node.traverse
 local set_attribute = node.set_attribute or node.setattribute
-local has_attribute = node.has_attribute or node.hasattribute
 local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
-local min_col_width = tex.sp("25em")
+local min_col_width = tex.sp("250pt")
 local maxdimen = 0x40000000 - 1 -- \\maxdimen in sp
 
 --[[
@@ -113,7 +112,6 @@ paragraphs.]],
         attribute = luatexbase.new_attribute(lwc.name)
     elseif optex then
         debug_print("OpTeX")
-        local write_nl = texio.write_nl
         warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
         info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
         attribute = alloc.new_attribute(lwc.name)
