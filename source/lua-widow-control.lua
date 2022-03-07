@@ -62,7 +62,6 @@ local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
 local min_col_width = tex.sp("250pt")
-local maxdimen = 0x40000000 - 1 -- \\maxdimen in sp
 
 --[[
     Package/module initialization
@@ -74,7 +73,7 @@ local warning,
       stretch_order,
       pagenum,
       emergencystretch,
-      max_demerits
+      max_cost
 
 if lmtx then
     debug_print("LMTX")
@@ -92,16 +91,16 @@ if context then
     attribute = attributes.public(lwc.name)
     pagenum = function() return tex.count["realpageno"] end
     emergencystretch = "lwc_emergency_stretch"
-    max_demerits = "lwc_max_demerits"
+    max_cost = "lwc_max_cost"
 elseif plain or latex or optex then
     pagenum = function() return tex.count[0] end
 
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
-        max_demerits = "g__lwc_maxdemerits_int"
+        max_cost = "g__lwc_maxcost_int"
     else
         emergencystretch = "lwcemergencystretch"
-        max_demerits = "lwcmaxdemerits"
+        max_cost = "lwcmaxcost"
     end
 
     if plain or latex then
@@ -270,35 +269,29 @@ function lwc.save_paragraphs(head)
         lwc.callbacks.disable_box_warnings.disable()
     end
 
-    -- If we can't lengthen the paragraph, assign a \emph{very} large demerit value
-    local long_demerits
-    if long_info.prevgraf == natural_info.prevgraf then
-        long_demerits = maxdimen
-    else
-        long_demerits = long_info.demerits
-    end
-
     -- Offset the accumulated \\prevdepth
     local prevdepth = node.new("glue")
     prevdepth.width = natural_info.prevdepth - long_info.prevdepth
     last(long_node).next = prevdepth
 
-    table.insert(paragraphs, {
-        demerits = lwc.paragraph_cost(long_demerits, long_info.prevgraf),
-        node = long_node
-    })
+    if long_info.prevgraf == natural_info.prevgraf + 1 then
+        table.insert(paragraphs, {
+            cost = lwc.paragraph_cost(long_info.demerits, long_info.prevgraf),
+            node = long_node
+        })
+    end
 
     get_chars(head)
     debug_print(get_location(), "nat  lines    " .. natural_info.prevgraf)
     debug_print(
         get_location(),
-        "nat  demerits " ..
+        "nat  cost " ..
         lwc.paragraph_cost(natural_info.demerits, natural_info.prevgraf)
     )
     debug_print(get_location(), "long lines    " .. long_info.prevgraf)
     debug_print(
         get_location(),
-        "long demerits " ..
+        "long cost " ..
         lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
     )
 
@@ -398,19 +391,19 @@ function lwc.remove_widows(head)
     info("Widow/orphan detected. Attempting to remove.")
 
     --[[
-        Find the paragraph on the page with the least demerits.
+        Find the paragraph on the page with the least cost.
       ]]
     local paragraph_index = 1
-    local best_demerits = paragraphs[paragraph_index].demerits
+    local best_cost = paragraphs[paragraph_index].cost
 
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
-        if paragraph.demerits < best_demerits and i <= #paragraphs - 1 then
+        if paragraph.cost < best_cost and i <= #paragraphs - 1 then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
             -- Set the new best paragraph
-            paragraph_index, best_demerits = i, paragraph.demerits
+            paragraph_index, best_cost = i, paragraph.cost
         elseif i > 1 then
             -- Not sure why `i > 1` is required?
             flush_list(paragraph.node)
@@ -424,11 +417,11 @@ function lwc.remove_widows(head)
         "/" ..
         paragraph_index ..
         " (" ..
-        best_demerits ..
+        best_cost ..
         ")"
     )
 
-    if best_demerits > tex.getcount(max_demerits) then
+    if best_cost > tex.getcount(max_cost) then
         -- If the best replacement is too bad, we can't do anything
         warning("Widow/Orphan NOT removed on page " .. pagenum())
         paragraphs = {}

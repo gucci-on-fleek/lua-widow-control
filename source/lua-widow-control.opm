@@ -12,8 +12,8 @@
 \_newdimen\lwcemergencystretch
 \lwcemergencystretch=3em
 
-\_newcount\lwcmaxdemerits
-\lwcmaxdemerits=2147483647
+\_newcount\lwcmaxcost
+\lwcmaxcost=2147483647
 
 \_directlua{require "lua-widow-control"}
 
