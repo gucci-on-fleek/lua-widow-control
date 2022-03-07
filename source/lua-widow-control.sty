@@ -77,6 +77,10 @@
     emergencystretch .value_required:n = true,
     emergencystretch .initial:x        = \dim_max:nn { 3em } { 30pt },
 
+    max-demerits .int_gset:N       = \g__lwc_maxdemerits_int,
+    max-demerits .value_required:n = true,
+    max-demerits .initial:x        = \c_max_int,
+
     widowpenalty .code:n = \int_gset:Nn \tex_widowpenalty:D        { #1 }
                            \int_gset:Nn \tex_displaywidowpenalty:D { #1 },
     widowpenalty .value_required:n = true,
@@ -188,9 +192,6 @@
     debug .choice:,
     debug / true  .code:n = \lua_now:n { lwc.debug = true },
     debug / false .code:n = \lua_now:n { lwc.debug = false },
-
-    max-demerits .code:n           = \lua_now:n { lwc.max_demerits = #1 },
-    max-demerits .value_required:n = true,
 
     strict .meta:n = { emergencystretch = 0pt,
                        max-demerits     = 20000,

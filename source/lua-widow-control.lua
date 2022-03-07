@@ -8,7 +8,6 @@
 lwc = lwc or {}
 lwc.name = "lua-widow-control"
 lwc.nobreak_behaviour = "keep"
-lwc.max_demerits = 0x40000000 - 1
 
 local write_nl = texio.write_nl
 local string_rep = string.rep
@@ -68,7 +67,15 @@ local maxdimen = 0x40000000 - 1 -- \\maxdimen in sp
 --[[
     Package/module initialization
   ]]
-local warning, info, attribute, contrib_head, stretch_order, pagenum, emergencystretch
+local warning,
+      info,
+      attribute,
+      contrib_head,
+      stretch_order,
+      pagenum,
+      emergencystretch,
+      max_demerits
+
 if lmtx then
     debug_print("LMTX")
     contrib_head = 'contributehead'
@@ -85,13 +92,16 @@ if context then
     attribute = attributes.public(lwc.name)
     pagenum = function() return tex.count["realpageno"] end
     emergencystretch = "lwc_emergency_stretch"
+    max_demerits = "lwc_max_demerits"
 elseif plain or latex or optex then
     pagenum = function() return tex.count[0] end
 
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
+        max_demerits = "g__lwc_maxdemerits_int"
     else
         emergencystretch = "lwcemergencystretch"
+        max_demerits = "lwcmaxdemerits"
     end
 
     if plain or latex then
@@ -392,7 +402,7 @@ function lwc.remove_widows(head)
         end
     end
 
-    if best_demerits > lwc.max_demerits then
+    if best_demerits > tex.getcount(max_demerits) then
         -- If the best replacement is too bad, we can't do anything
         warning("Widow/Orphan NOT removed on page " .. pagenum())
         paragraphs = {}

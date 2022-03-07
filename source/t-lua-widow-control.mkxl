@@ -40,8 +40,9 @@
     \ctxlua{lwc.nobreak_behaviour = "\lwcparameter{nobreak}"}
 \to\everysetuplwc
 
+\newcount\lwc_max_demerits
 \appendtoks
-    \ctxlua{lwc.max_demerits = \lwcparameter{maxdemerits}}
+    \lwc_max_demerits=\lwcparameter{maxdemerits}
 \to\everysetuplwc
 
 \appendtoks
@@ -67,7 +68,7 @@
     orphanpenalty=1,
     widowpenalty=1,
     nobreak=keep,
-    maxdemerits=1073741823, % \\maxdimen
+    maxdemerits=2147483647,
 ]
 
 
