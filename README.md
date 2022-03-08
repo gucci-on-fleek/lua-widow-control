@@ -38,7 +38,7 @@ To load the package, add the relevant line to your preamble:
 Contributing
 ------------
 
-Please see [`contributing.md`](https://github.com/gucci-on-fleek/lua-widow-control/blob/master/.github/contributing.md).
+Please see [`CONTRIBUTING.md`](https://github.com/gucci-on-fleek/lua-widow-control/blob/master/CONTRIBUTING.md).
 
 Licence
 -------
