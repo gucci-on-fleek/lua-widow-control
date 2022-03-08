@@ -24,6 +24,7 @@
 \def\waos/{widows and orphans}
 \def\wao/{widow and orphan}
 \def\woo/{widow or orphan}
+\def\plainop/{Plain~\TeX{}/Op\TeX{}}
 \let\q=\quotation
 
 \def\titlecite[#1]{\cite[title][#1]\cite[#1]}
@@ -45,7 +46,7 @@
 \Lwc/ is a Plain~\TeX/\LaTeX/\ConTeXt{}/Op\TeX{} package that removes \waos/ without any user intervention. Using the power of \LuaTeX{}, it does so \emph{without} stretching any glue or shortening any pages or columns. Instead, \lwc/ automatically lengthens a paragraph on a page or column where a \woo/ would otherwise occur. 
 
 \section{Quick Start}
-Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} users just need to place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document. For more details, see the \goto{Installation and Usage sections}[sec:install].
+Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} users just need to place \inlineTEX{\usepackage{lua-widow-control}} in the preamble of your document. For more details, see the \goto{Usage sections}[sec:usage].
 
 \subject{Contents}
 \placecontent[criterium=all]
@@ -157,7 +158,7 @@ To do so, \lwc/ lengthened the second paragraph by one line. If you look closely
 
 \Lwc/ automatically finds the \q{best} paragraph to stretch, so the increase in interword spaces should almost always be minimal.
 
-\section[sec:install]{Installation}
+\section{Installation}
 Most up-to-date \TeX~Live and Mik\TeX{} systems should already have \lwc/ installed. However, a manual installation may occasionally be required. 
 
 \subsection{\TeX~Live}
@@ -203,95 +204,221 @@ Please note that when running in legacy mode, you cannot use the key--value inte
 \Lwc/ works with any version of Op\TeX{} and has no dependencies.
 
 
-\section{Loading the Package}
-
-\subsection{Plain \TeX}
-
-\inlineTEX{\input  lua-widow-control}
-
-\subsection{\LaTeX}
-
-\inlineTEX{\usepackage{lua-widow-control}}
-
-\subsection{\ConTeXt}
-
-\inlineTEX{\usemodule[lua-widow-control]}
-
-\subsection{Op\TeX{}}
-
-\inlineTEX{\load[lua-widow-control]}
-
-\section{Columns}
-
-Since \TeX{} implements column breaking and page breaking through the same internal mechanisms, \lwc/ should remove \waos/ between columns just as well as it does with \waos/ between pages. This has been tested with the standard \LaTeX{} class option \type{twocolumn} and the two-column output routine from Chapter~23 of \cite[title][texbook].\cite[texbook] \Lwc/ should presumably work with any other multi-column implementation; however, due to the diversity and complexity of output~routines, this cannot be guaranteed.
-
-\section{Advanced Usage}
-
-\Lwc/ is automatically enabled with the default settings as soon as you load it. Most users should not need to configure \lwc/; however, the packages does provide a few commands.
+\section[sec:usage]{Loading the Package}
 
 \setupTABLE[frame=off]
+\setupTABLE[column][first][roffset=1.5em]
+\setupTABLE[row][first][toffset=0.25ex]
 
-\subsection{Plain \TeX{}}
 \startTABLE
-\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
-\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch=3em} \NC\NR
-\NC Selectively Disable \NC \inlineTEX{\lwcdisablecmd{\cmd}}  \NC\NR
+    \NC Plain~\TeX{}
+    \NC\inlineTEX{\input  lua-widow-control}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\usepackage{lua-widow-control}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\usemodule[lua-widow-control]}
+    \NC\NR
+    \NC Op\TeX{}
+    \NC\inlineTEX{\load[lua-widow-control]}
+    \NC\NR
 \stopTABLE
 
-\subsection{\LaTeX{}}
-All options can be set either as package options or with the \inlineTEX{\lwcsetup} command.
+\section{Options}
+
+\Lwc/ is automatically enabled with the default settings as soon as you load it. Most users should not need to configure \lwc/; however, the packages provides a few commands.
+
+\subsection{Overview}
+
+\LaTeX{} users can set the options either when loading the package (\tex{usepackage[\meta{options}]\{lua-widow-control\}}) or at any point using \tex{lwcsetup\{\meta{options}\}}.
+
+\ConTeXt{} users should always use the \tex{setuplwc[\meta{options}]} command.
+
+Plain~\TeX{} and Op\TeX{} are a little different. Some options have commands provided (i.e., \tex{lwcemergencystretch=\meta{dimension}}), while others must be set manually (i.e., \tex{directlua\{lwc.debug = true\}}).
+
+Also, please note that not all commands are provided for all formats.
+
+\subsection{Enabling}
+
+\Lwc/ is enabled by default as soon as you load it. Nevertheless, you may need to explicitly reenable it if you have previously disabled it.
+
 \startTABLE
-\NC Enable (default) \NC \inlineTEX{\lwcsetup{enable=true}}  \NC\NR
-\NC Disable \NC \inlineTEX{\lwcsetup{enable=false}}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\lwcsetup{emergencystretch=3em}}  \NC\NR
-\NC Selectively Disable \NC \inlineTEX{\lwcsetup{disablecmds={\aaa, \bbb}}}  \NC\NR
-\NC Prevent loading \sans{microtype} \NC \inlineTEX{\lwcsetup{microtype=false}}  \NC\NR
-\NC Widow Penalty \NC \inlineTEX{\lwcsetup{widowpenalty=999}}  \NC\NR
-\NC Orphan Penalty \NC \inlineTEX{\lwcsetup{orphanpenalty=999}}  \NC\NR
-\NC Debug Mode \NC \inlineTEX{\lwcsetup{debug=true}}  \NC\NR
+    \NC \plainop/
+    \NC\inlineTEX{\lwcenable}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{enable}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[state = start]}
+    \NC\NR
 \stopTABLE
 
-\subsection{\ConTeXt{}}
+\subsection{Disabling}
+
 \startTABLE
-\NC Enable (default) \NC \inlineTEX{\setuplwc[state = start]}  \NC\NR
-\NC Disable \NC \inlineTEX{\setuplwc[state = stop]}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\setuplwc[emergencystretch = 3em]} \NC\NR
-\NC Selectively Disable \NC \inlineTEX{\prependtoks\lwc_patch_pre \to\everybefore}\meta{hook} \NC\NR
-\NC          \NC \inlineTEX{\prependtoks\lwc_patch_post\to\everyafter}\meta{hook} \NC\NR
-\NC Widow Penalty \NC \inlineTEX{\setuplwc{widowpenalty=999}}  \NC\NR
-\NC Orphan Penalty \NC \inlineTEX{\setuplwc{orphanpenalty=999}}  \NC\NR
-\NC Debug Mode \NC \inlineTEX{\setuplwc{debug=start}}  \NC\NR
+    \NC \plainop/
+    \NC\inlineTEX{\lwcdisable}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{disable}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[state = stop]}
+    \NC\NR
 \stopTABLE
 
-\subsection{Op\TeX{}}
+\subsection{Strict Mode}
+
+By default, \lwc/ takes all possible measures to remove \waos/. This normally works out pretty well; however, sometimes these measures may be a little more aggressive than certain users want. 
+
+\Lwc/ offers a \q{strict} mode that will only make modification to the page that are near-imperceptible to remove \waos/.
+
 \startTABLE
-\NC Enable (default) \NC \inlineTEX{\lwcenable}  \NC\NR
-\NC Disable \NC \inlineTEX{\lwcdisable}  \NC\NR
-\NC \estretch/ \NC \inlineTEX{\lwcemergencystretch=3em} \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{strict}}
+    \NC\NR
 \stopTABLE
+
+Internally, this sets {\tt emergencystretch = 0pt}, {\tt max-cost = 2500}, and {\tt nobreak = warn}.
 
 \subsection{\estretch/}
 
 You can configure the \estretch/ used when stretching a paragraph. The default value is 3~em. 
 
-\Lwc/ will only use use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so its pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
+\Lwc/ will only use the \estretch/ when it cannot lengthen a paragraph in any other way, so it is fairly safe to set this to a large value. \TeX{} still accumulates badness when \estretch/ is used, so it's pretty rare that a paragraph that requires any \estretch/ will actually be used on the page.
+
+\startTABLE
+    \NC \plainop/
+    \NC\tex{lwcemergencystretch=\meta{dimension}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\tex{lwcsetup\{emergencystretch = \meta{dimension}\}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\tex{setuplwc[emergencystretch = \meta{dimension}]}
+    \NC\NR
+\stopTABLE
 
 \subsection{Selectively Disabling}
 Sometimes, you may want to disable \lwc/ for certain commands where stretching is undesirable. For example, you typically wouldn't want section headings to be stretched. 
 
 You could just disable then reenable \lwc/ every time that you use the command; however, \lwc/ provides a convenience macro that will do this automatically for you.
 
-\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, Op\TeX{}, and others. You'll need to patch these yourself.
+\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, Op\TeX{}, and others. You'll need to add these yourself.
 
-Under \ConTeXt{}, you need to use a different method to selectively disable \lwc/. Instead of using \tex{lwcdisablecmd}, you should use one of the preexisting \tex{everyfoo} hooks as shown in the table above since patching commands is rarely advisable in \ConTeXt{} 
+\startTABLE
+    \NC Plain \TeX{}
+    \NC \tex{lwcdisablecmd\{\meta{\backslash macro}\}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC \tex{lwcsetup\{disablecmds = \{\meta{\backslash macroone}, \meta{\backslash macrotwo}\}\}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC \tex{prependtoks\backslash lwc@patch@pre\backslash to\backslash everybefore\meta{hook}}
+    \NC\NR\NC\NC \tex{prependtoks\backslash lwc@patch@post\backslash to\backslash everyafter\meta{hook}}
+    \NC\NR
+\stopTABLE
 
-No commands are provided for selectively disabling \lwc/ with Op\TeX{}. Users must implement this functionality themselves.
+\subsection{Widow and Orphan Penalties}
+
+You can also manually adjust the penalties that \TeX{} assigns to \waos/. Usually, the defaults are fine, but advanced users may want to change them.
+
+\startTABLE
+    \NC \plainop/
+    \NC\tex{widowpenalty=\meta{integer}}
+    \NC\NR\NC\NC\tex{clubpenalty=\meta{integer}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\tex{lwcsetup\{widowpenalty = \meta{integer}\}}
+    \NC\NR\NC\NC\tex{lwcsetup\{orphanpenalty = \meta{integer}\}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\tex{setuplwc[widowpenalty = \meta{integer}]}
+    \NC\NR\NC\NC\tex{setuplwc[orphanpenalty = \meta{integer}]}
+    \NC\NR
+\stopTABLE
+
+Some suitable integers:
+
+\startTABLE
+    \NC Ignore widows/orphans \NC 0 \NC\NR
+    \NC Default \NC 1 \NC\NR
+    \NC Disable \lwc/ \NC 10\,000 \NC\NR
+\stopTABLE
+
+\subsection{\tex{nobreak} Behaviour}
+
+When \lwc/ encounters an orphan, it removes it by removing the orphaned line to the next page. However, sometimes, an orphan is immediately preceded by a section heading or a \tex{nobreak} command. By moving the orphan to the next page, you would naïvely separate a section (or other such material) from the line that follows. This really ought to be avoided, so \lwc/ provides some options to avoid this.
+
+\startTABLE
+    \NC \plainop/
+    \NC\tex{directlua\{lwc.nobreak_behaviour = "\meta{value}"\}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\tex{lwcsetup\{nobreak = \meta{value}\}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\tex{setuplwc[nobreak = \meta{value}]}
+    \NC\NR
+\stopTABLE
+
+The default value, \type{keep}, \emph{keep}s the section heading with the orphan by moving both to the next page.
+
+The value \type{split} \emph{split}s up the section heading and the orphan by moving the orphan to the next page while leaving the heading behind. This is usually a bad idea.
+
+The value \type{warn} causes \lwc/ to give up on the page and do nothing, leaving an orphaned line. \Lwc/ \emph{warn}s the user so that they can manually remove the orphan.
+
+\subsection{Maximum Cost}
+
+When \TeX{} breaks a paragraph, it scores it by the number of \q{demerits}. The demerits for a paragraph is the sum of the squared badnesses for each line, plus any \q{additional demerits} added for any other reason. The badness for a line is proportional the cube of the glue stretch ratio, so demerits grow with the sixth power of glue stretch.
+
+To choose the \q{best} paragraph on the page, \lwc/ uses a \q{cost function} $C$ that is initially defined as \startformula
+    C = \frac{d}{2\sqrt{l}}
+\stopformula where $d$ is the total demerits of the paragraph, and $l$ is the number of lines in the paragraph. 
+
+By default, \lwc/ just selects the paragraph on the page with the lowest cost; however, you can configure it to only select paragraphs below a selected cost. If there aren't any paragraphs below the set threshold, then \lwc/ won't remove the \woo/ and will instead issue a warning.
+
+\startTABLE
+    \NC \plainop/
+    \NC\tex{lwcmaxcost=\meta{integer}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\tex{lwcsetup\{max-cost = \meta{integer}\}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\tex{setuplwc[maxcost = \meta{integer}]}
+    \NC\NR
+\stopTABLE
+
+Very advanced users may also set a custom cost function by redefining the \inlineLUA{lwc.paragraph_cost(demerits, lines)} function.
+
+\subsection{Debug Mode}
+
+\Lwc/ offers a \q{debug} mode that prints extra information in the log files. This may be helpful to understand how \lwc/ is processing paragraphs and pages.
+
+\startTABLE
+    \NC \plainop/
+    \NC\inlineTEX{\directlua{lwc.debug = true}}
+    \NC\NR\NC\NC\inlineTEX{\directlua{lwc.debug = false}}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{debug = true}}
+    \NC\NR\NC\NC\inlineTEX{\lwcsetup{debug = false}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[state = start]}
+    \NC\NR\NC\NC\inlineTEX{\setuplwc[state = stop]}
+    \NC\NR
+\stopTABLE
+
+\section{Columns}
+
+Since \TeX{} implements column breaking and page breaking through the same internal mechanisms, \lwc/ should remove \waos/ between columns just as well as it does with \waos/ between pages. This has been tested with the standard \LaTeX{} class option \type{twocolumn} and the two-column output routine from Chapter~23 of \cite[title][texbook].\cite[texbook] \Lwc/ should presumably work with any other multi-column implementation; however, due to the diversity and complexity of output~routines, this cannot be guaranteed.
 
 \section[sec:issues]{Known Issues}
 \startitemize
-    \item \Lwc/ will not expand the first paragraph of a document.
-
     \item \Lwc/ will rarely fail to correctly move the last line on an expanded page to the next page in documents with \emph{very} small paper sizes.
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are better than widows, so this is still an improvement.
@@ -300,7 +427,9 @@ No commands are provided for selectively disabling \lwc/ with Op\TeX{}. Users mu
 
     \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored. % I have no idea how to fix this. The LMTX manual has "\parfillleftskip" in the indices, but that's all that I can find about it.
 
-    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the replacement paragraph node list loops back on itself. Since there is no \q{end} to the paragraph, \lwc/ cannot splice the paragraph into the page. The only reasonable option in this scenario is to stop processing the page, without removing the \woo/.
+    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the replacement paragraph node list loops back on itself. This is usually harmless, but can rarely cause the entire compile to completely fail. 
+
+    \item \TeX{} may warn you about over or underfull vboxes on pages where \lwc/ removed a \woo/. This is a false alarm and can be ignored.
 \stopitemize
 
 \section{The Algorithm}
@@ -318,7 +447,7 @@ After \TeX{} has broken its paragraph into its natural length, \lwc/ appears onc
 
 First, \lwc/ analyzes the \openalty/ of the page or column. If the page was broken at a \woo/, the \openalty/ will equal either \tex{widow\allowbreak penalty} or \tex{orphan\allowbreak penalty}. If the \openalty/ is not indicative of a \woo/, \lwc/ will stop and return \tex{box255} unmodified.
 
-At this point, we know that we have a \woo/ on the page, so we must lengthen the page by 1~line. We iterate through the list of saved paragraphs to find the lengthened paragraph with the least demerits. Once we've selected a paragraph to replace, we can now traverse through the page to find the original version of this paragraph that \TeX{} originally typeset. Once we find the original paragraph, we \q{splice} the lengthened paragraph in the place of the original.
+At this point, we know that we have a \woo/ on the page, so we must lengthen the page by 1~line. We iterate through the list of saved paragraphs to find the lengthened paragraph with the least cost. Once we've selected a paragraph to replace, we can now traverse through the page to find the original version of this paragraph that \TeX{} originally typeset. Once we find the original paragraph, we \q{splice} the lengthened paragraph in the place of the original.
 
 Since the page is now 1~line longer than it was before, we pull the last line off of the page to bring it back to its original length. We place the line onto the top of the \emph{recent contributions} list so that it is added to the start of the next page. Now, we can return the new, widow-free page to the output routine.
 
