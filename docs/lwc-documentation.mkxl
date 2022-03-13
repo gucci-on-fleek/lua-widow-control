@@ -146,6 +146,8 @@ setbounds currentpicture to boundingbox OverlayBox;
 
 \definecharacterkerning[titlekern][factor=0.2]
 
+\protected\def\interwordspace{\scaledfontdimen2\font}
+
 % Section
 \startsetups[style:section]
     \setcharacterkerning[titlekern]
