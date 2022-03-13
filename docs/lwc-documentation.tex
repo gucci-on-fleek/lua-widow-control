@@ -375,7 +375,7 @@ The value \type{warn} causes \lwc/ to give up on the page and do nothing, leavin
 When \TeX{} breaks a paragraph, it scores it by the number of \q{demerits}. The demerits for a paragraph is the sum of the squared badnesses for each line, plus any \q{additional demerits} added for any other reason. The badness for a line is proportional the cube of the glue stretch ratio, so demerits grow with the sixth power of glue stretch.
 
 To choose the \q{best} paragraph on the page, \lwc/ uses a \q{cost function} $C$ that is initially defined as \startformula
-    C = \frac{d}{2\sqrt{l}}
+    C = \frac{d}{\sqrt{l}}
 \stopformula where $d$ is the total demerits of the paragraph, and $l$ is the number of lines in the paragraph. 
 
 By default, \lwc/ just selects the paragraph on the page with the lowest cost; however, you can configure it to only select paragraphs below a selected cost. If there aren't any paragraphs below the set threshold, then \lwc/ won't remove the \woo/ and will instead issue a warning.

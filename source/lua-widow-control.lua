@@ -225,7 +225,7 @@ end
 
 
 function lwc.paragraph_cost(demerits, lines)
-    return demerits / (2 * math.sqrt(lines))
+    return demerits / math.sqrt(lines)
 end
 
 
