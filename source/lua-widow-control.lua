@@ -305,8 +305,12 @@ end
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
-    set_attribute(head, attribute, #paragraphs)
-    set_attribute(last(head), attribute, -1 * #paragraphs)
+    local offset = 0
+    if #paragraphs == 0 then
+        offset = 1
+    end
+    set_attribute(head, attribute, #paragraphs + offset)
+    set_attribute(last(head), attribute, -1 * (#paragraphs + offset))
 
     return head
 end
