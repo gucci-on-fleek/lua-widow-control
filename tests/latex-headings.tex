@@ -10,7 +10,7 @@
 \usepackage[debug=true]{lua-widow-control}
 \usepackage[textwidth=345pt, textheight=550pt, showframe]{geometry}
 
-\def\section#1{\vskip0pt plus 1ex\noindent\textbf{\interlinepenalty=10000\Large#1}\vskip0pt plus 1ex\nobreak}
+\def\section#1{\vskip0pt plus 1ex\noindent{\bfseries\interlinepenalty=10000\Large#1\par}\nobreak\vskip0pt plus 1ex\relax}
 
 \newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
@@ -18,7 +18,7 @@
 
 \def\sectionname{Section Heading\printlocation{2}}
 
-\def\text{\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence
+\def\text{\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence
 
 \sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence\sentence \sentence \sentence \sentence \sentence \sentence \printlocation{1} Filler.
 

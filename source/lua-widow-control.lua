@@ -299,14 +299,17 @@ function lwc.save_paragraphs(head)
     return head
 end
 
+
+local last_paragraph = 0
 --- Tags the beginning and the end of each paragraph as it is added to the page.
 ---
 --- We add an attribute to the first and last node of each paragraph. The ID is
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
-    set_attribute(head, attribute, #paragraphs)
-    set_attribute(last(head), attribute, -1 * #paragraphs)
+    set_attribute(head, attribute, #paragraphs + (100 * pagenum()))
+    set_attribute(last(head), attribute, -1 * (#paragraphs + (100 * pagenum())))
+    last_paragraph = #paragraphs
 
     return head
 end
@@ -385,7 +388,7 @@ function lwc.remove_widows(head)
         #paragraphs >= 1 then
     else
         paragraphs = {}
-        return head
+        return head_save
     end
 
     info("Widow/orphan detected. Attempting to remove.")
@@ -398,7 +401,8 @@ function lwc.remove_widows(head)
 
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
-        if paragraph.cost < best_cost and i <= #paragraphs - 1 then
+        if paragraph.cost < best_cost and
+           i ~= last_paragraph then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil
@@ -421,7 +425,9 @@ function lwc.remove_widows(head)
         ")"
     )
 
-    if best_cost > tex.getcount(max_cost) then
+    if best_cost > tex.getcount(max_cost) or
+       paragraph_index == last_paragraph
+    then
         -- If the best replacement is too bad, we can't do anything
         warning("Widow/Orphan NOT removed on page " .. pagenum())
         paragraphs = {}
@@ -488,7 +494,7 @@ function lwc.remove_widows(head)
         debug_print("remove_widows", "found " .. value)
 
         -- Insert the start of the replacement paragraph
-        if value == paragraph_index then
+        if value == paragraph_index + (100 * pagenum()) then
             debug_print("remove_widows", "replacement start")
             safe_last(target_node) -- Remove any loops
 
@@ -497,7 +503,7 @@ function lwc.remove_widows(head)
         end
 
         -- Insert the end of the replacement paragraph
-        if value == -1 * paragraph_index then
+        if value == -1 * (paragraph_index + (100 * pagenum())) then
             debug_print("remove_widows", "replacement end")
             safe_last(target_node).next = head.next
             break
