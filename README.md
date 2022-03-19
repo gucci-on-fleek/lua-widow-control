@@ -7,7 +7,7 @@
 lua-widow-control
 =================
 
-Lua-widow-control is a Plain TeX/LaTeX/ConTeXt/OpTeX package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages or columns. Instead, lua-widow-control automatically lengthens a paragraph on a page or column where a widow or orphan would otherwise occur. 
+Lua-widow-control is a Plain TeX/LaTeX/ConTeXt/OpTeX package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages or columns. Instead, lua-widow-control automatically lengthens a paragraph on a page or column where a widow or orphan would otherwise occur.
 
 Please see the [**full documentation**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lua-widow-control.pdf) for more.
 
@@ -45,7 +45,7 @@ Licence
 
 Lua-widow-control is licensed under the [_Mozilla Public License_, version 2.0](https://www.mozilla.org/en-US/MPL/2.0/) or greater. The documentation is additionally licensed under [CC-BY-SA, version 4.0](https://creativecommons.org/licenses/by-sa/4.0/legalcode) or greater.
 
-Please note that a compiled document is absolutely **not** considered to be an "Executable Form" as defined by the MPL. The use of lua-widow-control in a document does not place **any** obligations on the document's author or distributors. The MPL and CC-BY-SA licenses **only** apply to you if you distribute the lua-widow-control source code or documentation. 
+Please note that a compiled document is absolutely **not** considered to be an "Executable Form" as defined by the MPL. The use of lua-widow-control in a document does not place **any** obligations on the document's author or distributors. The MPL and CC-BY-SA licenses **only** apply to you if you distribute the lua-widow-control source code or documentation.
 
 ---
 _v2.0.0 (2022-03-07)_ <!--%%version %%dashdate-->

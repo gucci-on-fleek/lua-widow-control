@@ -182,7 +182,7 @@ local function register_callback(t)
             with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
             and unfrozen. Because of this, we need to register some callbacks at the
             engine level. This is fragile though, because a future \ConTeXt{} update
-            may decide to register one of these functions, in which case 
+            may decide to register one of these functions, in which case
             \lwc/ will crash with a cryptic error message.
           ]]
         return {
@@ -329,7 +329,7 @@ local function safe_last(head)
 
         if ids[id] then
             warning [[Circular node list detected!
-This should never happen. I'll try and 
+This should never happen. I'll try and
 recover, but your output may be corrupted.
 (Internal Error)]]
             prev.next = nil
@@ -402,7 +402,8 @@ function lwc.remove_widows(head)
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
         if paragraph.cost < best_cost and
-           i ~= last_paragraph then
+           i ~= last_paragraph
+        then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
             paragraphs[paragraph_index].node = nil

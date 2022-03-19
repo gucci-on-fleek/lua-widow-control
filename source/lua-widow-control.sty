@@ -5,7 +5,7 @@
 
 % Formats built after 2015 include \LuaTeX{}Base, so this is the absolute
 % minimum version that we will run under.
-\NeedsTeXFormat{LaTeX2e}[2015/01/01] 
+\NeedsTeXFormat{LaTeX2e}[2015/01/01]
 
 % For _really_ old formats
 \providecommand\DeclareRelease[3]{}
@@ -44,15 +44,15 @@
 \msg_new:nnn
     { \c__lwc_name_str }
     { patch-failed }
-    { 
+    {
         Patching~ \c_backslash_str #1~ failed. \\
-        Please~ ensure~ that~ \c_backslash_str #1~ exists. 
+        Please~ ensure~ that~ \c_backslash_str #1~ exists.
     }
 
 \msg_new:nnn
     { \c__lwc_name_str }
     { old-format-patch }
-    { 
+    {
         Patching~ not~ supported~ with~ old~ LaTeX. \\
         Please~ use~ a~ LaTeX~ format~ >=~ 2021/06/01.
     }
@@ -60,9 +60,9 @@
 \msg_new:nnn
     { \c__lwc_name_str }
     { old-command }
-    { 
+    {
         \c_backslash_str #1~ has~ been~ REMOVED! \\
-        Please~ use~ \c_backslash_str setuplwc \c_left_brace_str #2 
+        Please~ use~ \c_backslash_str setuplwc \c_left_brace_str #2
         \c_right_brace_str\ instead.
     }
 
@@ -195,15 +195,15 @@
 
     strict .meta:n = { emergencystretch = 0pt,
                        max-cost         = 5000,
-                       nobreak          = warn, 
+                       nobreak          = warn,
                      },
     strict .value_forbidden:n = true,
 
     default .meta:n = { emergencystretch = 3em,
                         max-cost         = \c_max_int,
-                        nobreak          = keep, 
+                        nobreak          = keep,
                       },
-    default .value_forbidden:n = true,  
+    default .value_forbidden:n = true,
 }
 
 % Add the user interface for the keys

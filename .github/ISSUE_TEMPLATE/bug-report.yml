@@ -35,7 +35,7 @@ body:
       label: Reproduction
       description: >
         Please include an [MWE](https://tex.meta.stackexchange.com/q/228). It should be
-        as small as possible, hopefully no more than 15-20 lines. 
+        as small as possible, hopefully no more than 15-20 lines.
 
         If you are using LaTeX, then please enable debug mode with `\usepackage[debug=true]{lua-widow-control}`.
       render: TeX
@@ -95,7 +95,7 @@ body:
     attributes:
       label: Lua-widow-control Version
       description: >
-        This should be found in your `.log` file or at the top of one of 
+        This should be found in your `.log` file or at the top of one of
         lua-widow-control's source files.
   - type: textarea
     attributes:

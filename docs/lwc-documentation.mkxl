@@ -117,7 +117,7 @@ setbounds currentpicture to boundingbox OverlayBox;
         align=flushleft,
     ]{%
         {\ssa\bf Warning}
-        
+
         #1
     }}
     \blank[line]
@@ -204,7 +204,7 @@ setbounds currentpicture to boundingbox OverlayBox;
     \else
         \box0
     \fi
-    
+
     \goodbreak
 \stoptexdefinition
 
@@ -297,7 +297,7 @@ interfaces.implement {
         \dontleavehmode
         \blackrule[depth=-0.25\baselineskip, height=\dimexpr0.25\baselineskip + 0.4pt, width=8em]
         \par
-        
+
         \doifdocumentvariable{ctan}{
             \strippedurl{\documentvariable{ctan}}
         }
@@ -308,7 +308,7 @@ interfaces.implement {
 
         \noindentation
     \stopalignment
-\stopsetups 
+\stopsetups
 
 \startsetups[document:start]
     \setup[titleblock]
