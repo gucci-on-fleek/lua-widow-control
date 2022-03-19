@@ -139,6 +139,7 @@ setbounds currentpicture to boundingbox OverlayBox;
 ]
 
 \define[1]\meta{\m{\langle}\italic{#1}\m{\rangle}}
+\define[1]\githubissue{\goto{(Issue~\##1)}[url(https://github.com/gucci-on-fleek/lua-widow-control/issues/#1)]}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Section Commands %%%%%

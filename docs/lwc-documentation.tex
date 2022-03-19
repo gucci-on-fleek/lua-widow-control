@@ -426,17 +426,19 @@ Since \TeX{} implements column breaking and page breaking through the same inter
 
 \section[sec:issues]{Known Issues}
 \startitemize
-    \item \Lwc/ will rarely fail to correctly move the last line on an expanded page to the next page in documents with \emph{very} small paper sizes.
+    \item \Lwc/ will rarely fail to correctly move the last line on an expanded page to the next page in documents with \emph{very} small paper sizes. \githubissue{19}
 
     \item When a 3-line paragraph is at the end of a page forming a widow, \lwc/ will remove the widow; however, it will leave an orphan. This issue is inherent to any process that removes widows through paragraph expansion and is thus unavoidable. Orphans are better than widows, so this is still an improvement.
 
     \item Sometimes a \woo/ cannot be eliminated because no paragraph has enough \q{stretch}. This can \emph{sometimes} be remediated by increasing \lwc/'s \estretch/; however, some pages just don't have enough \q{stretchy} paragraphs. Long paragraphs with short words tend to be \q{stretchier} than short paragraphs with long words since these long paragraphs will have more interword glue. Narrow columns also stretch easier than wide columns since you need to expand a paragraph by less to make a new line.
 
-    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored. % I have no idea how to fix this. The LMTX manual has "\parfillleftskip" in the indices, but that's all that I can find about it.
+    \item When running under \LuaMetaTeX, the log may be filled with lines like \q{\tt luatex warning  > tex: left parfill skip is gone}. This is harmless and can be ignored. \githubissue{7} % I have no idea how to fix this. The LMTX manual has "\parfillleftskip" in the indices, but that's all that I can find about it.
 
-    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the replacement paragraph node list loops back on itself. This is usually harmless, but can rarely cause the entire compile to completely fail.
+    \item \Lwc/ will rarely raise a \q{\tt Circular node list detected!} warning. This occurs when the replacement paragraph node list loops back on itself. This is usually harmless, but can rarely cause the entire compile to completely fail. \githubissue{9}
 
-    \item \TeX{} may warn you about over or underfull vboxes on pages where \lwc/ removed a \woo/. This is a false alarm and can be ignored.
+    \item \TeX{} may warn you about over or underfull vboxes on pages where \lwc/ removed a \woo/. This is a false alarm and can be ignored. \githubissue{8}
+
+    \item If there is a footnote on the last line of the page with a \woo/, \lwc/ will sometimes move the \q{footnote mark} but not the \q{footnote text}, thus breaking up a footnote. \githubissue{26}
 \stopitemize
 
 \section{The Algorithm}
