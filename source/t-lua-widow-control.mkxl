@@ -52,6 +52,7 @@
         \clubpenalty=\lwcparameter{orphanpenalty}
         \widowpenalty=\lwcparameter{widowpenalty}
         \displaywidowpenalty=\lwcparameter{widowpenalty}
+        \brokenpenalty=\lwcparameter{brokenpenalty}
     \stopsetups
 
     \setups[*default]
@@ -67,6 +68,7 @@
     debug=\v!stop,
     orphanpenalty=1,
     widowpenalty=1,
+    brokenpenalty=1,
     nobreak=keep,
     maxcost=2147483647,
 ]

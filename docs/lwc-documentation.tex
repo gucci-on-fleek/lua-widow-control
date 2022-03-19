@@ -65,6 +65,9 @@ Widows occur when when the majority of a paragraph is on one page or column, but
 \subsection{Orphans}
 Orphans are when the first line of a paragraph occurs on the page or column before the remainder of they paragraph. They are not nearly as distracting for the reader, but they are still not ideal. Visually, \waos/ are about equally disruptive; however, orphans tend not to decrease the legibility of a text as much as widows do, so they tend to be ignored more often.
 
+\subsection{Broken Hyphens}
+\q{Broken} hyphens occur whenever a page break occurs part way through a hyphenated word. These really have nothing to do with \waos/; however, \TeX{} treats broken hyphens exactly the same as it does \waos/. In addition, breaking a word across two pages is at almost as bad for the reader as \waos/; therefore, \lwc/ treats broken hyphens exactly the same way as it treats \waos/.
+
 \startplacefigure[location={here, top, bottom}, title={A visual comparison of \waos/.}, reference=tab:widow]
     \getbuffer[widow-orphan]
 \stopplacefigure
@@ -331,14 +334,17 @@ You can also manually adjust the penalties that \TeX{} assigns to \waos/. Usuall
     \NC \plainop/
     \NC\tex{widowpenalty=\meta{integer}}
     \NC\NR\NC\NC\tex{clubpenalty=\meta{integer}}
+    \NC\NR\NC\NC\tex{brokenpenalty=\meta{integer}}
     \NC\NR
     \NC \LaTeX{}
     \NC\tex{lwcsetup\{widowpenalty = \meta{integer}\}}
     \NC\NR\NC\NC\tex{lwcsetup\{orphanpenalty = \meta{integer}\}}
+    \NC\NR\NC\NC\tex{lwcsetup\{brokenpenalty = \meta{integer}\}}
     \NC\NR
     \NC \ConTeXt{}
     \NC\tex{setuplwc[widowpenalty = \meta{integer}]}
     \NC\NR\NC\NC\tex{setuplwc[orphanpenalty = \meta{integer}]}
+    \NC\NR\NC\NC\tex{setuplwc[brokenpenalty = \meta{integer}]}
     \NC\NR
 \stopTABLE
 
