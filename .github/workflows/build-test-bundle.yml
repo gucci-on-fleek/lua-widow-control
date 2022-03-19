@@ -32,7 +32,6 @@ jobs:
           -e TEXMFHOME=/mnt/texmf
           contextgarden/context:lmtx
           /bin/sh -c '
-            sed -i "s/detokenize/luadetokenize/;/starttexdefinition externalfilter@process_inline/i\\\\\\def\\\luadetokenize\\{\\\ctxlua\\{tex.sprint\\(-2\\,\\ token.scanargument\\(false\\):gsub\\(\"\\\\\\\\(\\[A-Za-z\\]+\\)\\ \"\\,\\ \"\\\\\\\\\"\\ ..\\ string.char\\(37\\)\\ ..\\ \"1\"\\)\\ ..\\ \"\"\\)\\}\\}" /context/tex/texmf-modules/tex/context/third/filter/t-filter.mkxl;
             mtxrun --generate;
             cd /mnt/tests/ &&
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||

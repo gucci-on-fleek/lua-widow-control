@@ -29,9 +29,8 @@
 
 \def\titlecite[#1]{\cite[title][#1]\cite[#1]}
 
-\usemodule[vim]
-\definevimtyping[TEX][syntax=tex, lines=split, escape=comment, directory=tmp]
-\definevimtyping[LUA][syntax=lua, lines=split, escape=comment, directory=tmp]
+\definetype[inlineTEX][option=tex, escape={$,$}, lines=hyphenated]
+\definetype[inlineLUA][option=lua, escape={$,$}, lines=hyphenated]
 
 \input lwc-sample
 
@@ -128,10 +127,10 @@ There have been a few previous attempts to improve upon \TeX's previously-discus
         \NC \typesetbuffer[lwc][frame=on,page=2]
         \NC\NR
 
-        \NC \processTEXbuffer[ignore-code]
-        \NC \processTEXbuffer[shorten-code]
-        \NC \processTEXbuffer[stretch-code]
-        \NC \processTEXbuffer[lwc-code]
+        \NC \typebuffer[ignore-code][option=TEX]
+        \NC \typebuffer[shorten-code][option=TEX]
+        \NC \typebuffer[stretch-code][option=TEX]
+        \NC \typebuffer[lwc-code][option=TEX]
         \NC\NR
     \stopTABLE
 
@@ -236,11 +235,11 @@ Please note that when running in legacy mode, you cannot use the key--value inte
 
 \subsection{Overview}
 
-\LaTeX{} users can set the options either when loading the package (\tex{usepackage[\meta{options}]\{lua-widow-control\}}) or at any point using \tex{lwcsetup\{\meta{options}\}}.
+\LaTeX{} users can set the options either when loading the package (\inlineTEX{\usepackage[$\meta{options}$]{lua-widow-control}}) or at any point using \inlineTEX{\lwcsetup{$\meta{options}$}}.
 
-\ConTeXt{} users should always use the \tex{setuplwc[\meta{options}]} command.
+\ConTeXt{} users should always use the \inlineTEX{\setuplwc[$\meta{options}$]} command.
 
-Plain~\TeX{} and Op\TeX{} are a little different. Some options have commands provided (i.e., \tex{lwcemergencystretch=\meta{dimension}}), while others must be set manually (i.e., \tex{directlua\{lwc.debug = true\}}).
+Plain~\TeX{} and Op\TeX{} are a little different. Some options have commands provided (i.e., \inlineTEX{\lwcemergencystretch = $\meta{dimension}$}), while others must be set manually (i.e., \inlineTEX{\directlua{lwc.debug = true}}).
 
 Also, please note that not all commands are provided for all formats.
 
@@ -296,13 +295,13 @@ You can configure the \estretch/ used when stretching a paragraph. The default v
 
 \startTABLE
     \NC \plainop/
-    \NC\tex{lwcemergencystretch=\meta{dimension}}
+    \NC\inlineTEX{\lwcemergencystretch = $\meta{dimension}$}
     \NC\NR
     \NC \LaTeX{}
-    \NC\tex{lwcsetup\{emergencystretch = \meta{dimension}\}}
+    \NC\inlineTEX{\lwcsetup{emergencystretch = $\meta{dimension}$}}
     \NC\NR
     \NC \ConTeXt{}
-    \NC\tex{setuplwc[emergencystretch = \meta{dimension}]}
+    \NC\inlineTEX{\setuplwc[emergencystretch = $\meta{dimension}$]}
     \NC\NR
 \stopTABLE
 
@@ -315,36 +314,36 @@ You could just disable then reenable \lwc/ every time that you use the command; 
 
 \startTABLE
     \NC Plain \TeX{}
-    \NC \tex{lwcdisablecmd\{\meta{\backslash macro}\}}
+    \NC \inlineTEX{\lwcdisablecmd{$\meta{\backslash macro}$}}
     \NC\NR
     \NC \LaTeX{}
-    \NC \tex{lwcsetup\{disablecmds = \{\meta{\backslash macroone}, \meta{\backslash macrotwo}\}\}}
+    \NC \inlineTEX{\lwcsetup{disablecmds = {$\meta{\backslash macroone}$, $\meta{\backslash macrotwo}$}}}
     \NC\NR
     \NC \ConTeXt{}
-    \NC \tex{prependtoks\backslash lwc@patch@pre\backslash to\backslash everybefore\meta{hook}}
-    \NC\NR\NC\NC \tex{prependtoks\backslash lwc@patch@post\backslash to\backslash everyafter\meta{hook}}
+    \NC \inlineTEX{\prependtoks\lwc$\hskip-0.5em\relax$@patch@pre\to\everybefore$\hskip-0.5em\relax\meta{hook}$}
+    \NC\NR\NC\NC \inlineTEX{\prependtoks\lwc$\hskip-0.5em\relax$@patch@pre\to\everyafter$\hskip-0.5em\relax\meta{hook}$}
     \NC\NR
 \stopTABLE
 
 \subsection{Widow and Orphan Penalties}
 
-You can also manually adjust the penalties that \TeX{} assigns to \waos/. Usually, the defaults are fine, but advanced users may want to change them.
+You can also manually adjust the penalties that \TeX{} assigns to widows, orphans, and broken hyphens. Usually, the defaults are fine, but advanced users may want to change them.
 
 \startTABLE
     \NC \plainop/
-    \NC\tex{widowpenalty=\meta{integer}}
-    \NC\NR\NC\NC\tex{clubpenalty=\meta{integer}}
-    \NC\NR\NC\NC\tex{brokenpenalty=\meta{integer}}
+    \NC\inlineTEX{\widowpenalty = $\meta{integer}$}
+    \NC\NR\NC\NC\inlineTEX{\clubpenalty = $\meta{integer}$}
+    \NC\NR\NC\NC\inlineTEX{\brokenpenalty = $\meta{integer}$}
     \NC\NR
     \NC \LaTeX{}
-    \NC\tex{lwcsetup\{widowpenalty = \meta{integer}\}}
-    \NC\NR\NC\NC\tex{lwcsetup\{orphanpenalty = \meta{integer}\}}
-    \NC\NR\NC\NC\tex{lwcsetup\{brokenpenalty = \meta{integer}\}}
+    \NC\inlineTEX{\lwcsetup{widowpenalty = $\meta{integer}$}}
+    \NC\NR\NC\NC\inlineTEX{\lwcsetup{orphanpenalty = $\meta{integer}$}}
+    \NC\NR\NC\NC\inlineTEX{\lwcsetup{brokenpenalty = $\meta{integer}$}}
     \NC\NR
     \NC \ConTeXt{}
-    \NC\tex{setuplwc[widowpenalty = \meta{integer}]}
-    \NC\NR\NC\NC\tex{setuplwc[orphanpenalty = \meta{integer}]}
-    \NC\NR\NC\NC\tex{setuplwc[brokenpenalty = \meta{integer}]}
+    \NC\inlineTEX{\setuplwc[widowpenalty = $\meta{integer}$]}
+    \NC\NR\NC\NC\inlineTEX{\setuplwc[orphanpenalty = $\meta{integer}$]}
+    \NC\NR\NC\NC\inlineTEX{\setuplwc[brokenpenalty = $\meta{integer}$]}
     \NC\NR
 \stopTABLE
 
@@ -362,13 +361,13 @@ When \lwc/ encounters an orphan, it removes it by removing the orphaned line to 
 
 \startTABLE
     \NC \plainop/
-    \NC\tex{directlua\{lwc.nobreak_behaviour = "\meta{value}"\}}
+    \NC\inlineTEX{\directlua{lwc.nobreak_behaviour = "$\meta{value}$"}}
     \NC\NR
     \NC \LaTeX{}
-    \NC\tex{lwcsetup\{nobreak = \meta{value}\}}
+    \NC\inlineTEX{\lwcsetup{nobreak = $\meta{value}$}}
     \NC\NR
     \NC \ConTeXt{}
-    \NC\tex{setuplwc[nobreak = \meta{value}]}
+    \NC\inlineTEX{\setuplwc[nobreak = $\meta{value}$]}
     \NC\NR
 \stopTABLE
 
@@ -390,13 +389,13 @@ By default, \lwc/ just selects the paragraph on the page with the lowest cost; h
 
 \startTABLE
     \NC \plainop/
-    \NC\tex{lwcmaxcost=\meta{integer}}
+    \NC\inlineTEX{\lwcmaxcost = $\meta{integer}$}
     \NC\NR
     \NC \LaTeX{}
-    \NC\tex{lwcsetup\{max-cost = \meta{integer}\}}
+    \NC\inlineTEX{\lwcsetup{max-cost = $\meta{integer}$}}
     \NC\NR
     \NC \ConTeXt{}
-    \NC\tex{setuplwc[maxcost = \meta{integer}]}
+    \NC\inlineTEX{\setuplwc[maxcost = $\meta{integer}$]}
     \NC\NR
 \stopTABLE
 
@@ -481,11 +480,13 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 ]
 \section[sec:implementation]{Implementation}
 
+\usemodule[scite]
 \setupbodyfont[10pt]
 \setuphead[subsection][
     alternative=normal,
     style=\ssita,
-    before={\blank[big, preference]},
+    page=yes,
+    continue=yes,
 ]
 
 \subsection{lua-widow-control.lua}
@@ -500,7 +501,6 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 
 \typeTEXfile{../source/lua-widow-control.sty}
 
-\def\module{\tex{module}}
 \subsection{t-lua-widow-control.mkxl/mkiv}
 
 \typeTEXfile{../source/t-lua-widow-control.mkxl}
