@@ -93,7 +93,7 @@
 
     brokenpenalty .int_gset:N       = \tex_brokenpenalty:D,
     brokenpenalty .value_required:n = true,
-    brokenpenalty .initial:x        = 1,
+    brokenpenalty .initial:n        = 1,
 
     microtype .bool_gset:N      = \g__lwc_use_microtype_bool,
     microtype .value_required:n = true,
@@ -200,14 +200,29 @@
     strict .meta:n = { emergencystretch = 0pt,
                        max-cost         = 5000,
                        nobreak          = warn,
+                       widowpenalty     = 1,
+                       orphanpenalty    = 1,
+                       brokenpenalty    = 1,
                      },
     strict .value_forbidden:n = true,
 
     default .meta:n = { emergencystretch = 3em,
                         max-cost         = \c_max_int,
                         nobreak          = keep,
+                        widowpenalty     = 1,
+                        orphanpenalty    = 1,
+                        brokenpenalty    = 1,
                       },
     default .value_forbidden:n = true,
+
+    balanced .meta:n = { emergencystretch = 1em,
+                         max-cost         = 10000,
+                         nobreak          = keep,
+                         widowpenalty     = 500,
+                         orphanpenalty    = 500,
+                         brokenpenalty    = 500,
+                      },
+    balanced .value_forbidden:n = true,
 }
 
 % Add the user interface for the keys
