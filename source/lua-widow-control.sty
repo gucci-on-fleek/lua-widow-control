@@ -177,8 +177,18 @@
     \__lwc_patch_cmd:c { \cs_to_str:N #1 }
 }
 
+\cs_new:Npn \__lwc_patch_cmd:n #1 {
+    % If the item provided is a single token, we'll assume that it's a \macro.
+    % If it is multiple tokens, we'll assume that it's a `csname`.
+    \tl_if_single:nTF { #1 } {
+        \__lwc_patch_cmd:c { \cs_to_str:N #1 }
+    } {
+        \__lwc_patch_cmd:c { #1 }
+    }
+}
+
 \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
-    \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:N
+    \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:n
 }
 
 % Define some final keys
