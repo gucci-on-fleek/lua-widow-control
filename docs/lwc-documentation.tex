@@ -310,14 +310,14 @@ Sometimes, you may want to disable \lwc/ for certain commands where stretching i
 
 You could just disable then reenable \lwc/ every time that you use the command; however, \lwc/ provides a convenience macro that will do this automatically for you.
 
-\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself; however, \lwc/ does \bold{not} patch the non-standard section commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, \sans{titlesec}, Op\TeX{}, and others. You'll need to add these yourself.
+\Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself. \Lwc/ also patches the commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, and \sans{titlesec}. You'll need to patch any other section commands yourself.
 
 \startTABLE
     \NC Plain \TeX{}
     \NC \inlineTEX{\lwcdisablecmd{$\meta{\backslash macro}$}}
     \NC\NR
     \NC \LaTeX{}
-    \NC \inlineTEX{\lwcsetup{disablecmds = {$\meta{\backslash macroone}$, $\meta{\backslash macrotwo}$}}}
+    \NC \inlineTEX{\lwcsetup{disablecmds = {$\meta{macronameone}$, $\meta{macronametwo}$}}}
     \NC\NR
     \NC \ConTeXt{}
     \NC \inlineTEX{\prependtoks\lwc$\hskip-0.5em\relax$@patch@pre\to\everybefore$\hskip-0.5em\relax\meta{hook}$}
