@@ -312,6 +312,8 @@ You could just disable then reenable \lwc/ every time that you use the command; 
 
 \Lwc/ automatically patches the default \LaTeX{}, \ConTeXt{}, and Plain~\TeX{} section commands, so you shouldn't need to patch these yourself. \Lwc/ also patches the commands provided by \sans{memoir}, \sans{\acronym{KOMA}-script}, and \sans{titlesec}. You'll need to patch any other section commands yourself.
 
+Note that the \LaTeX{} option does not \emph{append} commands to the disable list; rather, it \emph{sets} the list from scratch. This means that you can set an empty list to disable any command patching; however, this also means that if you want to disable one command on top of the defaults, you'll also need to manually include the default list.
+
 \startTABLE
     \NC Plain \TeX{}
     \NC \inlineTEX{\lwcdisablecmd{$\meta{\backslash macro}$}}
