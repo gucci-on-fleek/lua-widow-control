@@ -231,6 +231,13 @@ end
 
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
+    -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
+    if (head.id ~= par_id and context) or
+        status.output_active -- Don't run during the output routine
+    then
+        return head
+    end
+
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     local renable_box_warnings
     if (context or optex) or
@@ -240,10 +247,6 @@ function lwc.save_paragraphs(head)
         lwc.callbacks.disable_box_warnings.enable()
     end
 
-    -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
-    if head.id ~= par_id and context then
-        return head
-    end
 
     -- We need to return the unmodified head at the end, so we make a copy here
     local new_head = copy(head)
@@ -307,9 +310,11 @@ local last_paragraph = 0
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
-    set_attribute(head, attribute, #paragraphs + (100 * pagenum()))
-    set_attribute(last(head), attribute, -1 * (#paragraphs + (100 * pagenum())))
-    last_paragraph = #paragraphs
+    if not status.output_active then
+        set_attribute(head, attribute, #paragraphs + (100 * pagenum()))
+        set_attribute(last(head), attribute, -1 * (#paragraphs + (100 * pagenum())))
+        last_paragraph = #paragraphs
+    end
 
     return head
 end
