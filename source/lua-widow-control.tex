@@ -12,6 +12,8 @@
     }
 \fi
 
+\catcode`@=11
+
 \input ltluatex % \LuaTeX{}Base
 
 \clubpenalty=1
@@ -43,7 +45,6 @@
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
-\catcode`@=11
 
 % We should only reenable \lwc/ at the end if it was already enabled.
 \newcount\lwc@disable@count
@@ -59,19 +60,35 @@
     \ifnum\lwc@disable@count>0%
         \lwcenable%
         \advance\lwc@disable@count by -1%
-    \fi%
+    \fi
+}
+
+\def\lwc@extractcomponents #1:#2->#3\STOP{%
+    \def\lwc@params{#2}%
+    \def\lwc@body{#3}%
 }
 
 \def\lwcdisablecmd#1{%
-    \ifdefined#1
-        \expandafter\def\expandafter#1\expandafter{\lwc@patch@pre #1\lwc@patch@post}
-    \fi
+    \ifdefined#1%
+        \expandafter\lwc@extractcomponents\meaning#1\STOP%
+        \begingroup%
+            \catcode`@=11%
+            \expanded{%
+                \noexpand\scantokens{%
+                    \gdef\noexpand#1\lwc@params{%
+                        \noexpand\lwc@patch@pre\lwc@body\noexpand\lwc@patch@post%
+                    }%
+                }%
+            }%
+        \endgroup%
+    \fi%
 }
-\catcode`@=12
 
 \begingroup
     \suppressoutererror=1
     \lwcdisablecmd{\beginsection} % Sectioning
 \endgroup
 
+
+\catcode`@=12
 \endinput
