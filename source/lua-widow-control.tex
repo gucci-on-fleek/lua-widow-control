@@ -46,20 +46,21 @@
 \catcode`@=11
 
 % We should only reenable \lwc/ at the end if it was already enabled.
-\newif\iflwc@should@reenable
+\newcount\lwc@disable@count
 
 \def\lwc@patch@pre{%
     \iflwc%
-        \lwc@should@reenabletrue%
+        \advance\lwc@disable@count by 1%
         \lwcdisable%
-    \else%
-        \lwc@should@reenablefalse%
     \fi%
 }
 
-\def\lwc@patch@post{\iflwc@should@reenable%
-    \lwcenable%
-\fi}
+\def\lwc@patch@post{
+    \ifnum\lwc@disable@count>0%
+        \lwcenable%
+        \advance\lwc@disable@count by -1%
+    \fi%
+}
 
 \def\lwcdisablecmd#1{%
     \ifdefined#1

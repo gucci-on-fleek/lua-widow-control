@@ -154,26 +154,25 @@
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
-\bool_new:N \g__lwc_should_reenable_bool
+\int_new:N \g__lwc_disable_int
 
 \cs_new:Npn \__lwc_patch_pre: {
     % We should only reenable \lwc/ at the end if it was already enabled.
-    \__lwc_if_enabled:TF {
-        \bool_gset_true:N \g__lwc_should_reenable_bool
+    \__lwc_if_enabled:T {
+        \int_gincr:N \g__lwc_disable_int
         \__lwc_disable:
-    } {
-        \bool_gset_false:N \g__lwc_should_reenable_bool
     }
 }
 
 \cs_new:Npn \__lwc_patch_post: {
-    \bool_if:NT { \g__lwc_should_reenable_bool } {
+    \int_compare:nT { \g__lwc_disable_int > 0 } {
         \__lwc_enable:
+        \int_gdecr:N \g__lwc_disable_int
     }
 }
 
 \cs_new:Npn \__lwc_patch_cmd:c #1 {
-    \IfFormatAtLeastTF {2021/06/01 } {
+    \IfFormatAtLeastTF { 2021/06/01 } {
         \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
             \__lwc_patch_pre:
         }

@@ -83,20 +83,21 @@
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
 % We should only reenable \lwc/ at the end if it was already enabled.
-\newif\iflwc_should_reenable
+\newcount\lwc_disable_count
 
 \define\lwc_patch_pre{%
     \iflwc%
-        \lwc_should_reenabletrue%
-        \setuplwc[state=stop]%
-    \else%
-        \lwc_should_reenablefalse
+        \advance\lwc_disable_count by 1%
+        \setuplwc[\c!state=\v!stop]%
     \fi%
 }
 
-\define\lwc_patch_post{\iflwc_should_reenable%
-    \setuplwc[state=start]%
-\fi}
+\define\lwc_patch_post{
+    \ifnum\lwc_disable_count>0%
+        \setuplwc[\c!state=\v!start]%
+        \advance\lwc_disable_count by -1%
+    \fi%
+}
 
 \prependtoks\lwc_patch_pre\to\everybeforesectionheadhandle % Sectioning
 \prependtoks\lwc_patch_post\to\everyaftersectionheadhandle
