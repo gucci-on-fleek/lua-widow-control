@@ -204,11 +204,16 @@
     \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:n
 }
 
+%%% Class and package-specifc patches
+
 % KOMA-Script
 \cs_if_exist:NT \AddtoDoHook {
     \AddtoDoHook { heading / begingroup } { \__lwc_patch_pre:  \use_none:n }
     \AddtoDoHook { heading / endgroup   } { \__lwc_patch_post: \use_none:n }
 }
+
+% Memoir
+\cs_gset_nopar:Npn \pen@ltyabovepfbreak { 23 } % GitHub #32
 
 % Define some final keys
 \keys_define:nn { \c__lwc_name_str } {
