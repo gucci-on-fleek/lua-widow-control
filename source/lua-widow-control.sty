@@ -72,7 +72,9 @@
 }
 
 % Define (most of) the keys
-\keys_define:nn { \c__lwc_name_str } {
+\cs_generate_variant:Nn \keys_define:nn { Vn }
+
+\keys_define:Vn { \c__lwc_name_str } {
     emergencystretch .dim_gset:N       = \g__lwc_emergencystretch_dim,
     emergencystretch .value_required:n = true,
     emergencystretch .initial:x        = \dim_max:nn { 3em } { 30pt },
@@ -213,10 +215,10 @@
 }
 
 % Memoir
-\cs_gset_nopar:Npn \pen@ltyabovepfbreak { 23 } % GitHub #32
+\cs_gset_nopar:Npn \pen@ltyabovepfbreak { 23 } % Issue #32
 
 % Define some final keys
-\keys_define:nn { \c__lwc_name_str } {
+\keys_define:Vn { \c__lwc_name_str } {
     enable .choice:,
     enable / true  .code:n     = \__lwc_enable:,
     enable / false .code:n     = \__lwc_disable:,
@@ -260,9 +262,12 @@
 }
 
 % Add the user interface for the keys
-\ProcessKeysPackageOptions{ \c__lwc_name_str }
+\exp_args:NV \ProcessKeysPackageOptions { \c__lwc_name_str }
 
-\NewDocumentCommand \lwcsetup {m} { \keys_set:nn{\c__lwc_name_str}{#1} }
+\cs_generate_variant:Nn \keys_set:nn { Vn }
+\NewDocumentCommand \lwcsetup {m} {
+    \keys_set:Vn { \c__lwc_name_str }{ #1 }
+}
 
 % Legacy Commands
 \NewDocumentCommand \lwcemergencystretch { } {
