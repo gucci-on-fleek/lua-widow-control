@@ -23,7 +23,6 @@ local function debug_print(title, text)
     end
 end
 
-
 --[[
     \lwc/ is intended to be format-agonistic. It only runs on Lua\TeX{},
     but there are still some slight differences between formats. Here, we
@@ -50,7 +49,7 @@ end
     This is probably a useless micro-optimization, but it can't hurt.
   ]]
 local last = node.slide
-local copy = node.copy_list
+local copy = node.copy_list or node.copylist
 local par_id = node.id("par") or node.id("local_par")
 local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
@@ -61,19 +60,13 @@ local set_attribute = node.set_attribute or node.setattribute
 local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
+local node_id = node.is_node or node.isnode
 local min_col_width = tex.sp("250pt")
 
 --[[
     Package/module initialization
   ]]
-local warning,
-      info,
-      attribute,
-      contrib_head,
-      stretch_order,
-      pagenum,
-      emergencystretch,
-      max_cost
+local warning, info, attribute, contrib_head, stretch_order, pagenum, emergencystretch, max_cost
 
 if lmtx then
     debug_print("LMTX")
@@ -136,7 +129,6 @@ local paragraphs = {} -- List to hold the alternate paragraph versions
 local function get_location()
     return "At " .. pagenum() .. "/" .. #paragraphs
 end
-
 
 --[[
     Function definitions
@@ -223,11 +215,9 @@ local function get_chars(head)
     debug_print(get_location(), chars)
 end
 
-
 function lwc.paragraph_cost(demerits, lines)
     return demerits / math.sqrt(lines)
 end
-
 
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
@@ -241,7 +231,7 @@ function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     local renable_box_warnings
     if (context or optex) or
-       #luatexbase.callback_descriptions("hpack_quality") == 0
+        #luatexbase.callback_descriptions("hpack_quality") == 0
     then -- See #18 and michal-h21/linebreaker#3
         renable_box_warnings = true
         lwc.callbacks.disable_box_warnings.enable()
@@ -302,7 +292,6 @@ function lwc.save_paragraphs(head)
     return head
 end
 
-
 local last_paragraph = 0
 --- Tags the beginning and the end of each paragraph as it is added to the page.
 ---
@@ -330,7 +319,7 @@ local function safe_last(head)
     local prev
 
     while head.next do
-        local id = node.is_node(head) -- Returns the internal node id
+        local id = node_id(head)
 
         if ids[id] then
             warning [[Circular node list detected!
@@ -377,19 +366,19 @@ function lwc.remove_widows(head)
         The list of penalties is from:
         https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
-    if  penalty ~= 0 and
-        penalty <  10000 and
-       (penalty == widowpenalty or
-        penalty == displaywidowpenalty or
-        penalty == clubpenalty or
-        penalty == clubpenalty + widowpenalty or
-        penalty == clubpenalty + displaywidowpenalty or
-        penalty == brokenpenalty or
-        penalty == brokenpenalty + widowpenalty or
-        penalty == brokenpenalty + displaywidowpenalty or
-        penalty == brokenpenalty + clubpenalty or
-        penalty == brokenpenalty + clubpenalty + widowpenalty or
-        penalty == brokenpenalty + clubpenalty + displaywidowpenalty) and
+    if penalty ~= 0 and
+        penalty < 10000 and
+        (penalty == widowpenalty or
+            penalty == displaywidowpenalty or
+            penalty == clubpenalty or
+            penalty == clubpenalty + widowpenalty or
+            penalty == clubpenalty + displaywidowpenalty or
+            penalty == brokenpenalty or
+            penalty == brokenpenalty + widowpenalty or
+            penalty == brokenpenalty + displaywidowpenalty or
+            penalty == brokenpenalty + clubpenalty or
+            penalty == brokenpenalty + clubpenalty + widowpenalty or
+            penalty == brokenpenalty + clubpenalty + displaywidowpenalty) and
         #paragraphs >= 1 then
     else
         paragraphs = {}
@@ -407,7 +396,7 @@ function lwc.remove_widows(head)
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
         if paragraph.cost < best_cost and
-           i ~= last_paragraph
+            i ~= last_paragraph
         then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
@@ -432,7 +421,7 @@ function lwc.remove_widows(head)
     )
 
     if best_cost > tex.getcount(max_cost) or
-       paragraph_index == last_paragraph
+        paragraph_index == last_paragraph
     then
         -- If the best replacement is too bad, we can't do anything
         warning("Widow/Orphan NOT removed on page " .. pagenum())
@@ -523,7 +512,7 @@ function lwc.remove_widows(head)
     end
 
     info(
-    "Widow/orphan successfully removed at paragraph "
+        "Widow/orphan successfully removed at paragraph "
         .. paragraph_index
         .. " on page "
         .. pagenum()
@@ -641,7 +630,6 @@ local function silence_luatexbase()
         end
     end
 end
-
 
 -- Activate \lwc/
 if plain or latex then
