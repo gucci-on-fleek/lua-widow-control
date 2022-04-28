@@ -62,6 +62,7 @@ local flush_list = node.flush_list or node.flushlist
 local free = node.free
 local node_id = node.is_node or node.isnode
 local min_col_width = tex.sp("250pt")
+local iftrue = token.create("iftrue").mode
 
 --[[
     Package/module initialization
@@ -219,6 +220,12 @@ function lwc.paragraph_cost(demerits, lines)
     return demerits / math.sqrt(lines)
 end
 
+--- Checks if the ConTeXt "grid snapping" is active
+local function grid_mode_enabled()
+    -- Compare the token "mode" to see if `\\ifgridsnapping` is `\\iftrue`
+    return token.create("ifgridsnapping").mode == iftrue
+end
+
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
     -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
@@ -262,10 +269,12 @@ function lwc.save_paragraphs(head)
         lwc.callbacks.disable_box_warnings.disable()
     end
 
-    -- Offset the accumulated \\prevdepth
-    local prevdepth = node.new("glue")
-    prevdepth.width = natural_info.prevdepth - long_info.prevdepth
-    last(long_node).next = prevdepth
+    if not grid_mode_enabled() then
+        -- Offset the accumulated \\prevdepth
+        local prevdepth = node.new("glue")
+        prevdepth.width = natural_info.prevdepth - long_info.prevdepth
+        last(long_node).next = prevdepth
+    end
 
     if long_info.prevgraf == natural_info.prevgraf + 1 then
         table.insert(paragraphs, {
@@ -495,12 +504,30 @@ function lwc.remove_widows(head)
 
             head.prev.next = target_node
             free_next_nodes = true
+
+            if grid_mode_enabled() then
+                -- Fix the `\\baselineskip` glue between paragraphs
+                height_difference = head.next.height - target_node.next.height
+                target_node.width = head.width + height_difference
+            end
         end
 
         -- Insert the end of the replacement paragraph
         if value == -1 * (paragraph_index + (100 * pagenum())) then
             debug_print("remove_widows", "replacement end")
-            safe_last(target_node).next = head.next
+            local target_node_last = safe_last(target_node)
+
+            if grid_mode_enabled() then
+                -- Account for the difference in depth
+                local after_glue = node.new("glue")
+                after_glue.width = head.depth - target_node_last.depth
+                target_node_last.next = after_glue
+
+                after_glue.next = head.next
+            else
+                target_node_last.next = head.next
+            end
+
             break
         end
 

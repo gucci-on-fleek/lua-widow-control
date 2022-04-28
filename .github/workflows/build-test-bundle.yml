@@ -36,6 +36,8 @@ jobs:
             cd /mnt/tests/ &&
             context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::ConTeXt LMTX Test Failed!"; exit 1; } &&
+            context --once ./context-grid.tex | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::ConTeXt Grid Test Failed!"; exit 1; } &&
             cd /mnt/docs;
             mkdir ./tmp/ &&
             context lwc-documentation.tex

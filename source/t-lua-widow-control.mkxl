@@ -49,6 +49,17 @@
     % We can't just set the penalties because they will be reset automatically
     % at \\starttext.
     \startsetups[*default]
+        \directsetup{*reset}
+
+        \clubpenalty=\lwcparameter{orphanpenalty}
+        \widowpenalty=\lwcparameter{widowpenalty}
+        \displaywidowpenalty=\lwcparameter{widowpenalty}
+        \brokenpenalty=\lwcparameter{brokenpenalty}
+    \stopsetups
+
+    \startsetups[grid][*default]
+        \directsetup{*reset}
+
         \clubpenalty=\lwcparameter{orphanpenalty}
         \widowpenalty=\lwcparameter{widowpenalty}
         \displaywidowpenalty=\lwcparameter{widowpenalty}

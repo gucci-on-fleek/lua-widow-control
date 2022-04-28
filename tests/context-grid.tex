@@ -1,0 +1,37 @@
+%!TeX program = context
+
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\setuppapersize[letter]
+
+\setuplayout[
+    width=345pt,
+    height=560pt,
+    header=0pt,
+    footer=0pt,
+    backspace=135pt,
+    topspace=130pt,
+]
+\setupbodyfont[10pt]
+\setupindenting[2em, yes]
+
+\usemodule[lua-widow-control]
+
+\let\pagebreakcommand=\page
+\let\texcsname=\tex
+
+\def\lwcenable{\setuplwc[state=start]}
+\def\lwcdisable{\setuplwc[state=stop]}
+\define[1]\printlocation{\write16{===#1:\pagenumber===}}
+
+\setuplwc[debug=start]
+
+\setuplayout[grid=yes]
+\showgrid
+
+\starttext
+    \input generic-basic
+\stoptext
