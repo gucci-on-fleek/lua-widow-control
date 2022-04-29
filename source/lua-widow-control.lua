@@ -55,6 +55,8 @@ local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
 local penalty_id = node.id("penalty")
 local hlist_id = node.id("hlist")
+local baselineskip_subid = 2
+local line_subid = 1
 local traverse = node.traverse
 local set_attribute = node.set_attribute or node.setattribute
 local find_attribute = node.find_attribute or node.findattribute
@@ -350,6 +352,16 @@ recover, but your output may be corrupted.
     return head
 end
 
+
+--- Gets the next node of a type/subtype in a node list
+local function next_of_type(head, id, subid)
+    for n, subtype in node.traverseid(id, head) do
+        if (subtype == subid) or (subid == nil) then
+            return n
+        end
+    end
+end
+
 --- Remove the widows and orphans from the page, just after the output routine.
 ---
 --- This function holds the "meat" of the module. It is called just after the
@@ -507,8 +519,14 @@ function lwc.remove_widows(head)
 
             if grid_mode_enabled() then
                 -- Fix the `\\baselineskip` glue between paragraphs
-                height_difference = head.next.height - target_node.next.height
-                target_node.width = head.width + height_difference
+                height_difference = (
+                    next_of_type(head, hlist_id, line_subid).height -
+                    next_of_type(target_node, hlist_id, line_subid).height
+                )
+                next_of_type(target_node, glue_id, baselineskip_subid).width = (
+                    next_of_type(head, glue_id, baselineskip_subid).width +
+                    height_difference
+                )
             end
         end
 
