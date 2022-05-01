@@ -71,6 +71,7 @@ local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
 local hlist_id = node.id("hlist")
 local line_subid = 1
+local linebreakpenalty_subid = 1
 local par_id = node.id("par") or node.id("local_par")
 local penalty_id = node.id("penalty")
 
@@ -120,8 +121,13 @@ end
 if context then
     debug_print("ConTeXt")
 
-    warning = logs.reporter("module", lwc.name)
-    info = logs.reporter("module", lwc.name)
+    warning = logs.reporter(lwc.name, "warning")
+    local _info = logs.reporter(lwc.name, "info")
+    info = function (text)
+        logs.pushtarget("logfile")
+        _info(text)
+        logs.poptarget()
+    end
     attribute = attributes.public(lwc.name)
     pagenum = function() return tex.count["realpageno"] end
 
@@ -488,6 +494,40 @@ recover, but your output may be corrupted.
     return head
 end
 
+--- Checks to see if a penalty matches the widow/orphan/broken penalties
+--- @param penalty number
+--- @return boolean
+function is_matching_penalty(penalty)
+    local widowpenalty = tex.widowpenalty
+    local clubpenalty = tex.clubpenalty
+    local displaywidowpenalty = tex.displaywidowpenalty
+    local brokenpenalty = tex.brokenpenalty
+
+    --[[
+        We only need to process pages that have orphans or widows. If `paragraphs`
+        is empty, then there is nothing that we can do.
+
+        The list of penalties is from:
+        https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
+      ]]
+    penalty = penalty - tex.interlinepenalty
+
+    return penalty ~= 0 and
+           penalty <  INFINITY and (
+               penalty == widowpenalty or
+               penalty == displaywidowpenalty or
+               penalty == clubpenalty or
+               penalty == clubpenalty + widowpenalty or
+               penalty == clubpenalty + displaywidowpenalty or
+               penalty == brokenpenalty or
+               penalty == brokenpenalty + widowpenalty or
+               penalty == brokenpenalty + displaywidowpenalty or
+               penalty == brokenpenalty + clubpenalty or
+               penalty == brokenpenalty + clubpenalty + widowpenalty or
+               penalty == brokenpenalty + clubpenalty + displaywidowpenalty
+           )
+end
+
 --- Remove the widows and orphans from the page, just after the output routine.
 ---
 --- This function holds the "meat" of the module. It is called just after the
@@ -501,42 +541,16 @@ end
 function lwc.remove_widows(head)
     local head_save = head -- Save the start of the `head` linked-list
 
-    local penalty = tex.outputpenalty - tex.interlinepenalty
-    local widowpenalty = tex.widowpenalty
-    local clubpenalty = tex.clubpenalty
-    local displaywidowpenalty = tex.displaywidowpenalty
-    local brokenpenalty = tex.brokenpenalty
-
     debug_print("outputpenalty", tex.outputpenalty .. " " .. #paragraphs)
 
-    --[[
-        We only need to process pages that have orphans or widows. If `paragraphs`
-        is empty, then there is nothing that we can do.
-
-        The list of penalties is from:
-        https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
-      ]]
-    if penalty ~= 0 and
-       penalty <  INFINITY and (
-           penalty == widowpenalty or
-           penalty == displaywidowpenalty or
-           penalty == clubpenalty or
-           penalty == clubpenalty + widowpenalty or
-           penalty == clubpenalty + displaywidowpenalty or
-           penalty == brokenpenalty or
-           penalty == brokenpenalty + widowpenalty or
-           penalty == brokenpenalty + displaywidowpenalty or
-           penalty == brokenpenalty + clubpenalty or
-           penalty == brokenpenalty + clubpenalty + widowpenalty or
-           penalty == brokenpenalty + clubpenalty + displaywidowpenalty
-       ) and
-       #paragraphs >= 1 then
-    else
+    if not is_matching_penalty(tex.outputpenalty) or
+       #paragraphs == 0
+    then
         paragraphs = {}
         return head_save
     end
 
-    info("Widow/orphan detected. Attempting to remove.")
+    info("Widow/orphan/broken hyphen detected. Attempting to remove")
 
     --[[
         Find the paragraph on the page with the least cost.
@@ -603,7 +617,7 @@ function lwc.remove_widows(head)
        paragraph_index == last_paragraph
     then
         -- If the best replacement is too bad, we can't do anything
-        warning("Widow/Orphan NOT removed on page " .. pagenum())
+        warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
         paragraphs = {}
         return head_save
     end
@@ -631,7 +645,7 @@ function lwc.remove_widows(head)
                 head = last(head_save)
                 break
             elseif lwc.nobreak_behaviour == "warn" then
-                warning("Widow/Orphan NOT removed on page " .. pagenum())
+                warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
                 paragraphs = {}
                 return head_save
             end
@@ -646,6 +660,17 @@ function lwc.remove_widows(head)
         end
         head = head.prev
     end
+
+    local potential_penalty = head.prev.prev
+
+    if potential_penalty and
+       potential_penalty.id      == penalty_id and
+       potential_penalty.subtype == linebreakpenalty_subid and
+       is_matching_penalty(potential_penalty.penalty)
+    then
+        warning("Making a new widow/orphan/broken hyphen on page " .. pagenum())
+    end
+
 
     last_line = copy(head)
     last(last_line).next = copy(tex.lists[contrib_head])
@@ -724,11 +749,10 @@ function lwc.remove_widows(head)
     end
 
     info(
-        "Widow/orphan successfully removed at paragraph "
+        "Widow/orphan/broken hyphen successfully removed at paragraph "
         .. paragraph_index
         .. " on page "
         .. pagenum()
-        .. "."
     )
 
     paragraphs = {} -- Clear paragraphs array at the end of the page
