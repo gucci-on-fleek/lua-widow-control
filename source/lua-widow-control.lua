@@ -5,6 +5,8 @@
     SPDX-FileCopyrightText: 2022 Max Chernoff
   ]]
 
+--- @diagnostic disable: undefined-doc-name
+
 lwc = lwc or {}
 lwc.name = "lua-widow-control"
 lwc.nobreak_behaviour = "keep"
@@ -17,9 +19,9 @@ local function debug_print(title, text)
     local filler = 15 - #title
 
     if text then
-        write_nl("log", "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
+        write_nl("logfile", "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
     else
-        write_nl("log", "LWC: " .. string_rep(" ", 18) .. title)
+        write_nl("logfile", "LWC: " .. string_rep(" ", 18) .. title)
     end
 end
 
@@ -228,10 +230,23 @@ local function grid_mode_enabled()
     return token.create("ifgridsnapping").mode == iftrue
 end
 
+--- Gets the next node of a type/subtype in a node list
+--- @param head node The head of the node list
+--- @param id number The node type
+--- @param args table
+---     subtype: number = The node subtype
+---     reverse: bool = Whether we should iterate backwards
+local function next_of_type(head, id, args)
+    for n, subtype in node.traverseid(id, head, args.reverse) do
+        if (subtype == args.subtype) or (args.subtype == nil) then
+            return n
+        end
+    end
+end
+
 --- Saves each paragraph, but lengthened by 1 line
 function lwc.save_paragraphs(head)
-    -- Ensure that we were actually given a par (only under \ConTeXt{} for some reason)
-    if (head.id ~= par_id and context) or
+    if (head.id ~= par_id and context) or -- Ensure that we were actually given a par
         status.output_active -- Don't run during the output routine
     then
         return head
@@ -264,7 +279,17 @@ function lwc.save_paragraphs(head)
     })
 
     -- Break the natural paragraph so we know how long it was
-    local natural_node, natural_info = tex.linebreak(copy(head))
+    nat_head = copy(head)
+
+    if lmtx then -- LMTX does not automatically add the \\parfillskip
+        parfillskip = last(nat_head)
+        if parfillskip.id == glue_id and tex.hsize > min_col_width then
+            parfillskip[stretch_order] = 1
+            parfillskip.stretch = 1 -- 0pt plus 1fil
+        end
+    end
+
+    local natural_node, natural_info = tex.linebreak(nat_head)
     flush_list(natural_node)
 
     if renable_box_warnings then
@@ -278,10 +303,14 @@ function lwc.save_paragraphs(head)
         last(long_node).next = prevdepth
     end
 
-    if long_info.prevgraf == natural_info.prevgraf + 1 then
+    local long_cost = lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
+
+    if long_info.prevgraf == natural_info.prevgraf + 1 and
+       long_cost > 10 -- Any paragraph that is "free" to expand is suspicious
+    then
         table.insert(paragraphs, {
-            cost = lwc.paragraph_cost(long_info.demerits, long_info.prevgraf),
-            node = long_node
+            cost = long_cost,
+            node = next_of_type(long_node, hlist_id, {subtype = line_subid})
         })
     end
 
@@ -303,7 +332,6 @@ function lwc.save_paragraphs(head)
     return head
 end
 
-local last_paragraph = 0
 --- Tags the beginning and the end of each paragraph as it is added to the page.
 ---
 --- We add an attribute to the first and last node of each paragraph. The ID is
@@ -311,9 +339,14 @@ local last_paragraph = 0
 --- paragraphs index, which is negated for the end of the paragraph.
 function lwc.mark_paragraphs(head)
     if not status.output_active then
-        set_attribute(head, attribute, #paragraphs + (100 * pagenum()))
-        set_attribute(last(head), attribute, -1 * (#paragraphs + (100 * pagenum())))
-        last_paragraph = #paragraphs
+        local top_para = next_of_type(head, hlist_id, {subtype = line_subid})
+        local bottom_para = last(head)
+        if top_para ~= bottom_para then
+            set_attribute(top_para, attribute, #paragraphs + (100 * pagenum()))
+            set_attribute(bottom_para, attribute, -1 * (#paragraphs + (100 * pagenum())))
+        else
+            set_attribute(top_para, attribute, #paragraphs + (100 * pagenum()) + 50)
+        end
     end
 
     return head
@@ -350,16 +383,6 @@ recover, but your output may be corrupted.
     end
 
     return head
-end
-
-
---- Gets the next node of a type/subtype in a node list
-local function next_of_type(head, id, subid)
-    for n, subtype in node.traverseid(id, head) do
-        if (subtype == subid) or (subid == nil) then
-            return n
-        end
-    end
 end
 
 --- Remove the widows and orphans from the page, just after the output routine.
@@ -414,10 +437,28 @@ function lwc.remove_widows(head)
     local paragraph_index = 1
     local best_cost = paragraphs[paragraph_index].cost
 
+    local last_paragraph
+    for n in node.traverse(head, true, true) do -- Find the last paragraph
+        local value = node.getattribute(n, attribute)
+        if value then
+            last_paragraph = value % 100
+            break
+        end
+    end
+
+    local first_paragraph
+    local first_attribute_val, first_attribute_head = find_attribute(head, attribute)
+    if first_attribute_val // 100 == pagenum() - 1 then
+        first_paragraph = find_attribute(first_attribute_head.next, attribute) % 100
+    else
+        first_paragraph = first_attribute_val % 100
+    end
+
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
         if paragraph.cost < best_cost and
-            i ~= last_paragraph
+            i < last_paragraph and
+            i >= first_paragraph
         then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
@@ -510,28 +551,32 @@ function lwc.remove_widows(head)
         debug_print("remove_widows", "found " .. value)
 
         -- Insert the start of the replacement paragraph
-        if value == paragraph_index + (100 * pagenum()) then
+        if value == paragraph_index + (100 * pagenum()) or
+           value == paragraph_index + (100 * pagenum()) + 50
+        then
             debug_print("remove_widows", "replacement start")
             safe_last(target_node) -- Remove any loops
-
-            head.prev.next = target_node
-            free_next_nodes = true
 
             if grid_mode_enabled() then
                 -- Fix the `\\baselineskip` glue between paragraphs
                 height_difference = (
-                    next_of_type(head, hlist_id, line_subid).height -
-                    next_of_type(target_node, hlist_id, line_subid).height
+                    next_of_type(head, hlist_id, {subtype = line_subid}).height -
+                    next_of_type(target_node, hlist_id, {subtype = line_subid}).height
                 )
-                next_of_type(target_node, glue_id, baselineskip_subid).width = (
-                    next_of_type(head, glue_id, baselineskip_subid).width +
-                    height_difference
-                )
+
+                local prev_bls = next_of_type(head, glue_id, { subtype = baselineskip_subid, reverse = true})
+
+                prev_bls.width = prev_bls.width + height_difference
             end
+
+            head.prev.next = target_node
+            free_next_nodes = true
         end
 
         -- Insert the end of the replacement paragraph
-        if value == -1 * (paragraph_index + (100 * pagenum())) then
+        if value == -1 * (paragraph_index + (100 * pagenum())) or
+           value == paragraph_index + (100 * pagenum()) + 50
+        then
             debug_print("remove_widows", "replacement end")
             local target_node_last = safe_last(target_node)
 
