@@ -7,21 +7,36 @@
 
 --- @diagnostic disable: undefined-doc-name
 
+
+-- Set some default variables
 lwc = lwc or {}
 lwc.name = "lua-widow-control"
 lwc.nobreak_behaviour = "keep"
 
+-- Locals for `debug_print`
 local write_nl = texio.write_nl
 local string_rep = string.rep
+local write_log
+if status.luatex_engine == "luametatex" then
+    write_log = "logfile"
+else
+    write_log = "log"
+end
+
+--- Prints debugging messages to the log, only if `debug` is set to `true`.
+--- @param title string The "title" to use
+--- @param text string? The "content" to print
+--- @return nil
 local function debug_print(title, text)
     if not lwc.debug then return end
 
+    -- The number of spaces we need
     local filler = 15 - #title
 
     if text then
-        write_nl("logfile", "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
+        write_nl(write_log, "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
     else
-        write_nl("logfile", "LWC: " .. string_rep(" ", 18) .. title)
+        write_nl(write_log, "LWC: " .. string_rep(" ", 18) .. title)
     end
 end
 
@@ -33,16 +48,16 @@ end
 local format = tex.formatname
 local context, latex, plain, optex, lmtx
 
-if format:find('cont') then -- cont-en, cont-fr, cont-nl, ...
+if format:find("cont") then -- cont-en, cont-fr, cont-nl, ...
     context = true
     if status.luatex_engine == "luametatex" then
         lmtx = true
     end
-elseif format:find('latex') then -- lualatex, lualatex-dev, ...
+elseif format:find("latex") then -- lualatex, lualatex-dev, ...
     latex = true
-elseif format == 'luatex' then -- Plain
+elseif format == "luatex" then -- Plain
     plain = true
-elseif format == 'optex' then -- OpTeX
+elseif format == "optex" then -- OpTeX
     optex = true
 end
 
@@ -50,49 +65,73 @@ end
     Save some local copies of the node library to reduce table lookups.
     This is probably a useless micro-optimization, but it can't hurt.
   ]]
-local last = node.slide
-local copy = node.copy_list or node.copylist
-local par_id = node.id("par") or node.id("local_par")
+-- Node ID"s
+local baselineskip_subid = 2
 local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
-local penalty_id = node.id("penalty")
 local hlist_id = node.id("hlist")
-local baselineskip_subid = 2
 local line_subid = 1
-local traverse = node.traverse
-local set_attribute = node.set_attribute or node.setattribute
+local par_id = node.id("par") or node.id("local_par")
+local penalty_id = node.id("penalty")
+
+-- Local versions of globals
+local copy = node.copy_list or node.copylist
 local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
+local getattribute = node.get_attribute or node.getattribute
+local last = node.slide
+local new_node = node.new
 local node_id = node.is_node or node.isnode
-local min_col_width = tex.sp("250pt")
+local set_attribute = node.set_attribute or node.setattribute
+local string_char = string.char
+local traverse = node.traverse
+local traverseid = node.traverse_id or node.traverseid
+
+-- Misc. Constants
 local iftrue = token.create("iftrue").mode
+local INFINITY = 10000
+local min_col_width = tex.sp("250pt")
+local SINGLE_LINE = 50
+local PAGE_MULTIPLE = 100
 
 --[[
     Package/module initialization
   ]]
-local warning, info, attribute, contrib_head, stretch_order, pagenum, emergencystretch, max_cost
+local attribute,
+      contrib_head,
+      emergencystretch,
+      info,
+      max_cost,
+      pagenum,
+      stretch_order,
+      warning
 
 if lmtx then
+    -- LMTX has removed underscores from most of the Lua parts
     debug_print("LMTX")
-    contrib_head = 'contributehead'
+    contrib_head = "contributehead"
     stretch_order = "stretchorder"
 else
-    contrib_head = 'contrib_head'
+    contrib_head = "contrib_head"
     stretch_order = "stretch_order"
 end
 
 if context then
     debug_print("ConTeXt")
+
     warning = logs.reporter("module", lwc.name)
     info = logs.reporter("module", lwc.name)
     attribute = attributes.public(lwc.name)
     pagenum = function() return tex.count["realpageno"] end
+
+    -- Dimen names
     emergencystretch = "lwc_emergency_stretch"
     max_cost = "lwc_max_cost"
 elseif plain or latex or optex then
     pagenum = function() return tex.count[0] end
 
+    -- Dimen names
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
         max_cost = "g__lwc_maxcost_int"
@@ -119,11 +158,12 @@ paragraphs.]],
         attribute = luatexbase.new_attribute(lwc.name)
     elseif optex then
         debug_print("OpTeX")
+
         warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
         info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
         attribute = alloc.new_attribute(lwc.name)
     end
-else -- uh oh
+else -- This shouldn't ever happen
     error [[Unsupported format.
 
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
@@ -131,6 +171,8 @@ end
 
 local paragraphs = {} -- List to hold the alternate paragraph versions
 
+--- Gets the current paragraph and page locations
+--- @return string
 local function get_location()
     return "At " .. pagenum() .. "/" .. #paragraphs
 end
@@ -186,7 +228,7 @@ local function register_callback(t)
             enable = function() callback.register(t.callback, t.func) end,
             disable = function() callback.register(t.callback, nil) end,
         }
-    elseif optex then
+    elseif optex then -- Op\TeX{} is very similar to luatexbase
         return {
             enable = function()
                 callback.add_to_callback(t.callback, t.func, t.name)
@@ -198,19 +240,22 @@ local function register_callback(t)
     end
 end
 
+--- Prints the initial glyphs and glue of an hlist
+--- @param head node
+--- @return nil
 local function get_chars(head)
     if not lwc.debug then return end
 
     local chars = ""
     for n in traverse(head) do
         if n.id == glyph_id then
-            if n.char < 127 then
-                chars = chars .. string.char(n.char)
+            if n.char < 127 then -- Only ASCII
+                chars = chars .. string_char(n.char)
             else
-                chars = chars .. "#"
+                chars = chars .. "#"  -- Replacement for an unknown glyph
             end
         elseif n.id == glue_id then
-            chars = chars .. " "
+            chars = chars .. " " -- Any glue goes to a space
         end
         if #chars > 25 then
             break
@@ -220,11 +265,16 @@ local function get_chars(head)
     debug_print(get_location(), chars)
 end
 
+--- The "cost function" to use. See the manual.
+--- @param demerits number The demerits of the broken paragraph
+--- @param lines number The number of lines in the broken paragraph
+--- @return number The cost of the broken paragraph
 function lwc.paragraph_cost(demerits, lines)
     return demerits / math.sqrt(lines)
 end
 
 --- Checks if the ConTeXt "grid snapping" is active
+--- @return bool
 local function grid_mode_enabled()
     -- Compare the token "mode" to see if `\\ifgridsnapping` is `\\iftrue`
     return token.create("ifgridsnapping").mode == iftrue
@@ -235,9 +285,9 @@ end
 --- @param id number The node type
 --- @param args table
 ---     subtype: number = The node subtype
----     reverse: bool = Whether we should iterate backwards
+---     reverse: bool = Whether we should iterate backwards (LMTX ONLY!!!)
 local function next_of_type(head, id, args)
-    for n, subtype in node.traverseid(id, head, args.reverse) do
+    for n, subtype in traverseid(id, head, args.reverse) do
         if (subtype == args.subtype) or (args.subtype == nil) then
             return n
         end
@@ -255,17 +305,17 @@ function lwc.save_paragraphs(head)
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     local renable_box_warnings
     if (context or optex) or
-        #luatexbase.callback_descriptions("hpack_quality") == 0
+       #luatexbase.callback_descriptions("hpack_quality") == 0
     then -- See #18 and michal-h21/linebreaker#3
         renable_box_warnings = true
         lwc.callbacks.disable_box_warnings.enable()
     end
 
-
     -- We need to return the unmodified head at the end, so we make a copy here
     local new_head = copy(head)
 
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
+    -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
     local parfillskip = last(new_head)
     if parfillskip.id == glue_id and tex.hsize > min_col_width then
         parfillskip[stretch_order] = 0
@@ -298,7 +348,7 @@ function lwc.save_paragraphs(head)
 
     if not grid_mode_enabled() then
         -- Offset the accumulated \\prevdepth
-        local prevdepth = node.new("glue")
+        local prevdepth = new_node("glue")
         prevdepth.width = natural_info.prevdepth - long_info.prevdepth
         last(long_node).next = prevdepth
     end
@@ -310,10 +360,11 @@ function lwc.save_paragraphs(head)
     then
         table.insert(paragraphs, {
             cost = long_cost,
-            node = next_of_type(long_node, hlist_id, {subtype = line_subid})
+            node = next_of_type(long_node, hlist_id, { subtype = line_subid })
         })
     end
 
+    -- Print some debugging information
     get_chars(head)
     debug_print(get_location(), "nat  lines    " .. natural_info.prevgraf)
     debug_print(
@@ -328,7 +379,7 @@ function lwc.save_paragraphs(head)
         lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
     )
 
-    -- \LuaMetaTeX{} crashes if we return `true`
+    -- \ConTeXt{} crashes if we return `true`
     return head
 end
 
@@ -337,15 +388,34 @@ end
 --- We add an attribute to the first and last node of each paragraph. The ID is
 --- some arbitrary number for \lwc/, and the value corresponds to the
 --- paragraphs index, which is negated for the end of the paragraph.
+---
+--- @param head node
+--- @return node
 function lwc.mark_paragraphs(head)
-    if not status.output_active then
-        local top_para = next_of_type(head, hlist_id, {subtype = line_subid})
+    if not status.output_active then -- Don't run during the output routine
+        -- Get the start and end of the paragraph
+        local top_para = next_of_type(head, hlist_id, { subtype = line_subid })
         local bottom_para = last(head)
+
         if top_para ~= bottom_para then
-            set_attribute(top_para, attribute, #paragraphs + (100 * pagenum()))
-            set_attribute(bottom_para, attribute, -1 * (#paragraphs + (100 * pagenum())))
+            set_attribute(
+                top_para,
+                attribute,
+                #paragraphs + (PAGE_MULTIPLE * pagenum())
+            )
+            set_attribute(
+                bottom_para,
+                attribute,
+                -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum()))
+            )
         else
-            set_attribute(top_para, attribute, #paragraphs + (100 * pagenum()) + 50)
+            -- We need a special tag for a 1-line paragraph since the node can only
+            -- have one attribute value
+            set_attribute(
+                top_para,
+                attribute,
+                #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
+            )
         end
     end
 
@@ -358,6 +428,9 @@ end
 --- of a looped linked-list, the `last()` function will never terminate. This
 --- function provides a "safe" version of the `last()` function that will break
 --- the loop at the end if the list is circular.
+---
+--- @param head any (node) The start of a node list
+--- @return any (node) The last node in a list
 local function safe_last(head)
     local ids = {}
     local prev
@@ -367,7 +440,7 @@ local function safe_last(head)
 
         if ids[id] then
             warning [[Circular node list detected!
-This should never happen. I'll try and
+This should never happen. I"ll try and
 recover, but your output may be corrupted.
 (Internal Error)]]
             prev.next = nil
@@ -392,6 +465,9 @@ end
 --- penalty indicates that the page was broken at a widow or an orphan, we
 --- replace one paragraph with the same paragraph, but lengthened by one line.
 --- Then, we can push the bottom line of the page to the next page.
+---
+--- @param head any (node)
+--- @return node
 function lwc.remove_widows(head)
     local head_save = head -- Save the start of the `head` linked-list
 
@@ -411,19 +487,20 @@ function lwc.remove_widows(head)
         https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
       ]]
     if penalty ~= 0 and
-        penalty < 10000 and
-        (penalty == widowpenalty or
-            penalty == displaywidowpenalty or
-            penalty == clubpenalty or
-            penalty == clubpenalty + widowpenalty or
-            penalty == clubpenalty + displaywidowpenalty or
-            penalty == brokenpenalty or
-            penalty == brokenpenalty + widowpenalty or
-            penalty == brokenpenalty + displaywidowpenalty or
-            penalty == brokenpenalty + clubpenalty or
-            penalty == brokenpenalty + clubpenalty + widowpenalty or
-            penalty == brokenpenalty + clubpenalty + displaywidowpenalty) and
-        #paragraphs >= 1 then
+       penalty <  INFINITY and (
+           penalty == widowpenalty or
+           penalty == displaywidowpenalty or
+           penalty == clubpenalty or
+           penalty == clubpenalty + widowpenalty or
+           penalty == clubpenalty + displaywidowpenalty or
+           penalty == brokenpenalty or
+           penalty == brokenpenalty + widowpenalty or
+           penalty == brokenpenalty + displaywidowpenalty or
+           penalty == brokenpenalty + clubpenalty or
+           penalty == brokenpenalty + clubpenalty + widowpenalty or
+           penalty == brokenpenalty + clubpenalty + displaywidowpenalty
+       ) and
+       #paragraphs >= 1 then
     else
         paragraphs = {}
         return head_save
@@ -438,27 +515,37 @@ function lwc.remove_widows(head)
     local best_cost = paragraphs[paragraph_index].cost
 
     local last_paragraph
-    for n in node.traverse(head, true, true) do -- Find the last paragraph
-        local value = node.getattribute(n, attribute)
+    local head_last = last(head)
+    -- Find the last paragraph on the page, starting at the end, heading in reverse
+    while head_last do
+        local value = getattribute(head_last, attribute)
         if value then
-            last_paragraph = value % 100
+            last_paragraph = value % PAGE_MULTIPLE
             break
         end
+
+        head_last = head_last.prev
     end
 
     local first_paragraph
+    -- Find the first paragraph on the page, from the top
     local first_attribute_val, first_attribute_head = find_attribute(head, attribute)
     if first_attribute_val // 100 == pagenum() - 1 then
-        first_paragraph = find_attribute(first_attribute_head.next, attribute) % 100
+        -- If the first complete paragraph on the page was initially broken on the
+        -- previous page, then we can't expand it here so we need to skip it.
+        first_paragraph = find_attribute(
+            first_attribute_head.next,
+            attribute
+        ) % PAGE_MULTIPLE
     else
-        first_paragraph = first_attribute_val % 100
+        first_paragraph = first_attribute_val % PAGE_MULTIPLE
     end
 
     -- We find the current "best" replacement, then free the unused ones
     for i, paragraph in pairs(paragraphs) do
         if paragraph.cost < best_cost and
-            i < last_paragraph and
-            i >= first_paragraph
+           i <  last_paragraph and
+           i >= first_paragraph
         then
             -- Clear the old best paragraph
             flush_list(paragraphs[paragraph_index].node)
@@ -483,7 +570,7 @@ function lwc.remove_widows(head)
     )
 
     if best_cost > tex.getcount(max_cost) or
-        paragraph_index == last_paragraph
+       paragraph_index == last_paragraph
     then
         -- If the best replacement is too bad, we can't do anything
         warning("Widow/Orphan NOT removed on page " .. pagenum())
@@ -496,12 +583,13 @@ function lwc.remove_widows(head)
     -- Start of final paragraph
     debug_print("remove_widows", "moving last line")
 
+    -- Here we check to see if the widow/orphan was preceded by a large penalty
     head = last(head_save).prev
     local big_penalty_found, last_line, hlist_head
     while head do
         if head.id == glue_id then
             -- Ignore any glue nodes
-        elseif head.id == penalty_id and head.penalty >= 10000 then
+        elseif head.id == penalty_id and head.penalty >= INFINITY then
             -- Infinite break penalty
             big_penalty_found = true
         elseif big_penalty_found and head.id == hlist_id then
@@ -551,8 +639,8 @@ function lwc.remove_widows(head)
         debug_print("remove_widows", "found " .. value)
 
         -- Insert the start of the replacement paragraph
-        if value == paragraph_index + (100 * pagenum()) or
-           value == paragraph_index + (100 * pagenum()) + 50
+        if value == paragraph_index + (PAGE_MULTIPLE * pagenum()) or
+           value == paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug_print("remove_widows", "replacement start")
             safe_last(target_node) -- Remove any loops
@@ -560,11 +648,15 @@ function lwc.remove_widows(head)
             if grid_mode_enabled() then
                 -- Fix the `\\baselineskip` glue between paragraphs
                 height_difference = (
-                    next_of_type(head, hlist_id, {subtype = line_subid}).height -
-                    next_of_type(target_node, hlist_id, {subtype = line_subid}).height
+                    next_of_type(head, hlist_id, { subtype = line_subid }).height -
+                    next_of_type(target_node, hlist_id, { subtype = line_subid }).height
                 )
 
-                local prev_bls = next_of_type(head, glue_id, { subtype = baselineskip_subid, reverse = true})
+                local prev_bls = next_of_type(
+                    head,
+                    glue_id,
+                    { subtype = baselineskip_subid, reverse = true }
+                )
 
                 prev_bls.width = prev_bls.width + height_difference
             end
@@ -574,15 +666,15 @@ function lwc.remove_widows(head)
         end
 
         -- Insert the end of the replacement paragraph
-        if value == -1 * (paragraph_index + (100 * pagenum())) or
-           value == paragraph_index + (100 * pagenum()) + 50
+        if value == -1 * (paragraph_index + (PAGE_MULTIPLE * pagenum())) or
+           value ==       paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug_print("remove_widows", "replacement end")
             local target_node_last = safe_last(target_node)
 
             if grid_mode_enabled() then
                 -- Account for the difference in depth
-                local after_glue = node.new("glue")
+                local after_glue = new_node("glue")
                 after_glue.width = head.depth - target_node_last.depth
                 target_node_last.next = after_glue
 
@@ -618,27 +710,27 @@ end
 lwc.callbacks = {
     disable_box_warnings = register_callback({
         callback = "hpack_quality",
-        func = function() end,
-        name = "disable_box_warnings",
+        func     = function() end,
+        name     = "disable_box_warnings",
         lowlevel = true,
     }),
     remove_widows = register_callback({
         callback = "pre_output_filter",
-        func = lwc.remove_widows,
-        name = "remove_widows",
+        func     = lwc.remove_widows,
+        name     = "remove_widows",
         lowlevel = true,
     }),
     save_paragraphs = register_callback({
         callback = "pre_linebreak_filter",
-        func = lwc.save_paragraphs,
-        name = "save_paragraphs",
+        func     = lwc.save_paragraphs,
+        name     = "save_paragraphs",
         category = "processors",
         position = "after",
     }),
     mark_paragraphs = register_callback({
         callback = "post_linebreak_filter",
-        func = lwc.mark_paragraphs,
-        name = "mark_paragraphs",
+        func     = lwc.mark_paragraphs,
+        name     = "mark_paragraphs",
         category = "finalizers",
         position = "after",
     }),
@@ -702,12 +794,12 @@ end
 local function silence_luatexbase()
     local nups = debug.getinfo(luatexbase.add_to_callback).nups
 
-    for x = 1, nups do
-        local name, func = debug.getupvalue(luatexbase.add_to_callback, x)
+    for i = 1, nups do
+        local name, func = debug.getupvalue(luatexbase.add_to_callback, i)
         if name == "luatexbase_log" then
             debug.setupvalue(
                 luatexbase.add_to_callback,
-                x,
+                i,
                 function(text)
                     if text:match("^Inserting") or text:match("^Removing") then
                         return
