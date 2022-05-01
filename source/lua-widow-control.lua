@@ -281,20 +281,38 @@ local function grid_mode_enabled()
 end
 
 --- Gets the next node of a type/subtype in a node list
---- @param head node The head of the node list
+--- @param head any (node) The head of the node list
 --- @param id number The node type
---- @param args table
+--- @param args table?
 ---     subtype: number = The node subtype
----     reverse: bool = Whether we should iterate backwards (LMTX ONLY!!!)
+---     reverse: bool = Whether we should iterate backwards
+--- @return any (node)
 local function next_of_type(head, id, args)
-    for n, subtype in traverseid(id, head, args.reverse) do
-        if (subtype == args.subtype) or (args.subtype == nil) then
-            return n
+    args = args or {}
+    if lmtx or not args.reverse then
+        for n, subtype in traverseid(id, head, args.reverse) do
+            if (subtype == args.subtype) or (args.subtype == nil) then
+                return n
+            end
+        end
+    else -- Only LMTX has the built-in backwards traverser
+        while head do
+            if head.id == id and
+               (head.subtype == args.subtype or args.subtype == nil)
+            then
+                return head
+            end
+            head = head.prev
         end
     end
 end
 
 --- Saves each paragraph, but lengthened by 1 line
+---
+--- Called by the `pre_linebreak_filter` callback
+---
+--- @param head any (node)
+--- @return any (node)
 function lwc.save_paragraphs(head)
     if (head.id ~= par_id and context) or -- Ensure that we were actually given a par
         status.output_active -- Don't run during the output routine
@@ -316,10 +334,21 @@ function lwc.save_paragraphs(head)
 
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
-    local parfillskip = last(new_head)
-    if parfillskip.id == glue_id and tex.hsize > min_col_width then
+    local parfillskip
+    if lmtx or last(new_head).id ~= glue_id then
+        -- LMTX does not automatically add the \\parfillskip glue
+        parfillskip = new_node("glue", "parfillskip")
+    else
+        parfillskip = last(new_head)
+    end
+
+    if tex.hsize > min_col_width then
         parfillskip[stretch_order] = 0
         parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
+    end
+
+    if lmtx or last(new_head).id ~= glue_id then
+        last(new_head).next = parfillskip
     end
 
     -- Break the paragraph 1 line longer than natural
@@ -331,12 +360,11 @@ function lwc.save_paragraphs(head)
     -- Break the natural paragraph so we know how long it was
     nat_head = copy(head)
 
-    if lmtx then -- LMTX does not automatically add the \\parfillskip
-        parfillskip = last(nat_head)
-        if parfillskip.id == glue_id and tex.hsize > min_col_width then
-            parfillskip[stretch_order] = 1
-            parfillskip.stretch = 1 -- 0pt plus 1fil
-        end
+    if lmtx then
+        parfillskip = new_node("glue", "parfillskip")
+        parfillskip[stretch_order] = 1
+        parfillskip.stretch = 1 -- 0pt plus 1fil
+        last(nat_head).next = parfillskip
     end
 
     local natural_node, natural_info = tex.linebreak(nat_head)
@@ -387,7 +415,8 @@ end
 ---
 --- We add an attribute to the first and last node of each paragraph. The ID is
 --- some arbitrary number for \lwc/, and the value corresponds to the
---- paragraphs index, which is negated for the end of the paragraph.
+--- paragraphs index, which is negated for the end of the paragraph. Called by the
+--- `post_linebreak_filter` callback.
 ---
 --- @param head node
 --- @return node
@@ -427,7 +456,8 @@ end
 --- Sometimes the node list can form a loop. Since there is no last element
 --- of a looped linked-list, the `last()` function will never terminate. This
 --- function provides a "safe" version of the `last()` function that will break
---- the loop at the end if the list is circular.
+--- the loop at the end if the list is circular. Called by the `pre_output_filter`
+--- callback.
 ---
 --- @param head any (node) The start of a node list
 --- @return any (node) The last node in a list
@@ -645,19 +675,19 @@ function lwc.remove_widows(head)
             debug_print("remove_widows", "replacement start")
             safe_last(target_node) -- Remove any loops
 
-            if grid_mode_enabled() then
-                -- Fix the `\\baselineskip` glue between paragraphs
-                height_difference = (
-                    next_of_type(head, hlist_id, { subtype = line_subid }).height -
-                    next_of_type(target_node, hlist_id, { subtype = line_subid }).height
-                )
+            -- Fix the `\\baselineskip` glue between paragraphs
+            height_difference = (
+                next_of_type(head, hlist_id, { subtype = line_subid }).height -
+                next_of_type(target_node, hlist_id, { subtype = line_subid }).height
+            )
 
-                local prev_bls = next_of_type(
-                    head,
-                    glue_id,
-                    { subtype = baselineskip_subid, reverse = true }
-                )
+            local prev_bls = next_of_type(
+                head,
+                glue_id,
+                { subtype = baselineskip_subid, reverse = true }
+            )
 
+            if prev_bls then
                 prev_bls.width = prev_bls.width + height_difference
             end
 
