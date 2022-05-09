@@ -5,8 +5,15 @@
     SPDX-FileCopyrightText: 2022 Max Chernoff
   ]]
 
---- @diagnostic disable: undefined-doc-name
-
+--- Tell the linter about node attributes
+--- @class node
+--- @field prev node
+--- @field next node
+--- @field id integer
+--- @field subtype integer
+--- @field penalty integer
+--- @field height integer
+--- @field depth integer
 
 -- Set some default variables
 lwc = lwc or {}
@@ -81,6 +88,7 @@ local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
 local free = node.free
 local getattribute = node.get_attribute or node.getattribute
+local insert_token = token.put_next or token.putnext
 local last = node.slide
 local new_node = node.new
 local node_id = node.is_node or node.isnode
@@ -90,7 +98,8 @@ local traverse = node.traverse
 local traverseid = node.traverse_id or node.traverseid
 
 -- Misc. Constants
-local iftrue = token.create("iftrue").mode
+local iffalse = token.create("iffalse")
+local iftrue = token.create("iftrue")
 local INFINITY = 10000
 local min_col_width = tex.sp("250pt")
 local SINGLE_LINE = 50
@@ -187,65 +196,6 @@ end
     Function definitions
   ]]
 
---- Create a table of functions to enable or disable a given callback
---- @param t table Parameters of the callback to create
----     callback: str = The \LuaTeX{} callback name
----     func: function = The function to call
----     name: str = The name/ID of the callback
----     category: str = The category for a \ConTeXt{} "Action"
----     position: str = The "position" for a \ConTeXt{} "Action"
----     lowlevel: bool = If we should use a lowlevel \LuaTeX{} callback instead of a
----                      \ConTeXt{} "Action"
---- @return table t Enablers/Disablers for the callback
----     enable: function = Enable the callback
----     disable: function = Disable the callback
-local function register_callback(t)
-    if plain or latex then -- Both use \LuaTeX{}Base for callbacks
-        return {
-            enable = function()
-                luatexbase.add_to_callback(t.callback, t.func, t.name)
-            end,
-            disable = function()
-                luatexbase.remove_from_callback(t.callback, t.name)
-            end,
-        }
-    elseif context and not t.lowlevel then
-        return {
-            -- Register the callback when the table is created,
-            -- but activate it when `enable()` is called.
-            enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
-                or function()
-                    nodes.tasks.enableaction(t.category, "lwc." .. t.name)
-                end,
-            disable = function()
-                nodes.tasks.disableaction(t.category, "lwc." .. t.name)
-            end,
-        }
-    elseif context and t.lowlevel then
-        --[[
-            Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
-            with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
-            and unfrozen. Because of this, we need to register some callbacks at the
-            engine level. This is fragile though, because a future \ConTeXt{} update
-            may decide to register one of these functions, in which case
-            \lwc/ will crash with a cryptic error message.
-          ]]
-        return {
-            enable = function() callback.register(t.callback, t.func) end,
-            disable = function() callback.register(t.callback, nil) end,
-        }
-    elseif optex then -- Op\TeX{} is very similar to luatexbase
-        return {
-            enable = function()
-                callback.add_to_callback(t.callback, t.func, t.name)
-            end,
-            disable = function()
-                callback.remove_from_callback(t.callback, t.name)
-            end,
-        }
-    end
-end
-
 --- Prints the initial glyphs and glue of an hlist
 --- @param head node
 --- @return nil
@@ -280,19 +230,19 @@ function lwc.paragraph_cost(demerits, lines)
 end
 
 --- Checks if the ConTeXt "grid snapping" is active
---- @return bool
+--- @return boolean
 local function grid_mode_enabled()
     -- Compare the token "mode" to see if `\\ifgridsnapping` is `\\iftrue`
-    return token.create("ifgridsnapping").mode == iftrue
+    return token.create("ifgridsnapping").mode == iftrue.mode
 end
 
 --- Gets the next node of a type/subtype in a node list
---- @param head any (node) The head of the node list
+--- @param head node The head of the node list
 --- @param id number The node type
 --- @param args table?
 ---     subtype: number = The node subtype
 ---     reverse: bool = Whether we should iterate backwards
---- @return any (node)
+--- @return node
 local function next_of_type(head, id, args)
     args = args or {}
     if lmtx or not args.reverse then
@@ -317,8 +267,8 @@ end
 ---
 --- Called by the `pre_linebreak_filter` callback
 ---
---- @param head any (node)
---- @return any (node)
+--- @param head node
+--- @return node
 function lwc.save_paragraphs(head)
     if (head.id ~= par_id and context) or -- Ensure that we were actually given a par
         status.output_active -- Don't run during the output routine
@@ -465,8 +415,8 @@ end
 --- the loop at the end if the list is circular. Called by the `pre_output_filter`
 --- callback.
 ---
---- @param head any (node) The start of a node list
---- @return any (node) The last node in a list
+--- @param head node The start of a node list
+--- @return node The last node in a list
 local function safe_last(head)
     local ids = {}
     local prev
@@ -536,7 +486,7 @@ end
 --- replace one paragraph with the same paragraph, but lengthened by one line.
 --- Then, we can push the bottom line of the page to the next page.
 ---
---- @param head any (node)
+--- @param head node
 --- @return node
 function lwc.remove_widows(head)
     local head_save = head -- Save the start of the `head` linked-list
@@ -760,6 +710,65 @@ function lwc.remove_widows(head)
     return head_save
 end
 
+--- Create a table of functions to enable or disable a given callback
+--- @param t table Parameters of the callback to create
+---     callback: string = The \LuaTeX{} callback name
+---     func: function = The function to call
+---     name: string = The name/ID of the callback
+---     category: string = The category for a \ConTeXt{} "Action"
+---     position: string = The "position" for a \ConTeXt{} "Action"
+---     lowlevel: boolean = If we should use a lowlevel \LuaTeX{} callback instead of a
+---                      \ConTeXt{} "Action"
+--- @return table t Enablers/Disablers for the callback
+---     enable: function = Enable the callback
+---     disable: function = Disable the callback
+local function register_callback(t)
+    if plain or latex then -- Both use \LuaTeX{}Base for callbacks
+        return {
+            enable = function()
+                luatexbase.add_to_callback(t.callback, t.func, t.name)
+            end,
+            disable = function()
+                luatexbase.remove_from_callback(t.callback, t.name)
+            end,
+        }
+    elseif context and not t.lowlevel then
+        return {
+            -- Register the callback when the table is created,
+            -- but activate it when `enable()` is called.
+            enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
+                or function()
+                    nodes.tasks.enableaction(t.category, "lwc." .. t.name)
+                end,
+            disable = function()
+                nodes.tasks.disableaction(t.category, "lwc." .. t.name)
+            end,
+        }
+    elseif context and t.lowlevel then
+        --[[
+            Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
+            with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
+            and unfrozen. Because of this, we need to register some callbacks at the
+            engine level. This is fragile though, because a future \ConTeXt{} update
+            may decide to register one of these functions, in which case
+            \lwc/ will crash with a cryptic error message.
+          ]]
+        return {
+            enable = function() callback.register(t.callback, t.func) end,
+            disable = function() callback.register(t.callback, nil) end,
+        }
+    elseif optex then -- Op\TeX{} is very similar to luatexbase
+        return {
+            enable = function()
+                callback.add_to_callback(t.callback, t.func, t.name)
+            end,
+            disable = function()
+                callback.remove_from_callback(t.callback, t.name)
+            end,
+        }
+    end
+end
+
 -- Add all of the callbacks
 lwc.callbacks = {
     disable_box_warnings = register_callback({
@@ -792,6 +801,7 @@ lwc.callbacks = {
 
 
 local enabled = false
+--- Enable the paragraph callbacks
 function lwc.enable_callbacks()
     debug_print("callbacks", "enabling")
     if not enabled then
@@ -804,6 +814,7 @@ function lwc.enable_callbacks()
     end
 end
 
+--- Disable the paragraph callbacks
 function lwc.disable_callbacks()
     debug_print("callbacks", "disabling")
     if enabled then
@@ -824,11 +835,87 @@ end
 function lwc.if_lwc_enabled()
     debug_print("iflwc")
     if enabled then
-        tex.sprint("\\iftrue")
+        insert_token(iftrue)
     else
-        tex.sprint("\\iffalse")
+        insert_token(iffalse)
     end
 end
+
+--- Mangles a macro name so that it's suitable for a specific format
+--- @param name string The plain name
+--- @param args table<string> The TeX types of the function arguments
+--- @return string The mangled name
+local function mangle_name(name, args)
+    if plain then
+        return "lwc@" .. name:gsub("_", "@")
+    elseif optex then
+        return "_lwc_" .. name
+    elseif context then
+        return "lwc_" .. name
+    elseif latex then
+        return "__lwc_" .. name .. ":" .. string_rep("n", #args)
+    end
+end
+
+--- Creates a TeX command that evaluates a Lua function
+--- @param name string The name of the csname to define
+--- @param func function
+--- @param args table<string> The TeX types of the function arguments
+--- @return nil
+local function register_tex_cmd(name, func, args)
+    local scanning_func
+    name = mangle_name(name, args)
+
+    if not context then
+        local scanners = {}
+        for _, arg in ipairs(args) do
+            scanners[#scanners+1] = token['scan_' .. arg]
+        end
+
+        scanning_func = function()
+            local values = {}
+            for _, scanner in ipairs(scanners) do
+                values[#values+1] = scanner()
+            end
+
+            func(table.unpack(values))
+        end
+    end
+
+    if optex then
+        define_lua_command(name, scanning_func)
+        return
+    elseif plain or latex then
+        local index = luatexbase.new_luafunction(name)
+        lua.get_functions_table()[index] = scanning_func
+        token.set_lua(name, index)
+    elseif context then
+        interfaces.implement {
+            name = name,
+            public = true,
+            arguments = args,
+            actions = func
+        }
+    end
+end
+
+register_tex_cmd("if_enabled", lwc.if_lwc_enabled, {})
+register_tex_cmd("enable", lwc.enable_callbacks, {})
+register_tex_cmd("disable", lwc.disable_callbacks, {})
+register_tex_cmd(
+    "nobreak",
+    function(str)
+        lwc.nobreak_behaviour = str
+    end,
+    { "string" }
+)
+register_tex_cmd(
+    "debug",
+    function(str)
+        lwc.debug = str ~= "0" and str ~= "false" and str ~= "stop"
+    end,
+    { "string" }
+)
 
 --- Silence the luatexbase "Enabling/Removing <callback>" info messages
 ---

@@ -16,36 +16,22 @@
 \installcommandhandler \????lwc {lwc} \????lwc
 
 \newdimen\lwc_emergency_stretch
-\appendtoks
-    \lwc_emergency_stretch=\lwcparameter{emergencystretch}
-\to\everysetuplwc
-
-\appendtoks
-    \doifelse{\lwcparameter{\c!state}}\v!start{
-        \ctxlua{lwc.enable_callbacks()}
-    }{
-        \ctxlua{lwc.disable_callbacks()}
-    }
-\to\everysetuplwc
-
-\appendtoks
-    \doifelse{\lwcparameter{debug}}\v!start{
-        \ctxlua{lwc.debug = true}
-    }{
-        \ctxlua{lwc.debug = false}
-    }
-\to\everysetuplwc
-
-\appendtoks
-    \ctxlua{lwc.nobreak_behaviour = "\lwcparameter{nobreak}"}
-\to\everysetuplwc
-
 \newcount\lwc_max_cost
 \appendtoks
-    \lwc_max_cost=\lwcparameter{maxcost}
-\to\everysetuplwc
+    \lwc_emergency_stretch=\lwcparameter{emergencystretch}
 
-\appendtoks
+    \doifelse{\lwcparameter{\c!state}}\v!start{
+        \lwc_enable
+    }{
+        \lwc_disable
+    }
+
+    \lwc_debug{\lwcparameter{debug}}
+
+    \lwc_nobreak{\lwcparameter{nobreak}}
+
+    \lwc_max_cost=\lwcparameter{maxcost}
+
     % We can't just set the penalties because they will be reset automatically
     % at \\starttext.
     \startsetups[*default]
@@ -68,8 +54,6 @@
 
     \setups[*default]
 \to\everysetuplwc
-
-\define\iflwc{\ctxlua{lwc.if_lwc_enabled()}}
 
 \ctxloadluafile{lua-widow-control}
 
@@ -97,7 +81,7 @@
 \newcount\lwc_disable_count
 
 \define\lwc_patch_pre{%
-    \iflwc%
+    \lwc_if_enabled%
         \advance\lwc_disable_count by 1%
         \setuplwc[\c!state=\v!stop]%
     \fi%
@@ -112,6 +96,9 @@
 
 \prependtoks\lwc_patch_pre\to\everybeforesectionheadhandle % Sectioning
 \prependtoks\lwc_patch_post\to\everyaftersectionheadhandle
+
+% Make the commands public
+\let\iflwc=\lwc_if_enabled
 
 \protect
 \stopmodule

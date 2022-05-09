@@ -19,14 +19,6 @@
 
 \_directlua{require "lua-widow-control"}
 
-% Define \TeX{} wrappers for Lua functions
-\_def\.enable{\_directlua{lwc.enable_callbacks()}}
-\_def\.disable{\_directlua{lwc.disable_callbacks()}}
-\_def\.iflwc{\_directlua{lwc.if_lwc_enabled()}}
-
-\_let\lwcenable=\.enable
-\_let\lwcdisable=\.disable
-
 % Enable \lwc/ by default when the package is loaded.
 \.enable
 
@@ -37,7 +29,7 @@
 \_newcount\.disable_count
 
 \_def\.patch_pre{%
-    \.iflwc%
+    \.if_enabled%
         \_advance\.disable_count by 1%
         \.disable%
     \_fi%
@@ -70,11 +62,18 @@
         \_endgroup%
     \_fi%
 }
-\_let\lwcdisablecmd=\.disable_cmd
 
 \.disable_cmd{\_printchap}
 \.disable_cmd{\_printsec}
 \.disable_cmd{\_printsecc}
+
+% Make the commands public
+\_let\lwcenable=\.enable
+\_let\lwcdisable=\.disable
+\_let\lwcdisablecmd=\.disable_cmd
+\_let\lwcdebug=\.debug
+\_let\iflwc=\.if_enabled
+\_let\lwcnobreak=\.nobreak
 
 \_endnamespace
 \_endcode

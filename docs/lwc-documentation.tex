@@ -316,7 +316,7 @@ Note that the \LaTeX{} option does not \emph{append} commands to the disable lis
 
 \startTABLE
     \NC \plainop/
-    \NC \inlineTEX{\lwcdisablecmd{$\meta{\backslash macro}$}}
+    \NC \inlineTEX{\lwcdisablecmd $\meta{\backslash macro}$}
     \NC\NR
     \NC \LaTeX{}
     \NC \inlineTEX{\lwcsetup{disablecmds = {$\meta{macronameone}$, $\meta{macronametwo}$}}}
@@ -363,7 +363,7 @@ When \lwc/ encounters an orphan, it removes it by removing the orphaned line to 
 
 \startTABLE
     \NC \plainop/
-    \NC\inlineTEX{\directlua{lwc.nobreak_behaviour = "$\meta{value}$"}}
+    \NC\inlineTEX{\lwcnobreak{$\meta{value}$}}
     \NC\NR
     \NC \LaTeX{}
     \NC\inlineTEX{\lwcsetup{nobreak = $\meta{value}$}}
@@ -409,8 +409,8 @@ Very advanced users may also set a custom cost function by redefining the \inlin
 
 \startTABLE
     \NC \plainop/
-    \NC\inlineTEX{\directlua{lwc.debug = true}}
-    \NC\NR\NC\NC\inlineTEX{\directlua{lwc.debug = false}}
+    \NC\inlineTEX{\lwcdebug 1}
+    \NC\NR\NC\NC\inlineTEX{\lwcdebug 0}
     \NC\NR
     \NC \LaTeX{}
     \NC\inlineTEX{\lwcsetup{debug = true}}

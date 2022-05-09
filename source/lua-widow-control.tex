@@ -35,13 +35,8 @@
 \expandglyphsinfont\the\font 20 20 5
 \adjustspacing=2
 
-% Define \TeX{} wrappers for Lua functions
-\def\lwcenable{\directlua{lwc.enable_callbacks()}}
-\def\lwcdisable{\directlua{lwc.disable_callbacks()}}
-\def\iflwc{\directlua{lwc.if_lwc_enabled()}}
-
 % Enable \lwc/ by default when the package is loaded.
-\lwcenable
+\lwc@enable
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
@@ -50,15 +45,15 @@
 \newcount\lwc@disable@count
 
 \def\lwc@patch@pre{%
-    \iflwc%
+    \lwc@if@enabled%
         \advance\lwc@disable@count by 1%
-        \lwcdisable%
+        \lwc@disable%
     \fi%
 }
 
 \def\lwc@patch@post{
     \ifnum\lwc@disable@count>0%
-        \lwcenable%
+        \lwc@enable%
         \advance\lwc@disable@count by -1%
     \fi
 }
@@ -88,6 +83,13 @@
     \suppressoutererror=1
     \lwcdisablecmd{\beginsection} % Sectioning
 \endgroup
+
+% Make the commands public
+\let\lwcenable=\lwc@enable
+\let\lwcdisable=\lwc@disable
+\let\lwcdebug=\lwc@debug
+\let\iflwc=\lwc@if@enabled
+\let\lwcnobreak=\lwc@nobreak
 
 
 \catcode`@=12
