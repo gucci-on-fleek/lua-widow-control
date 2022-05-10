@@ -44,6 +44,7 @@ jobs:
             collection-latexrecommended
             latex-bin-dev
             context
+            l3build
             blindtext
             kantlipsum
             linebreaker
@@ -72,9 +73,8 @@ jobs:
 
       - name: Build Documentation
         run: |
-            cd "$GITHUB_WORKSPACE"/docs
-            mkdir ./tmp/
-            $lmtx_context lwc-documentation.tex
+            cd "$GITHUB_WORKSPACE"
+            l3build doc "$lmtx_context"
 
       - name: Test the package
         run: >
@@ -116,13 +116,7 @@ jobs:
 
       - name: Bundle the package
         run: |
-          cd "$GITHUB_WORKSPACE"/texmf
-          zip -r "$GITHUB_WORKSPACE"/lua-widow-control.tds.zip ./*
-          mkdir "$GITHUB_WORKSPACE"/ctan && cd "$GITHUB_WORKSPACE"/ctan
-          mkdir lua-widow-control
-          find -L "$GITHUB_WORKSPACE"/texmf -type f -exec cp '{}' lua-widow-control \;
-          cp "$GITHUB_WORKSPACE"/lua-widow-control.tds.zip .
-          zip -r "$GITHUB_WORKSPACE"/lua-widow-control.ctan.zip ./*
+          l3build bundle
           cd "$GITHUB_WORKSPACE"/tests
           zip test-results.zip *.pdf *.log
 
