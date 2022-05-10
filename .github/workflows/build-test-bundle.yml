@@ -17,62 +17,102 @@ jobs:
     runs-on: ubuntu-latest
     name: Build, Test, and Bundle
     steps:
-      - name: Pull Docker Images
-        run: >
-          docker pull contextgarden/context:lmtx &
-          docker pull texlive/texlive:latest &
-
       - name: Checkout the Repository
         uses: actions/checkout@v2
 
-      - name: Build Documentation
-        run: >
-          docker run
-          -v "$GITHUB_WORKSPACE":/mnt
-          -e TEXMFHOME=/mnt/texmf
-          contextgarden/context:lmtx
-          /bin/sh -c '
-            mtxrun --generate;
-            cd /mnt/tests/ &&
-            context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt LMTX Test Failed!"; exit 1; } &&
-            context --once ./context-grid.tex | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt Grid Test Failed!"; exit 1; } &&
-            cd /mnt/docs;
-            mkdir ./tmp/ &&
-            context lwc-documentation.tex
-          '
+      # From https://github.com/zauguin/install-texlive
+      - name: Generate unique ID
+        id: get-id
+        run: |
+          echo -n ::set-output name=id::
+          cat /proc/sys/kernel/random/uuid
 
-      - name: Test the package under TeXLive
+      # From https://github.com/zauguin/install-texlive
+      - name: Load cache
+        uses: actions/cache@v2
+        with:
+          path: |
+              ~/texlive
+              ~/lmtx
+          key: tex-v1-${{ steps.get-id.outputs.id }}
+          restore-keys: tex-v1-
+
+      - name: Install TeX Live
+        uses: zauguin/install-texlive@v1
+        with:
+          packages: >
+            collection-latexrecommended
+            latex-bin-dev
+            context
+            blindtext
+            kantlipsum
+            linebreaker
+            luatexbase
+            optex
+
+      - name: Install ConTeXt LMTX
+        run: |
+            if [ ! -d ~/lmtx ]; then
+                mkdir ~/lmtx
+                cd ~/lmtx
+                wget http://lmtx.pragma-ade.nl/install-lmtx/context-linux-64.zip
+                unzip context-linux-64.zip
+                rm context-linux-64.zip
+                chmod +x ./install.sh
+            fi
+
+            cd ~/lmtx
+            ./install.sh
+
+      - name: Set environment variables
+        run: |
+            echo "lmtx_context=$HOME/lmtx/tex/texmf-linux-64/bin/context" >> $GITHUB_ENV
+            echo "tl_context=$HOME/texlive/bin/x86_64-linux/context" >> $GITHUB_ENV
+            echo "TEXMFHOME=$GITHUB_WORKSPACE/texmf" >> $GITHUB_ENV
+
+      - name: Build Documentation
+        run: |
+            cd "$GITHUB_WORKSPACE"/docs
+            mkdir ./tmp/
+            $lmtx_context lwc-documentation.tex
+
+      - name: Test the package
         run: >
-          docker run
-          -v "$GITHUB_WORKSPACE":/mnt
-          -e TEXMFHOME=/mnt/texmf
-          texlive/texlive:latest
-          /bin/sh -c '
-            mktexlsr &&
-            mtxrun --generate &
-            cd /mnt/tests/ &&
-            lualatex-dev --halt-on-error ./latex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            cd "$GITHUB_WORKSPACE"/tests/ &&
+            $lmtx_context --once ./context-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::ConTeXt LMTX Test Failed!"; exit 1; } &&
+            $lmtx_context --once ./context-grid.tex
+            | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::ConTeXt Grid Test Failed!"; exit 1; } &&
+            lualatex-dev --halt-on-error ./latex-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
+            { echo "::error::LaTeX Dev Basic Test Failed!"; exit 1; } &&
+            lualatex --halt-on-error ./latex-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::LaTeX Basic Test Failed!"; exit 1; } &&
             lualatex-dev --halt-on-error ./latex-advanced.tex &&
             lualatex-dev --halt-on-error ./latex-advanced.tex ||
             { echo "::error::LaTeX Advanced Test Failed!"; exit 1; } &&
-            luatex --halt-on-error ./plain-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            luatex --halt-on-error ./plain-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::Plain TeX Basic Test Failed!"; exit 1; } &&
             luatex --halt-on-error ./plain-columns.tex ||
             { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
             lualatex-dev --halt-on-error ./latex-columns.tex ||
-            { echo "::error::LaTeX Columns Test Failed!"; exit 1; }
-            optex --halt-on-error ./optex-basic.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            { echo "::error::LaTeX Columns Test Failed!"; exit 1; } &&
+            optex --halt-on-error ./optex-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::OpTeX Basic Test Failed!"; exit 1; } &&
-            context --once ./context-basic.tex | grep === | diff -ws ./expected-results.txt - ||
+            $tl_context --once ./context-basic.tex
+            | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; } &&
-            lualatex-dev --halt-on-error ./latex-headings.tex | grep === | diff -ws /mnt/tests/headings-expected.txt - ||
+            lualatex-dev --halt-on-error ./latex-headings.tex
+            | grep === | diff -ws ./headings-expected.txt - ||
             { echo "::error::LaTeX Headings Test Failed!"; exit 1; } &&
-            lualatex --halt-on-error ./latex-old.tex | grep === | diff -ws /mnt/tests/expected-results.txt - ||
+            lualatex --halt-on-error ./latex-old.tex
+            | grep === | diff -ws ./expected-results.txt - ||
             { echo "::error::LaTeX Old Test Failed!"; exit 1; }
-          '
 
       - name: Bundle the package
         run: |
