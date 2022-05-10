@@ -11,4 +11,6 @@
 *.toc
 *.tuc
 *.vimout
+*.zip
+build/
 nogit-**

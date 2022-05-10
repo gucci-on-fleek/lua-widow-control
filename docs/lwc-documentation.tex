@@ -5,7 +5,10 @@
 % SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-% Warning: Compiles slowly
+\doifnot{\contextmark}{LMTX}{
+    \errhelp{LMTX/MkXL is required to compile this file.}
+    \errmessage{Fatal error, exiting.}
+}
 
 \environment lwc-documentation
 
