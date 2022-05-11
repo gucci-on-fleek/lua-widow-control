@@ -1,5 +1,3 @@
-%!TeX program = LuaLaTeX
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
@@ -7,11 +5,13 @@
 
 % Pathological test file to look for edge cases. Includes just about everything that I could possibly think of.
 
+\input regression-test.tex\relax
+
 \documentclass{article}
 
 \usepackage{linebreaker} % Issue #18
 
-\usepackage[debug=true]{lua-widow-control}
+\usepackage{lua-widow-control}
 
 \usepackage[stretch=30, shrink=30]{microtype}
 
@@ -87,7 +87,7 @@
     \lwcenable
     \footnotetest
 
-    \input generic-basic
+    \input basic
 
     \blindmathpaper
 

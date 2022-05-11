@@ -1,9 +1,10 @@
-%!TeX program = LuaLaTeX
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\input regression-test.tex\relax
+
 \RequirePackage[2016/01/01]{latexrelease}
 
 \documentclass{article}
@@ -16,5 +17,5 @@
 \newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
 \begin{document}
-    \input generic-basic
+    \input basic
 \end{document}

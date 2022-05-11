@@ -1,23 +1,29 @@
-%!TeX program = luatex
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
-\input lua-widow-control
+
+\input regression-test.tex\relax
+
+\load[lua-widow-control]
 
 % Emulate standard LaTeX settings for ease of testing
+\margins/1 letter (,,,,)pt
 \hsize=345pt
-\hoffset=62pt
+\hoffset=134pt
 \vsize=550pt
-\voffset=56pt
+\voffset=128pt
 
-\def\pagebreakcommand{\vfill\eject}
+\fontfam[LMfonts]
+
+\def\pagebreakcommand{\vfil\break}
 \def\texcsname#1{{\tt\char`\\#1}}
 \def\emph#1{{\it#1}}
-\def\quotation#1{``#1''}
+\enquotes
+\def\quotation#1{\"#1"}
 \def\printlocation#1{\write16{===#1:\the\count0===}}
 
-\input generic-basic
+\input basic
+\END
 
 \bye

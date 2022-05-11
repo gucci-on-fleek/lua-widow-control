@@ -1,26 +1,23 @@
-%!TeX program = LuaLaTeX
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\documentclass[twocolumn]{article}
-\usepackage[
-    letterpaper,
-    top=22pt,
-    height=696pt,
-    left=0.5in,
-    width=7.5in
-]{geometry}
+\input regression-test.tex\relax
 
-\usepackage[debug=true]{lua-widow-control}
+\RequirePackage[enable-debug, check-declarations]{expl3}
+\ExplSyntaxOn
+\debug_on:n {all}
+\ExplSyntaxOff
+\documentclass{article}
+
+\usepackage{lua-widow-control}
 
 \let\pagebreakcommand=\clearpage
 \newcommand{\texcsname}[1]{\texttt{\textbackslash#1}}
 \renewcommand{\quotation}[1]{``#1''}
-\newcommand{\printlocation}[1]{}
+\newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
 
 \begin{document}
-    \input generic-basic
+    \input basic
 \end{document}

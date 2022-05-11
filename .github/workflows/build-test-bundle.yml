@@ -77,48 +77,12 @@ jobs:
             l3build doc "$lmtx_context"
 
       - name: Test the package
-        run: >
-            cd "$GITHUB_WORKSPACE"/tests/ &&
-            $lmtx_context --once ./context-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt LMTX Test Failed!"; exit 1; } &&
-            $lmtx_context --once ./context-grid.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt Grid Test Failed!"; exit 1; } &&
-            lualatex-dev --halt-on-error ./latex-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::LaTeX Dev Basic Test Failed!"; exit 1; } &&
-            lualatex --halt-on-error ./latex-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::LaTeX Basic Test Failed!"; exit 1; } &&
-            lualatex-dev --halt-on-error ./latex-advanced.tex &&
-            lualatex-dev --halt-on-error ./latex-advanced.tex ||
-            { echo "::error::LaTeX Advanced Test Failed!"; exit 1; } &&
-            luatex --halt-on-error ./plain-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::Plain TeX Basic Test Failed!"; exit 1; } &&
-            luatex --halt-on-error ./plain-columns.tex ||
-            { echo "::error::Plain TeX Columns Test Failed!"; exit 1; } &&
-            lualatex-dev --halt-on-error ./latex-columns.tex ||
-            { echo "::error::LaTeX Columns Test Failed!"; exit 1; } &&
-            optex --halt-on-error ./optex-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::OpTeX Basic Test Failed!"; exit 1; } &&
-            $tl_context --once ./context-basic.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::ConTeXt MKIV Test Failed!"; exit 1; } &&
-            lualatex-dev --halt-on-error ./latex-headings.tex
-            | grep === | diff -ws ./headings-expected.txt - ||
-            { echo "::error::LaTeX Headings Test Failed!"; exit 1; } &&
-            lualatex --halt-on-error ./latex-old.tex
-            | grep === | diff -ws ./expected-results.txt - ||
-            { echo "::error::LaTeX Old Test Failed!"; exit 1; }
+        run: |
+            l3build check --show-log-on-error
 
       - name: Bundle the package
         run: |
           l3build bundle
-          cd "$GITHUB_WORKSPACE"/tests
-          zip test-results.zip *.pdf *.log
 
       - name: Generate Release
         uses: ncipollo/release-action@v1

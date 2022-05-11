@@ -1,0 +1,30 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `lmtt' (encoding: TU).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+(../mt-cmr.cfg
+File: mt-cmr.cfg ....-..-.. v... microtype config. file: Computer Modern Roman (RS)
+)
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line ....
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line ....
+Underfull \vbox (badness 10000) has occurred while \output is active []
+[1
+]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+[2
+]
+Module lua-widow-control Info: Widow/orphan/broken hyphen detected. Attempting to remove on input line ...
+Module lua-widow-control Info: Widow/orphan/broken hyphen successfully removed at paragraph 2 on page 3 on input line ...
+Underfull \vbox (badness 10000) has occurred while \output is active []
+[3
+]
+Module lua-widow-control Info: Widow/orphan/broken hyphen detected. Attempting to remove on input line ...
+Module lua-widow-control Warning: Making a new widow/orphan/broken hyphen on page 4 on input line ...
+Module lua-widow-control Info: Widow/orphan/broken hyphen successfully removed at paragraph 1 on page 4 on input line ...
+Underfull \vbox (badness 10000) has occurred while \output is active []
+[4
+]) (columns.aux)

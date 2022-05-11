@@ -11,12 +11,6 @@ local orig_targets = target_list
 local orig_options = option_list
 target_list = {}
 
-option_list = {
-    help = orig_options.help,
-    version = orig_options.version,
-}
-
-
 -- Tagging
 target_list.tag = orig_targets.tag
 tagfiles = { "source/*.*", "docs/*.*", "README.md" }
@@ -81,14 +75,14 @@ end
 target_list.doc = {}
 target_list.doc.desc = "Builds the documentation"
 
--- option_list["context-path"] = {
+-- option_list["lmtx-path"] = {
 --     type = "string",
 --     desc = "Path to the ConTeXt LMTX executable",
 -- }
 
 function target_list.doc.func(args)
-    options["context-path"] = args and args[1]
-    local context = options["context-path"] or "context"
+    options["lmtx-path"] = args and args[1]
+    local context = options["lmtx-path"] or "context"
 
     mkdir("./docs/tmp")
     run("./docs",
@@ -101,4 +95,13 @@ function target_list.doc.func(args)
     )
 
     return 0
+end
+
+-- Tests
+target_list.check = orig_targets.check
+target_list.save = orig_targets.save
+
+checkconfigs = {}
+for _, path in ipairs(tree(".", "./tests/*/build.lua")) do
+    checkconfigs[#checkconfigs+1] = path.src
 end

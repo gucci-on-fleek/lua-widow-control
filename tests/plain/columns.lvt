@@ -1,9 +1,10 @@
-%!TeX program = luatex
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\input regression-test.tex\relax
+
 \input lua-widow-control
 
 % Have the same amount of text per column as text per page in the other tests
@@ -51,6 +52,6 @@
 }
 % End "twocolumns" excerpt.
 
-\input generic-basic
+\input basic
 
 \bye
