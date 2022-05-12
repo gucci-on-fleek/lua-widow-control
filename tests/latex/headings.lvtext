@@ -3,8 +3,6 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\input regression-test.tex\relax
-
 \documentclass{article}
 
 \usepackage{lua-widow-control}
@@ -30,7 +28,6 @@ A \printlocation{3} paragraph with exactly two lines. A paragraph with exactly t
 \flushbottom
 
 \begin{document}
-    \START
     \lwcsetup{nobreak = keep}
     \text
 
@@ -43,5 +40,4 @@ A \printlocation{3} paragraph with exactly two lines. A paragraph with exactly t
     \lwcsetup{nobreak = keep}
     \def\sectionname{Long\printlocation{X} long long long long long long long long long long long\printlocation{2}}
     \text
-    \END
 \end{document}

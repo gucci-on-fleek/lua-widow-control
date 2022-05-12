@@ -20,6 +20,14 @@ jobs:
       - name: Checkout the Repository
         uses: actions/checkout@v2
 
+      - name: Install Dependencies
+        run: >
+          (sudo apt-get update &&
+          sudo apt-get install --no-install-recommends -y
+          poppler-utils
+          xsltproc
+          ) & disown
+
       # From https://github.com/zauguin/install-texlive
       - name: Generate unique ID
         id: get-id
@@ -89,7 +97,7 @@ jobs:
         if: "! ${{github.base_ref}}" # not a PR
         with:
           prerelease: true
-          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf, ./tests/test-results.zip
+          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf
           tag: release-${{github.sha}}
           commit: ${{github.sha}}
           name: Prerelease ${{github.sha}}

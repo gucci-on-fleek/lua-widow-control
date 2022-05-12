@@ -4,19 +4,13 @@
     SPDX-License-Identifier: MPL-2.0+
     SPDX-FileCopyrightText: 2022 Max Chernoff
   ]]
--- Common
-module = "lua-widow-control"
-
-local prefix
 if lfs.currentdir():match("lua%-widow%-control$") then
     prefix = "./"
 else
     prefix = "../../"
 end
 
-testsuppdir = prefix .. "tests/common"
-tdsdirs = { [prefix .. "texmf"] = "." }
-maxprintline = 10000
+dofile(prefix .. "tests/test-config.lua")
 
 -- OpTeX
 specialformats = { optex = {

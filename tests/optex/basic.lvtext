@@ -3,8 +3,6 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\input regression-test.tex\relax
-
 \load[lua-widow-control]
 
 % Emulate standard LaTeX settings for ease of testing
@@ -24,6 +22,5 @@
 \def\printlocation#1{\write16{===#1:\the\count0===}}
 
 \input basic
-\END
 
 \bye
