@@ -20,6 +20,14 @@ jobs:
       - name: Checkout the Repository
         uses: actions/checkout@v2
 
+      - name: Install Dependencies
+        run: >
+          (sudo apt-get update &&
+          sudo apt-get install --no-install-recommends -y
+          poppler-utils
+          xsltproc
+          ) & disown
+
       # From https://github.com/zauguin/install-texlive
       - name: Generate unique ID
         id: get-id
