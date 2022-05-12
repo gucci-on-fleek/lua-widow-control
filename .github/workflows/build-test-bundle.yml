@@ -54,6 +54,7 @@ jobs:
             context
             l3build
             blindtext
+            dejavu-otf
             kantlipsum
             linebreaker
             luatexbase
@@ -86,6 +87,10 @@ jobs:
 
       - name: Test the package
         run: |
+            # Temporary workaround; see latex3/l3build#232
+            sed -i '/TEXMFCNF/,+2d' "$(kpsewhich l3build-check.lua)"
+            export TEXMFHOME="$GITHUB_WORKSPACE/texmf"
+
             l3build check --show-log-on-error
 
       - name: Bundle the package

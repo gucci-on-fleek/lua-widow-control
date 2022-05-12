@@ -16,6 +16,10 @@
 \setupbodyfont[10pt]
 \setupindenting[2em, yes]
 
+\definefontfeature[default][default][trep=yes]
+\usetypescript[modern-base]
+\setupbodyfont[reset,modern]
+
 \usemodule[lua-widow-control]
 
 \let\pagebreakcommand=\page
@@ -26,7 +30,7 @@
 \define[1]\printlocation{\write16{===#1:\pagenumber===}}
 
 \setuplayout[grid=yes]
-\showgrid
+\showgrid[nonumber]
 
 \starttext
     \input basic

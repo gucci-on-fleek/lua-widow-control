@@ -4,7 +4,6 @@
     SPDX-License-Identifier: MPL-2.0+
     SPDX-FileCopyrightText: 2022 Max Chernoff
   ]]
---[[ Temporarily broken
 if lfs.currentdir():match("lua%-widow%-control$") then
     prefix = "./"
 else
@@ -14,7 +13,17 @@ end
 dofile(prefix .. "tests/test-config.lua")
 
 -- ConTeXt
-checkengines = { "luatex" }
+specialformats = { context = {
+    mkxl = {
+        binary = os.getenv("lmtx_context") or "context",
+        format = ""
+    },
+    mkiv = {
+        binary = os.getenv("tl_context") or "context",
+        format = ""
+    },
+}}
+
+checkengines = { "mkxl", "mkiv" }
 checkformat = "context"
 testfiledir = prefix .. "tests/context"
-]]
