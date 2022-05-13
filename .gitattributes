@@ -2,4 +2,16 @@
 # https://github.com/gucci-on-fleek/lua-widow-control
 # SPDX-License-Identifier: MPL-2.0+
 # SPDX-FileCopyrightText: 2022 Max Chernoff
+
+# EOL Conversion
 * text eol=lf
+*.pdf binary
+
+# File Types
+docs/** linguist-documentation
+licences/** linguist-documentation
+
+*.lvtext linguist-language=tex
+*.mkxl linguist-language=tex -linguist-documentation
+*.opm linguist-language=tex
+*.tltext linguist-generated linguist-language=text
