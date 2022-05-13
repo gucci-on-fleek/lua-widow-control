@@ -88,7 +88,7 @@
 }
 
 \define\lwc_patch_post{
-    \ifnum\lwc_disable_count>0%
+    \ifnum\lwc_disable_count>0\relax%
         \setuplwc[\c!state=\v!start]%
         \advance\lwc_disable_count by -1%
     \fi%

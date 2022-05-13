@@ -1,3 +1,9 @@
+--[[
+    lua-widow-control
+    https://github.com/gucci-on-fleek/lua-widow-control
+    SPDX-License-Identifier: MPL-2.0+
+    SPDX-FileCopyrightText: 2022 Max Chernoff
+  ]]
 module = "lua-widow-control"
 
 testsuppdir = prefix .. "tests/common"

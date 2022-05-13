@@ -1,0 +1,93 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+% See thread beginning at https://mailman.ntg.nl/pipermail/ntg-context/2022/105509.html for details
+
+%%%%%%%%%%%%%%
+%%% Layout %%%
+%%%%%%%%%%%%%%
+
+% This section is from Eduardo Bohoyo. Thanks!
+
+\definepapersize[smallpaper][width=6in,height=9in]
+\setuppapersize[smallpaper]
+
+\setuplayout[
+    grid=yes,
+    backspace=58pt,
+    width=306pt,
+    topspace=36pt,
+    header=12pt,
+    headerdistance=13.50pt,
+    height=569pt,
+    footer=26pt,
+    footerdistance=12pt
+]
+
+\switchtobodyfont[12.76pt]
+\setupindenting[yes,medium]
+\setupalign[lesshyphenation,tolerant,stretch,hanging,hz]
+\setupinterlinespace[line=15.45pt]
+
+\setuphead[chapter][
+    page=newsections,
+    placehead=yes,
+    number=no,
+    alternative=middle,
+    style=tfb,
+    before={\blank[force,35.50pt]},
+    after={\blank[107.90pt]}
+]
+
+% When we use background layers + grids, there isn't really any glue between the
+% line before the layer and the line after. We need to test this scenario.
+\definelayer[layer][
+    x=0mm,
+    y=0mm,
+    width=\paperwidth,
+    height=\paperheight
+]
+\setupbackgrounds[page][background=layer]
+
+%%%%%%%%%%%%%%%%%%
+%%% Test Setup %%%
+%%%%%%%%%%%%%%%%%%
+
+% Load lwc
+\usemodule[lua-widow-control]
+\setuplwc[state=stop]
+
+\showgrid[nonumber]
+
+% The test content
+\define\demotext{
+    \setlayer[layer][
+        x=140pt,
+        y=150pt
+    ]{
+        \framed[
+            width=10\baselineskip,
+            height=7.2\baselineskip
+        ]{LAYER}
+    }
+
+    This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. This is a long, stretchy paragraph. Filler.
+
+    This paragraph will have a widow or orphan. This paragraph will have a widow or orphan.
+
+    \page
+}
+
+\starttext
+    \chapter{Chapter One}
+
+    \demotext
+
+    \setuplwc[state=start]
+
+    \chapter{Chapter Two}
+
+    \demotext
+\stoptext
