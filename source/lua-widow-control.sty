@@ -105,6 +105,7 @@
     disablecmds .clist_gset:N     = \g__lwc_disablecmds_cl,
     disablecmds .value_required:n = false,
     disablecmds .initial:n        = { \@sect,           % LaTeX default
+                                      \@ssect,          % LaTeX starred
                                       \M@sect,          % Memoir
                                       \@mem@old@ssect,  % Memoir Starred
                                       \ttl@straight@ii, % titlesec normal
