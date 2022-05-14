@@ -72,7 +72,7 @@ end
     Save some local copies of the node library to reduce table lookups.
     This is probably a useless micro-optimization, but it can't hurt.
   ]]
--- Node ID"s
+-- Node ID's
 local baselineskip_subid = 2
 local glue_id = node.id("glue")
 local glyph_id = node.id("glyph")
@@ -426,7 +426,7 @@ local function safe_last(head)
 
         if ids[id] then
             warning [[Circular node list detected!
-This should never happen. I"ll try and
+This should never happen. I'll try and
 recover, but your output may be corrupted.
 (Internal Error)]]
             prev.next = nil
