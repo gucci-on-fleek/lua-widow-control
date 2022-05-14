@@ -13,6 +13,17 @@ end
 dofile(prefix .. "tests/test-config.lua")
 
 -- LaTeX
-checkengines = { "luatex" }
-checkformat = "latex"
+specialformats = { lualatex = {
+    lualatex = {
+        binary = "lualatex",
+        format = ""
+    },
+    ["lualatex-dev"] = {
+        binary = "lualatex-dev",
+        format = ""
+    },
+}}
+
+checkengines = { "lualatex", "lualatex-dev" }
+checkformat = "lualatex"
 testfiledir = prefix .. "tests/latex"
