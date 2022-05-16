@@ -12,6 +12,6 @@ docs/** linguist-documentation
 licences/** linguist-documentation
 
 *.lvtext linguist-language=tex
-*.mkxl linguist-language=tex -linguist-documentation
+*.mkxl linguist-language=tex
 *.opm linguist-language=tex
 *.tltext linguist-generated linguist-language=text
