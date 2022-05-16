@@ -1,5 +1,3 @@
-%!TeX program = context
-
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
@@ -10,10 +8,10 @@
     \errmessage{Fatal error, exiting.}
 }
 
-\environment lwc-documentation
+\environment lwc-manual
 
 \usemodule[lua-widow-control]
-\usebtxdataset[lwc-documentation.bib]
+\usebtxdataset[\jobname.bib]
 
 \useURL[projecturl][https://github.com/gucci-on-fleek/lua-widow-control]
 \useURL[download][https://github.com/gucci-on-fleek/lua-widow-control/releases/latest]
@@ -518,6 +516,6 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 
 \subsection{Demo from \in{Table}[tab:demo]}
 
-\typeTEXfile{lwc-documentation-demo-text.tmp}
+\typeTEXfile{\jobname-demo-text.tmp}
 
 \stopdocument

@@ -8,7 +8,6 @@
 module = "lua-widow-control"
 
 local orig_targets = target_list
-local orig_options = option_list
 target_list = {}
 
 -- Tagging
@@ -75,26 +74,20 @@ end
 target_list.doc = {}
 target_list.doc.desc = "Builds the documentation"
 
--- option_list["lmtx-path"] = {
---     type = "string",
---     desc = "Path to the ConTeXt LMTX executable",
--- }
+function target_list.doc.func()
+    local context = os.getenv("lmtx_context") or "context"
+    local error = 0
 
-function target_list.doc.func(args)
-    options["lmtx-path"] = args and args[1]
-    local context = options["lmtx-path"] or "context"
+    mkdir("./docs/manual/tmp")
+    error = error + run("./docs/manual", context .. " lwc-manual")
 
-    mkdir("./docs/tmp")
-    run("./docs",
-        os_setenv ..
-        " TEXMFHOME=" ..
-        abspath("./texmf") ..
-        os_concat ..
-        context ..
-        " lwc-documentation"
-    )
+    error = error + run("./docs/TUGboat", context .. " tb133chernoff-widows-figure.ctx")
+    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
+    error = error + run("./docs/TUGboat", "bibtex tb133chernoff-widows")
+    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
+    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
 
-    return 0
+    return error
 end
 
 -- Tests

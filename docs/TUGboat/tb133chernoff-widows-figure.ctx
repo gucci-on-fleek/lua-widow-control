@@ -1,0 +1,166 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\startbuffer[demo-text]
+    \definepapersize[smallpaper][
+        width=6cm,
+        height=8.3cm
+    ]
+    \setuppapersize[smallpaper]
+
+    \def\lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
+    \def\Lwc/{\sans{lua-\allowbreak widow-\allowbreak control}}
+
+    \setupbodyfont[9pt]
+    \setupindenting[yes, 2em]
+    \setupalign[tolerant]
+
+    \definecolor[midlightgray][s=0.75]
+    \definepalet[layout][grid=midlightgray]
+    \showgrid[nonumber, none, lines]
+
+    \definefontfeature[default][default][expansion=quality,protrusion=quality]
+
+    \usetypescript[modern-base]
+    \setupbodyfont[reset,modern]
+
+    \setupalign[hz,hanging,tolerant]
+
+    \setuplanguage[en][spacing=packed]
+
+    \setuplayout[
+        topspace=0.1cm,
+        backspace=0.1cm,
+        width=middle,
+        height=\dimexpr 21\baselineskip + 1.1pt,
+        header=0pt,
+        footer=0pt,
+    ]
+
+    \starttext
+        \Lwc/ can remove most widows and orphans from a document, \emph{without}
+        stretching any glue or shortening any pages.
+
+        \ifx\uselooseness\undefined\else\uselooseness\fi It does so by automatically lengthening a paragraph on a page where a
+        widow or orphan would otherwise occur. While \TeX{} breaks paragraphs
+        into their natural length, \lwc/ is breaking the paragraph 1~line
+        longer than its natural length. \TeX{}'s paragraph is output to the
+        page, but \lwc/'s paragraph is just stored for later. When a widow or
+        orphan occurs, \lwc/ can take over. It selects the previously-saved
+        paragraph with the least badness; then, it replaces \TeX{}'s paragraph
+        with its saved paragraph. This increases the text block height of the
+        page by 1~line.
+
+        Now, the last line of the current page can be pushed to the top of the
+        next page. This removes the widow or the orphan without creating any
+        additional work.
+    \stoptext
+    \stoptext
+\stopbuffer
+\savebuffer[list=demo-text]
+
+\startbuffer[shorten]
+    \parskip=0pt
+    \input tb133chernoff-widows-figure-demo-text.tmp
+\stopbuffer
+
+\startbuffer[shorten-code]
+    \parskip=0pt
+    \clubpenalty=10000
+    \widowpenalty=10000
+\stopbuffer
+
+\startbuffer[stretch]
+    \parskip=0pt plus 1fill
+    \input tb133chernoff-widows-figure-demo-text.tmp
+\stopbuffer
+
+\startbuffer[stretch-code]
+    \parskip=0pt plus 1fill
+    \clubpenalty=10000
+    \widowpenalty=10000
+\stopbuffer
+
+\startbuffer[ignore]
+    \startsetups[*default]
+        \clubpenalty=0
+        \widowpenalty=0
+        \displaywidowpenalty=0
+        \interlinepenalty=0
+        \brokenpenalty=0
+    \stopsetups
+
+    \setups[*default]
+
+    \input tb133chernoff-widows-figure-demo-text.tmp
+\stopbuffer
+
+\startbuffer[ignore-code]
+    \parskip=0pt
+    \clubpenalty=0
+    \widowpenalty=0
+\stopbuffer
+
+\startbuffer[lwc]
+    \def\uselooseness{\looseness=1}
+    \input tb133chernoff-widows-figure-demo-text.tmp
+\stopbuffer
+
+% We're pretending that we're using LaTeX for the demo since that's what
+% 99% of users will be using.
+\startbuffer[lwc-code]
+    \usepackage{lua-widow-control}
+\stopbuffer
+
+\setupbodyfont[10pt]
+
+\setupbackend[format=PDF/A-1b:2005] % Force PDF version <1.5
+
+\startTEXpage[
+    align=normal,
+    width=39pc,
+    offset=0pt,
+]
+    \veryraggedcenter
+    \setupTABLE[row][1, 5][style=\bfa, align=middle, offset=0pt]
+    \setupTABLE[row][5][toffset=2ex]
+    \setupTABLE[frame=off, distance=5em]
+    \startTABLE
+        \NC Ignore
+        \NC Shorten
+        \NC\NR
+
+        \NC \typesetbuffer[ignore][frame=on, page=1, scale=925]
+        \NC \typesetbuffer[shorten][frame=on, page=1, scale=925]
+        \NC\NR
+
+        \NC \clip[height=1cm]{\typesetbuffer[ignore]
+                [frame=on, page=2, scale=925]}
+        \NC \clip[height=1cm]{\typesetbuffer[shorten]
+                [frame=on, page=2, scale=925]}
+        \NC\NR
+
+        \NC \typebuffer[ignore-code]
+        \NC \typebuffer[shorten-code]
+        \NC\NR
+
+        \NC Stretch
+        \NC \sans{lua-widow-control} \NC\NR
+
+        \NC \typesetbuffer[stretch][frame=on, page=1, scale=925]
+        \NC \typesetbuffer[lwc][frame=on, page=1, scale=925]
+        \NC\NR
+
+        \NC \clip[height=1cm]{\typesetbuffer[stretch]
+                [frame=on, page=2, scale=925]}
+        \NC \clip[height=1cm]{\typesetbuffer[lwc]
+                [frame=on, page=2, scale=925]}
+        \NC\NR
+
+        \NC \typebuffer[stretch-code]
+        \NC \typebuffer[lwc-code]
+        \NC\NR
+    \stopTABLE
+\stopTEXpage
