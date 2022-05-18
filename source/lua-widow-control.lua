@@ -62,9 +62,9 @@ if format:find("cont") then -- cont-en, cont-fr, cont-nl, ...
     end
 elseif format:find("latex") then -- lualatex, lualatex-dev, ...
     latex = true
-elseif format == "luatex" then -- Plain
+elseif format == "luatex" or format == "luahbtex" then -- Plain
     plain = true
-elseif format == "optex" then -- OpTeX
+elseif format:find("optex") then -- OpTeX
     optex = true
 end
 
