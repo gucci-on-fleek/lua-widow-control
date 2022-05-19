@@ -96,32 +96,20 @@ fonts.handlers.otf.addfeature {
 \definealternativestyle[acronymstyle][{\feature[+][allsmall]\switchtobodyfont[1.1em]\setcharacterkerning[acronymkerning]}][]
 \definehighlight[acronym][style=acronymstyle]
 
-\startuniqueMPgraphic{warning}
-path p;
-p := roundedsquare(OverlayWidth, OverlayHeight, 0.25cm);
-fill p withcolor black;
-draw p anglestriped (1, 45, 20) withpen pencircle scaled 10pt withcolor yellow;
-fill p blownup -0.125cm withcolor white;
-draw p blownup -0.125cm;
-setbounds currentpicture to boundingbox OverlayBox;
-\stopuniqueMPgraphic
-\defineoverlay[warning][\useMPgraphic{warning}]
+\startsetups[commandtable]
+    \setupTABLE[frame=off]
+    \setupTABLE[column][first][roffset=1.5em]
+    \setupTABLE[row][first][toffset=0.25ex]
+\stopsetups
 
-\define[1]\warning{
-    \blank[line]
-    \midaligned{\framed[
-        frame=off,
-        background=warning,
-        backgroundoffset=0.25cm,
-        width=\dimexpr\hsize-4em,
-        align=flushleft,
-    ]{%
-        {\ssa\bf Warning}
-
-        #1
-    }}
-    \blank[line]
-}
+\startsetups[booktabs]
+    \setupTABLE[each][each][frame=off]
+    \setupTABLE[row][first][topframe=on, rulethickness=1.2bp]
+    \setupTABLE[row][2]    [topframe=on, rulethickness=0.6bp]
+    \setupTABLE[row][last] [bottomframe=on, rulethickness=1.2bp]
+    \setupTABLE[column][first][loffset=0.5em]
+    \setupTABLE[column][last][roffset=0.5em]
+\stopsetups
 
 \setupitemize[each][
     style=\lining,
@@ -370,6 +358,11 @@ interfaces.implement {
 \starttexdefinition mutable protected btx:apa:url
     \strippedurl{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
         }
+\stoptexdefinition
+
+\define[1]\lwc_doi{\goto{\acronym{DOI:}\,\tt\hyphenatedurl{#1}}[url(https://dx.doi.org/#1)]}
+\starttexdefinition mutable protected btx:apa:doi
+    \lwc_doi{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{doi}}
 \stoptexdefinition
 
 \protect

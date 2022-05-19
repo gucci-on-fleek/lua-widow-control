@@ -138,13 +138,20 @@
 
 % Load last
 \AddToHookNext{shipout/foreground}{%
-    \put(1in, \dimexpr-\baselineskip - 0.5ex){%
+    \put(1in, \dimexpr-2\baselineskip){%
         \fbox{\parbox[t]{\textwidth}{%
-            This document is a part of the \lwc/ documentation. Some commands
-            may have changed since publication, so check the package manual for
-            the current syntax. For the authoritative version of the article,
-            please see
+            This document is a part of the \lwc/ documentation. For the
+            authoritative version of the article, please see
             \tbsurl{https://tug.org/TUGboat/tb43-1/tb133chernoff-widows.html}.
+        }%
+    }}%
+    \put(\dimexpr1in + 0.4\textwidth, \dimexpr-\paperheight + 4\baselineskip){%
+        \fbox{\parbox[t]{0.6\textwidth}{%
+            Some commands may have changed since publication. Please see the
+            \lwc/ manual for the current syntax. (Links:
+            \href{lua-widow-control.pdf}{local},
+            \href{http://mirrors.ctan.org/macros/luatex/generic/lua-widow-control/lua-widow-control.pdf}{\acro{CTAN}},
+            \href{https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lua-widow-control.pdf}{GitHub}.)
         }%
     }}%
 }
@@ -955,7 +962,7 @@
     \cs{inter\-line\-penalties} and \cs{club\-penalties} behave similarly.
 
     \Lwc/ makes no explicit attempts to support these new -\texttt{penalties}
-    commands. Specifically, If you give a line a penalty that matches either
+    commands. Specifically, if you give a line a penalty that matches either
     \cs{widowpenalty} or \cs{clubpenalty}, \lwc/ will treat the lines
     exactly as it would a \woo/. So while these commands won't break \lwc/, they
     are likely to lead to some unexpected behaviour.

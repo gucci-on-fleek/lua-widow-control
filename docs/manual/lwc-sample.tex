@@ -119,3 +119,60 @@
         \NC\fakeend{1}{2em}\NC\NC\fakeend{5}{1.5em}\NC\NR
     \stopTABLE
 \stopbuffer
+
+\startbuffer[nobreak]
+    % This is also really hacky and terrible
+    \parfillskip=0pt
+    \define\lineone{%
+        \hbox to 0.3\textwidth{\blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=3em]\hfill%
+        \blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=3em]\hfill%
+        \blackrule[height=1.5ex, width=1em]}%
+    }
+
+    \define\linetwo{%
+        \hbox to 0.3\textwidth{\blackrule[height=1.5ex, width=2em]\hfill%
+        \blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=2.5em]\hfill%
+        \blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=2.5em]}%
+    }
+
+    \define\linethree{%
+        \hbox to 0.3\textwidth{\blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=3em]\hfill%
+        \blackrule[height=1.5ex, width=1em]\hfill%
+        \blackrule[height=1.5ex, width=3em]\hfill%
+        \hskip1em\relax}%
+    }
+
+    \define\heading{\bold{Heading}}
+
+    \setupTABLE[
+        width=broad,
+        topframe=off,
+        bottomframe=off,
+        leftframe=on,
+        rightframe=on,
+        height=1.2\baselineskip
+    ]
+    \setupTABLE[row][1][
+        align=middle,
+        style=\ttbf,
+        bottomframe=on,
+        leftframe=off,
+        rightframe=off
+    ]
+    \setupTABLE[row][3][bottomframe=on]
+    \setupTABLE[row][5][bottomframe=on]
+    \setupTABLE[column][2][bottomframe=off, width=1em]
+    \setupTABLE[column][4][bottomframe=off, width=1em]
+    \startTABLE
+        \NC keep     \NC\NC split    \NC\NC warn     \NC\NR
+        \NC          \NC\NC          \NC\NC \heading \NC\NR
+        \NC          \NC\NC \heading \NC\NC \lineone    \NC\NR
+        \NC \heading \NC\NC \lineone \NC\NC \linetwo    \NC\NR
+        \NC \lineone \NC\NC \linetwo \NC\NC \linethree  \NC\NR
+    \stopTABLE
+\stopbuffer
