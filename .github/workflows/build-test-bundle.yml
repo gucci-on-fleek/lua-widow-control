@@ -101,7 +101,7 @@ jobs:
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
-        if: "! ${{github.base_ref}}" # not a PR
+        if: ${{ github.event_name == 'push' }}
         with:
           prerelease: true
           artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf, ./texmf/doc/luatex/lua-widow-control/tb133chernoff-widows.pdf
