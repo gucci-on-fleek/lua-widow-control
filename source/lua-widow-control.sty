@@ -121,8 +121,8 @@
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
 % lengthened paragraphs to not have terrible spacing.
-\bool_if:NT \g__lwc_use_microtype_bool {
-    \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+\hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+    \bool_if:NT \g__lwc_use_microtype_bool {
         \@ifpackageloaded { microtype } {} {
             \RequirePackage[
                 final,
