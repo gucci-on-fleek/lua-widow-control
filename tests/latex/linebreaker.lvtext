@@ -1,0 +1,81 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+\documentclass{article}
+\usepackage{mathtools}
+\allowdisplaybreaks
+
+\usepackage[textwidth=345pt, textheight=540pt, showframe]{geometry}
+
+\usepackage{linebreaker}
+\usepackage[debug=true]{lua-widow-control}
+
+\begin{document}
+    % lwc + linebreaker broke in align at one point, so we test it here.
+    \begin{align}
+        a &= b + c \\
+        d &= e + f \\
+        g &= h + i \\
+        j &= k + l \\
+        m &= n + o \\
+        p &= q + r \\
+        s &= t + u \\
+        v &= w + x \\
+        y &= z + aa \\
+        bb &= cc + dd \\
+        ee &= ff + gg \\
+        hh &= ii + jj \\
+        kk &= ll + mm \\
+        nn &= oo + pp \\
+        qq &= rr + ss \\
+        tt &= uu + vv \\
+        ww &= xx + yy \\
+        zz &= aaa + bbb \\
+        ccc &= ddd + eee \\
+        fff &= ggg + hhh \\
+        iii &= jjj + lll \\
+        mmm &= nnn + ooo \\
+        ppp &= qqq + rrr \\
+        sss &= ttt + uuu \\
+        vvv &= www + xxx \\
+        yyy &= zzz + aaaa \\
+        bbbb &= cccc + dddd \\
+        eeee &= ffff + gggg \\
+        hhhh &= iiiii + jjjj \\
+        kkkk &= lllll + mmmmm \\
+        nnnnn &= ooooo + ppppp \\
+        qqqqq &= rrrrr + sssss \\
+        ttttt &= uuuuu + vvvvv \\
+        wwww &= xxxxx + yyyyy \\
+        zzzzz &= aaaaaa + bbbbbb \\
+        cccccc &= dddddd + eeeeee \\
+        ffffff &= gggggg + hhhhhh \\
+        iiiiii &= jjjjjj + kkkkkk \\
+        mmmmmm &= nnnnnn + oooooo \\
+        pppppp &= qqqqqq + rrrrrr \\
+        ssssss &= tttttt + uuuuuu \\
+        vvvvvv &= wwwwww + xxxxxx \\
+        yyyyyy &= zzzzzz + aaaaaaa \\
+        bbbbbbb &= ccccccc + ddddddd \\
+        eeeeeee &= fffffff + ggggggg \\
+        hhhhhhh &= iiiiiiii + jjjjjjj \\
+        kkkkkkk &= llllllll + mmmmmmmm \\
+        nnnnnnn &= ooooooooo + pppppppp \\
+        qqqqqqqq &= rrrrrrrrr + ssssssss \\
+        tttttttt &= uuuuuuuuu + vvvvvvvv \\
+        wwwwwwww &= xxxxxxxxx + yyyyyyyy \\
+        zzzzzzzzz &= \text{END!}
+    \end{align}
+
+    % Make sure that linebreaker has to work hard
+    \newgeometry{textwidth=200pt}
+    \parskip=0pt\relax
+    \hyphenchar\font=-1
+
+    Filler\par Filler\par
+    \newcount\n \n=0
+    \loop\ifnum\n<10 \advance\n by 1
+        \input knuth\par
+    \repeat
+\end{document}

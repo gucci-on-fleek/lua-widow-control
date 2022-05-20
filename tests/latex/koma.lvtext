@@ -1,0 +1,17 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+\documentclass[fontsize=10pt]{scrartcl}
+\areaset{345pt}{550pt}
+
+\usepackage{lua-widow-control}
+
+\let\pagebreakcommand=\clearpage
+\newcommand{\texcsname}[1]{\texttt{\textbackslash#1}}
+\renewcommand{\quotation}[1]{``#1''}
+\newcommand{\printlocation}[1]{\write16{===#1:\the\count0===}}
+
+\begin{document}
+    \input basic
+\end{document}
