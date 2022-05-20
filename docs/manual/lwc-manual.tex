@@ -695,14 +695,6 @@ ultra-short~lines.
     contain many lines like \q{\type{luatex warning > tex: left parfill skip is gone}}. These messages
     are completely harmless (although admittedly quite annoying). \githubissue{7}
 
-    \item \TeX{} may warn about overfull \tex{vbox}es on pages where
-    \lwc/ removed a \woo/. This happens due to the way that \lwc/
-    corrects for the \tex{prevdepth} when replacing paragraphs. It
-    does not actually produce an overfull \type{vbox}, but there
-    is a warning nevertheless. You can set \tex{vfuzz=2.5pt} to
-    hide the
-    warning. \githubissue{8}
-
     \item \Lwc/ only attempts to expand paragraphs on a page with
     a \woo/. A global system like in \titlecite[global] would solve this;
     however, this is both \acronym{NP}-complete\cite[plass] and

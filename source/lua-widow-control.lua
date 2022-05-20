@@ -83,6 +83,7 @@ local par_id = node.id("par") or node.id("local_par")
 local penalty_id = node.id("penalty")
 
 -- Local versions of globals
+local abs = math.abs
 local copy = node.copy_list or node.copylist
 local find_attribute = node.find_attribute or node.findattribute
 local flush_list = node.flush_list or node.flushlist
@@ -96,6 +97,7 @@ local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
 local traverse = node.traverse
 local traverseid = node.traverse_id or node.traverseid
+local vpack = node.vpack
 
 -- Misc. Constants
 local iffalse = token.create("iffalse")
@@ -502,6 +504,9 @@ function lwc.remove_widows(head)
 
     info("Widow/orphan/broken hyphen detected. Attempting to remove")
 
+    local vsize = tex.dimen.vsize
+    local orig_height_diff = vpack(head).height - vsize
+
     --[[
         Find the paragraph on the page with the least cost.
       ]]
@@ -696,6 +701,23 @@ function lwc.remove_widows(head)
         else
             head = head.next
         end
+    end
+
+    local new_height_diff = vpack(head_save).height - vsize
+    -- We need the original height discrepancy in case there are \\vfill's
+    local net_height_diff = orig_height_diff - new_height_diff
+
+    --[[ The final \\box255 needs to be exactly \\vsize tall to avoid
+         over/underfull box warnings, so we correct any discrepancies
+         here.
+      ]]
+    if abs(net_height_diff) > 0 and
+       -- A difference larger than 0.25\\baselineskip is probably not from \lwc/
+       abs(net_height_diff) < tex.skip.baselineskip.width / 4
+    then
+        local bottom_glue = new_node("glue")
+        bottom_glue.width = net_height_diff
+        last(head_save).next = bottom_glue
     end
 
     info(
