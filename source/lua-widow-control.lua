@@ -495,14 +495,18 @@ function lwc.remove_widows(head)
 
     debug_print("outputpenalty", tex.outputpenalty .. " " .. #paragraphs)
 
-    if not is_matching_penalty(tex.outputpenalty) or
-       #paragraphs == 0
-    then
+    if not is_matching_penalty(tex.outputpenalty) then
         paragraphs = {}
         return head_save
     end
 
     info("Widow/orphan/broken hyphen detected. Attempting to remove")
+
+    if #paragraphs == 0 then
+        warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
+        paragraphs = {}
+        return head_save
+    end
 
     local vsize = tex.dimen.vsize
     local orig_height_diff = vpack(head).height - vsize

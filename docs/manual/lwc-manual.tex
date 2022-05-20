@@ -685,6 +685,8 @@ ultra-short~lines.
 
     \item \Lwc/ only attempts to expand paragraphs; it never attempts to shrink them. See the \emph{TUGboat}~article\cite[article] §15.3 for further discussion. \githubissue{33}
 
+    \item \Lwc/ can only expand paragraphs that fit completely on a page. This is unavoidable due to the one-page-at-a-time model: you can't modify the bottom half of a paragraph since its top half has already shipped out, and you can't expand the top half of a paragraphs since that can't remove orphans. This only causes issues if your document has paragraphs so long that a page only has two half-paragraphs and zero whole paragraphs.
+
     \item Sometimes a \woo/ cannot be eliminated because no paragraph has
     enough stretch. Sometimes this can be remediated by
     increasing \lwc/'s \estretch/; however, some pages just don't have
