@@ -162,7 +162,7 @@ elseif plain or latex or optex then
         luatexbase.provides_module {
             name = lwc.name,
             date = "2022/05/14", --%%dashdate
-            version = "2.1.0", --%%version
+            version = "2.1.1", --%%version
             description = [[
 
 This module provides a LuaTeX-based solution to prevent
