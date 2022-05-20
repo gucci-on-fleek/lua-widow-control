@@ -37,7 +37,7 @@
 \definetype[inlineTEX][option=tex, escape={$,$}, lines=hyphenated]
 \definetype[inlineLUA][option=lua, escape={$,$}, lines=hyphenated]
 
-\input lwc-sample
+\input lwc-manual-samples
 
 \startdocument[
     title=lua-widow-control,
@@ -621,7 +621,7 @@ same internal mechanisms, \lwc/ removes \waos/ between columns just
 as it does with \waos/ between pages.
 
 \Lwc/ is known to work with the \LaTeX{} class option \type{twocolumn}
-and the two-column output routine from Chapter~23 of \cite[texbook].
+and the two-column output routine from Chapter~23 of \titlecite[texbook].
 
 \subsection{Performance}
 
@@ -648,11 +648,15 @@ commands. Specifically, if you give a line a penalty that matches either
 exactly as it would a \woo/. So while these commands won't break \lwc/, they
 are likely to lead to some unexpected behaviour.
 
+\subsection{Grids}
+
+\Lwc/ is fully compatible with the grid snapping features of \ConTeXt{} \mkiv/ and \mkxl/.
+
 \section{Stability}
 
 The documented interfaces of \lwc/ can be considered stable: I'm not planning on removing or modifying any existing options or commands in any way that would break documents.
 
-However, \lwc/'s page breaking \emph{is} subject to change. I will attempt to keep page breaks the same wherever reasonable; however, I will rarely make modifications to the algorithm when I can improve the output quality.
+However, \lwc/'s page breaking \emph{is} subject to change. I will attempt to keep page breaks the same whenever reasonable; however, I will \emph{rarely} make modifications to the algorithm when I can improve the output quality. Any such changes will be clearly noted in the release notes.
 
 \section{Short last lines}
 

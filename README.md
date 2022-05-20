@@ -9,7 +9,7 @@ lua-widow-control
 
 Lua-widow-control is a Plain TeX/LaTeX/ConTeXt/OpTeX package that removes widows and orphans without any user intervention. Using the power of LuaTeX, it does so _without_ stretching any glue or shortening any pages or columns. Instead, lua-widow-control automatically lengthens a paragraph on a page or column where a widow or orphan would otherwise occur.
 
-Please see the [**package documentation**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lua-widow-control.pdf) for usage details or the [***TUGboat* article**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/tb133chernoff-widows.pdf) for background information and discussion.
+Please see the [**package manual**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lua-widow-control.pdf) for usage details or the [***TUGboat* article**](https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/tb133chernoff-widows.pdf) for background information and discussion.
 
 Usage
 -----
