@@ -732,6 +732,12 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 ]
 \section[sec:implementation]{Implementation}
 
+From here and until the end of this manual is the raw source code of \lwc/. This is primarily of interest to developers; most users need not read further.
+
+This code vaguely resembles the typical \LaTeX{} literate programming style, although I use extensive inline comments instead of arcane \sans{docstrip} macros. Hopefully this is  useful as a reference for advanced \lwc/ users as well as anyone doing extensive node manipulation in \LuaTeX{}.
+
+If want to offer any improvements to the code below, please open an issue or a \acronym{PR} on \goto{GitHub}[url(projecturl)].
+
 \usemodule[scite]
 \setupbodyfont[10pt]
 \setuphead[subsection][
