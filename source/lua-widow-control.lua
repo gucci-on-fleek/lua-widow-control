@@ -7,13 +7,14 @@
 
 --- Tell the linter about node attributes
 --- @class node
---- @field prev node
---- @field next node
---- @field id integer
---- @field subtype integer
---- @field penalty integer
---- @field height integer
 --- @field depth integer
+--- @field height integer
+--- @field id integer
+--- @field list node
+--- @field next node
+--- @field penalty integer
+--- @field prev node
+--- @field subtype integer
 
 -- Initial setup
 lwc = lwc or {}
@@ -78,14 +79,16 @@ end
   ]]
 -- Node ID's
 -- (We need to hardcode the subid's sadly)
+local id_from_name = node.id
 local baselineskip_subid = 2
-local glue_id = node.id("glue")
-local glyph_id = node.id("glyph")
-local hlist_id = node.id("hlist")
+local glue_id = id_from_name("glue")
+local glyph_id = id_from_name("glyph")
+local hlist_id = id_from_name("hlist")
+local insert_id = id_from_name("insert") or id_from_name("ins")
 local line_subid = 1
 local linebreakpenalty_subid = 1
-local par_id = node.id("par") or node.id("local_par")
-local penalty_id = node.id("penalty")
+local par_id = id_from_name("par") or id_from_name("local_par")
+local penalty_id = id_from_name("penalty")
 
 -- Local versions of globals
 local abs = math.abs
@@ -93,38 +96,45 @@ local copy_list = node.copy_list or node.copylist
 local find_attribute = node.find_attribute or node.findattribute
 local free = node.free
 local free_list = node.flush_list or node.flushlist
-local getattribute = node.get_attribute or node.getattribute
+local get_attribute = node.get_attribute or node.getattribute
 local insert_token = token.put_next or token.putnext
 local last = node.slide
+local linebreak = tex.linebreak
 local new_node = node.new
 local node_id = node.is_node or node.isnode
 local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
+local tex_box = tex.box
+local tex_count = tex.count
+local tex_dimen = tex.dimen
+local tex_lists = tex.lists
 local traverse = node.traverse
-local traverseid = node.traverse_id or node.traverseid
+local traverse_id = node.traverse_id or node.traverseid
 local vpack = node.vpack
 
 -- Misc. Constants
 local iffalse = token.create("iffalse")
 local iftrue = token.create("iftrue")
 local INFINITY = 10000
+local INSERT_MULTIPLE = 1000
 local min_col_width = tex.sp("250pt")
-local SINGLE_LINE = 50
 local PAGE_MULTIPLE = 100
+local SINGLE_LINE = 50
 
---[[
-    Package/module initialization.
+--[[ Package/module initialization.
 
-    Here, we replace any format/engine-specific variables/functions with some
-    generic equivalents. This way, we can write the rest of the module without
-    worrying about any format/engine differences.
+     Here, we replace any format/engine-specific variables/functions with some
+     generic equivalents. This way, we can write the rest of the module without
+     worrying about any format/engine differences.
   ]]
-local attribute,
-      contrib_head,
+local contrib_head,
       emergencystretch,
       info,
+      insert_attribute,
+      insert_name,
       max_cost,
       pagenum,
+      paragraph_attribute,
       stretch_order,
       warning
 
@@ -133,9 +143,11 @@ if lmtx then
     debug("LMTX")
     contrib_head = "contributehead"
     stretch_order = "stretchorder"
+    insert_name = "insert"
 else
     contrib_head = "contrib_head"
     stretch_order = "stretch_order"
+    insert_name = "ins"
 end
 
 if context then
@@ -151,14 +163,15 @@ if context then
         _info(text)
         logs.poptarget()
     end
-    attribute = attributes.public(lwc.name)
-    pagenum = function() return tex.count["realpageno"] end
+    paragraph_attribute = attributes.public(lwc.name .. "_paragraph")
+    insert_attribute = attributes.public(lwc.name .. "_insert")
+    pagenum = function() return tex_count["realpageno"] end
 
     -- Dimen names
     emergencystretch = "lwc_emergency_stretch"
     max_cost = "lwc_max_cost"
 elseif plain or latex or optex then
-    pagenum = function() return tex.count[0] end
+    pagenum = function() return tex_count[0] end
 
     -- Dimen names
     if tex.isdimen("g__lwc_emergencystretch_dim") then
@@ -184,13 +197,15 @@ paragraphs.]],
         }
         warning = function(str) luatexbase.module_warning(lwc.name, str) end
         info = function(str) luatexbase.module_info(lwc.name, str) end
-        attribute = luatexbase.new_attribute(lwc.name)
+        paragraph_attribute = luatexbase.new_attribute(lwc.name .. "_paragraph")
+        insert_attribute = luatexbase.new_attribute(lwc.name .. "_insert")
     elseif optex then
         debug("OpTeX")
 
         warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
         info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
-        attribute = alloc.new_attribute(lwc.name)
+        paragraph_attribute = alloc.new_attribute(lwc.name .. "_paragraph")
+        insert_attribute = alloc.new_attribute(lwc.name .. "_insert")
     end
 else -- This shouldn't ever happen
     error [[Unsupported format.
@@ -204,6 +219,8 @@ end
      passing this data around would be even worse.
   ]]
 local paragraphs = {}
+
+local insert_count = 1
 
 --[[
     Function definitions
@@ -273,7 +290,7 @@ local function next_of_type(head, id, args)
     args = args or {}
 
     if lmtx or not args.reverse then
-        for n, subtype in traverseid(id, head, args.reverse) do
+        for n, subtype in traverse_id(id, head, args.reverse) do
             if (subtype == args.subtype) or (args.subtype == nil) then
                 return n
             end
@@ -323,9 +340,9 @@ local function long_paragraph(head)
     end
 
     -- Break the paragraph 1 line longer than natural
-    return tex.linebreak(head, {
+    return linebreak(head, {
         looseness = 1,
-        emergencystretch = tex.getdimen(emergencystretch),
+        emergencystretch = tex_dimen[emergencystretch],
     })
 end
 
@@ -350,7 +367,7 @@ local function natural_paragraph(head)
     end
 
     -- Break the paragraph naturally to get \\prevgraf
-    local natural_node, natural_info = tex.linebreak(head)
+    local natural_node, natural_info = linebreak(head)
     free_list(natural_node)
 
     return natural_info
@@ -435,6 +452,7 @@ end
 --- @param head node
 --- @return node
 function lwc.mark_paragraphs(head)
+    -- Tag the paragraphs
     if not status.output_active then -- Don't run during the output routine
         -- Get the start and end of the paragraph
         local top_para = next_of_type(head, hlist_id, { subtype = line_subid })
@@ -443,12 +461,12 @@ function lwc.mark_paragraphs(head)
         if top_para ~= bottom_para then
             set_attribute(
                 top_para,
-                attribute,
+                paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum())
             )
             set_attribute(
                 bottom_para,
-                attribute,
+                paragraph_attribute,
                 -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum()))
             )
         else
@@ -456,10 +474,25 @@ function lwc.mark_paragraphs(head)
             -- have a single attribute value
             set_attribute(
                 top_para,
-                attribute,
+                paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
             )
         end
+    end
+
+    --[[ We need to tag the first element of the hlist before the any insert nodes
+         since the insert nodes are removed before `pre_output_filter` gets called.
+      ]]
+    for insert in traverse_id(insert_id, head) do
+        local hlist_before = next_of_type(insert, hlist_id, { reverse = true} )
+        set_attribute(
+            hlist_before.list,
+            insert_attribute,
+            insert_count + (insert.subtype * INSERT_MULTIPLE)
+        )
+        set_attribute(insert.list, insert_attribute, insert_count)
+
+        insert_count = insert_count + 1
     end
 
     return head
@@ -555,7 +588,7 @@ local function first_last_paragraphs(head)
     -- Find the last paragraph on the page, starting at the end, heading in reverse
     local n = last(head)
     while n do
-        local value = getattribute(n, attribute)
+        local value = get_attribute(n, paragraph_attribute)
         if value then
             last_index = value % PAGE_MULTIPLE
             break
@@ -565,14 +598,14 @@ local function first_last_paragraphs(head)
     end
 
     -- Find the first paragraph on the page, from the top
-    local first_val, first_head = find_attribute(head, attribute)
-    if first_val // 100 == pagenum() - 1 then
+    local first_val, first_head = find_attribute(head, paragraph_attribute)
+    if first_val // PAGE_MULTIPLE == pagenum() - 1 then
         --[[ If the first complete paragraph on the page was initially broken on the
              previous page, then we can't expand it here so we need to skip it.
           ]]
         first_index = find_attribute(
             first_head.next,
-            attribute
+            paragraph_attribute
         ) % PAGE_MULTIPLE
     else
         first_index = first_val % PAGE_MULTIPLE
@@ -617,13 +650,79 @@ local function best_paragraph(head)
         pagenum() .. "/" .. best_index .. " (" .. best_cost .. ")"
     )
 
-    if best_cost  >  tex.getcount(max_cost) or
+    if best_cost  >  tex_count[max_cost] or
        best_index == last_paragraph_index
     then
         return nil
     else
         return best_index
     end
+end
+
+
+--- Gets any inserts present in the moved line
+---
+--- @param last_line node The moved last line
+--- @return table<node> inserts A list of the present inserts
+local function get_inserts(last_line)
+    local inserts = {}
+
+    local n = last_line.list
+    while n do -- Iterate through the last line
+        local value
+        value, n = find_attribute(n, insert_attribute)
+
+        if not n then
+            break
+        end
+
+        --[[ With LuaMetaTeX, the subtype of `insert` nodes is always zero,
+             so we cannot detect their class therefore we can't fix any moved
+             footnotes.
+          ]]
+        if lmtx then
+            warning("!!!Incorrect footnotes on page " .. pagenum() .. "!!!")
+            return {}
+        end
+
+        local class = value // INSERT_MULTIPLE
+        local index = value % INSERT_MULTIPLE
+        local insert_box = tex_box[class]
+
+        local m = insert_box.list
+        while m do -- Iterate through the insert box
+            local inner_value
+            inner_value, m = find_attribute(m, insert_attribute)
+
+            if not m then
+                break
+            end
+
+            if inner_value == index then
+                insert_box.list = node.remove(insert_box.list, m)
+
+                local new_insert = new_node(insert_name)
+                new_insert.list = m
+                new_insert.subtype = class
+
+                inserts[#inserts + 1] = new_insert
+            end
+
+            m = m.next
+        end
+
+        if not insert_box.list then
+            tex_box[class] = nil
+        end
+
+        n = n.next
+    end
+
+    if #inserts > 0 then
+        warning("Moving footnotes on page " .. pagenum())
+    end
+
+    return inserts
 end
 
 
@@ -684,11 +783,17 @@ local function move_last_line(head)
     end
 
     last_line = copy_list(n)
-    last(last_line).next = copy_list(tex.lists[contrib_head])
+    last(last_line).next = copy_list(tex_lists[contrib_head])
 
     n.prev.prev.next = nil
+
+    local inserts = get_inserts(last_line)
+    for _, insert in ipairs(inserts) do
+        last(last_line).next = insert
+    end
+
     -- Move the last line to the next page
-    tex.lists[contrib_head] = last_line
+    tex_lists[contrib_head] = last_line
 
     return true
 end
@@ -706,10 +811,10 @@ local function replace_paragraph(head, paragraph_index)
     local free_next_nodes = false
 
     -- Loop through all of the nodes on the page with the lwc attribute
-    n = head
+    local n = head
     while n do
         local value
-        value, n = find_attribute(n, attribute)
+        value, n = find_attribute(n, paragraph_attribute)
 
         if not n then
             break
@@ -802,7 +907,7 @@ function lwc.remove_widows(head)
     end
 
     -- Check the original height of \\box255
-    local vsize = tex.dimen.vsize
+    local vsize = tex_dimen.vsize
     local orig_height_diff = vpack(head).height - vsize
 
     -- Find the paragraph to expand
