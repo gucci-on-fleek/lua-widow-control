@@ -444,12 +444,11 @@ end
 ---
 --- We add an attribute to the first and last node of each paragraph. The ID is
 --- some arbitrary number for \lwc/, and the value corresponds to the
---- paragraphs index, which is negated for the end of the paragraph. Called by the
---- `post_linebreak_filter` callback.
+--- paragraphs index, which is negated for the end of the paragraph.
 ---
 --- @param head node
---- @return node
-function lwc.mark_paragraphs(head)
+--- @return nil
+local function mark_paragraphs(head)
     -- Tag the paragraphs
     if not status.output_active then -- Don't run during the output routine
         -- Get the start and end of the paragraph
@@ -481,10 +480,17 @@ function lwc.mark_paragraphs(head)
             )
         end
     end
+end
 
-    --[[ We need to tag the first element of the hlist before the any insert nodes
-         since the insert nodes are removed before `pre_output_filter` gets called.
-      ]]
+
+--- Tags the each line with the indices of any corresponding inserts.
+---
+--- We need to tag the first element of the hlist before the any insert nodes
+--- since the insert nodes are removed before `pre_output_filter` gets called.
+---
+--- @param head node
+--- @return nil
+local function mark_inserts(head)
     local insert_indices = {}
     for insert in traverse_id(insert_id, head) do
         -- Save the found insert nodes for later
@@ -522,43 +528,17 @@ function lwc.mark_paragraphs(head)
             insert_indices = {}
         end
     end
-
-    return head
 end
 
 
---- A "safe" version of the last/slide function.
+--- Saves the inserts and tags a typeset paragraph. Called by the
+--- `post_linebreak_filter` callback.
 ---
---- Sometimes the node list can form a loop. Since there is no last element
---- of a looped linked-list, the `last()` function will never terminate. This
---- function provides a "safe" version of the `last()` function that will break
---- the loop at the end if the list is circular.
----
---- @param head node The start of a node list
---- @return node The last node in a list
-local function safe_last(head)
-    local ids = {}
-    local prev
-
-    while head.next do
-        local id = node_id(head)
-
-        if ids[id] then
-            warning [[Circular node list detected!
-This should never happen. I'll try and
-recover, but your output may be corrupted.
-(Internal Error)]]
-            prev.next = nil
-            debug("safe_last", node.type(head.id) .. " " .. node.type(prev.id))
-
-            return prev
-        end
-
-        ids[id] = true
-        head.prev = prev
-        prev = head
-        head = head.next
-    end
+--- @param head node
+--- @return node
+function lwc.mark_paragraphs(head)
+    mark_paragraphs(head)
+    mark_inserts(head)
 
     return head
 end
@@ -594,12 +574,26 @@ function is_matching_penalty(penalty)
 end
 
 
---- When we are unable to remove a widow/orphan, print a warning and empty
---- the saved paragraphs table.
+--- Reset any state saved between pages
+---
+--- @return nil
+local function reset_state()
+    paragraphs = {}
+
+    for _, insert in ipairs(inserts) do
+        free(insert)
+    end
+
+    inserts = {}
+end
+
+
+--- When we are unable to remove a widow/orphan, print a warning
+---
 --- @return nil
 local function remove_widows_fail()
     warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
-    paragraphs = {}
+    reset_state()
 end
 
 
@@ -735,7 +729,7 @@ local function get_inserts(last_line)
             then
                 -- Remove the respective contents from the insert box
                 insert_box.list = node.remove(insert_box.list, m)
-                selected_inserts[#selected_inserts + 1] = inserts[box_value]
+                selected_inserts[#selected_inserts + 1] = copy(inserts[box_value])
             end
 
             m = m.next
@@ -746,14 +740,6 @@ local function get_inserts(last_line)
         end
 
         n = n.next
-    end
-
-    --[[ We issue a warning here if we move any inserts since this can often
-         leave a blank space at the bottom of the page. This is unavoidable,
-         although you can have the same problem in (Plain/La) (Knuth/e/pdf) TeX.
-      ]]
-    if #selected_inserts > 0 then
-        warning("Moving footnotes on page " .. pagenum())
     end
 
     return selected_inserts
@@ -865,7 +851,6 @@ local function replace_paragraph(head, paragraph_index)
            value == paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug("remove_widows", "replacement start")
-            safe_last(target_node) -- Remove any loops
 
             -- Fix the `\\baselineskip` glue between paragraphs
             height_difference = (
@@ -892,7 +877,7 @@ local function replace_paragraph(head, paragraph_index)
            value ==       paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug("remove_widows", "replacement end")
-            local target_node_last = safe_last(target_node)
+            local target_node_last = last(target_node)
 
             if grid_mode_enabled() then
                 -- Account for the difference in depth
@@ -932,7 +917,7 @@ function lwc.remove_widows(head)
 
     -- See if there is a widow/orphan for us to remove
     if not is_matching_penalty(tex.outputpenalty) then
-        paragraphs = {}
+        reset_state()
         return head
     end
 
@@ -989,8 +974,7 @@ function lwc.remove_widows(head)
         .. pagenum()
     )
 
-    -- Clear paragraphs array at the end of the page
-    paragraphs = {}
+    reset_state()
 
     return head
 end
