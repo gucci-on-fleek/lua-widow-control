@@ -656,8 +656,6 @@ are likely to lead to some unexpected behaviour.
 
 If there are footnotes (or any other type of inline \tex{insert}) present in the moved line, \lwc/ will move both the \q{footnote mark} and the \q{footnote text} such that both are on the same page. However, this may lead to an odd blank space at the bottom of the page since \lwc/ needs to move both the line and its footnotes. Footnotes cause the same page-breaking issues in unmodified Plain~\TeX{} and \LaTeX{}, so this is mostly unavoidable.
 
-Please note that \lwc/ does \bold{not} move footnotes in \ConTeXt{} \mkxl/ due to limitations with the \LuaMetaTeX{} engine.
-
 \section{Stability}
 
 The documented interfaces of \lwc/ can be considered stable: I'm not planning on removing or modifying any existing options or commands in any way that would break documents.
@@ -691,7 +689,7 @@ ultra-short~lines.
 
     \item \Lwc/ only attempts to expand paragraphs; it never attempts to shrink them. See the \emph{TUGboat}~article\cite[article] §15.3 for further discussion. \githubissue{33}
 
-    \item \Lwc/ can only expand paragraphs that fit completely on a page. This is unavoidable due to the one-page-at-a-time model: you can't modify the bottom half of a paragraph since its top half has already shipped out, and you can't expand the top half of a paragraphs since that can't remove orphans. This only causes issues if your document has paragraphs so long that a page only has two half-paragraphs and zero whole paragraphs.
+    \item \Lwc/ can only expand paragraphs that fit completely on a page. This is unavoidable due to the one-page-at-a-time model: you can't modify the bottom half of a paragraph since its top half has already shipped out, and you can't expand the top half of a paragraph since that can't remove orphans. This only causes issues if your document has paragraphs so long that a page only has two half-paragraphs and zero whole paragraphs.
 
     \item Sometimes a \woo/ cannot be eliminated because no paragraph has
     enough stretch. Sometimes this can be remediated by
@@ -712,6 +710,8 @@ ultra-short~lines.
     however, this is both \acronym{NP}-complete\cite[plass] and
     impossible to solve in a single pass. Very rarely would such a
     system remove widows or orphans that \lwc/ cannot.
+
+    \item \Lwc/ does not move footnotes in \ConTeXt{} \mkxl/ due to limitations with the \LuaMetaTeX{} engine. \Lwc/ may also have issues moving footnotes when a single footnote is so long that it spans multiple pages.
 \stopitemize
 
 \section{Contributions}

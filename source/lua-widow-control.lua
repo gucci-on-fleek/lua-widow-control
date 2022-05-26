@@ -742,6 +742,10 @@ local function get_inserts(last_line)
         n = n.next
     end
 
+    if #selected_inserts ~= 0 then
+        info("Moving footnotes on page " .. pagenum())
+    end
+
     return selected_inserts
 end
 
