@@ -1,8 +1,8 @@
 \documentclass{article}
 
 \usepackage[debug=true]{lua-widow-control}
-% \lwcsetup{disable}
 \parskip=0pt
+\advance\footnotesep by 0.2pt
 
 \usepackage{pgffor}
 
