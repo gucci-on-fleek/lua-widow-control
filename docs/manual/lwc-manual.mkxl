@@ -93,7 +93,7 @@ fonts.handlers.otf.addfeature {
 
 % Acronym styling
 \definecharacterkerning[acronymkerning][factor=0.05]
-\definealternativestyle[acronymstyle][{\feature[+][allsmall]\switchtobodyfont[1.1em]\setcharacterkerning[acronymkerning]}][]
+\definealternativestyle[acronymstyle][{\feature[+][allsmall]\switchtobodyfont[1.25em]\setcharacterkerning[acronymkerning]}][]
 \definehighlight[acronym][style=acronymstyle]
 
 \startsetups[commandtable]

@@ -1,0 +1,19 @@
+\documentclass{article}
+
+\usepackage[debug=true]{lua-widow-control}
+% \lwcsetup{disable}
+\parskip=0pt
+
+\usepackage{pgffor}
+
+\begin{document}
+    \foreach \z in {1, ..., 4} {
+        Filler\par
+    }
+
+    \foreach \x in {1, ..., 4} {
+        \foreach \y in {1, ..., 18} {
+            word word word word word\footnote{note}
+        }\par
+    }
+\end{document}

@@ -652,6 +652,12 @@ are likely to lead to some unexpected behaviour.
 
 \Lwc/ is fully compatible with the grid snapping features of \ConTeXt{} \mkiv/ and \mkxl/.
 
+\subsection{Footnotes}
+
+If there are footnotes (or any other type of inline \tex{insert}) present in the moved line, \lwc/ will move both the \q{footnote mark} and the \q{footnote text} such that both are on the same page. However, this may lead to an odd blank space at the bottom of the page since \lwc/ needs to move both the line and its footnotes. Footnotes cause the same page-breaking issues in unmodified Plain~\TeX{} and \LaTeX{}, so this is mostly unavoidable.
+
+Please note that \lwc/ does \bold{not} move footnotes in \ConTeXt{} \mkxl/ due to limitations with the \LuaMetaTeX{} engine.
+
 \section{Stability}
 
 The documented interfaces of \lwc/ can be considered stable: I'm not planning on removing or modifying any existing options or commands in any way that would break documents.
@@ -706,8 +712,6 @@ ultra-short~lines.
     however, this is both \acronym{NP}-complete\cite[plass] and
     impossible to solve in a single pass. Very rarely would such a
     system remove widows or orphans that \lwc/ cannot.
-
-    \item If there is a footnote on the last line of the page with a \woo/, \lwc/ will sometimes move the \q{footnote mark} but not the \q{footnote text}, thus breaking up a footnote. \githubissue{26}
 \stopitemize
 
 \section{Contributions}
