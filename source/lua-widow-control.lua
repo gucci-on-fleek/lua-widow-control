@@ -92,6 +92,7 @@ local penalty_id = id_from_name("penalty")
 
 -- Local versions of globals
 local abs = math.abs
+local copy = node.copy
 local copy_list = node.copy_list or node.copylist
 local find_attribute = node.find_attribute or node.findattribute
 local free = node.free
@@ -116,7 +117,8 @@ local vpack = node.vpack
 local iffalse = token.create("iffalse")
 local iftrue = token.create("iftrue")
 local INFINITY = 10000
-local INSERT_MULTIPLE = 1000
+local INSERT_CLASS_MULTIPLE = 1000 * 1000
+local INSERT_FIRST_MULTIPLE = 1000
 local min_col_width = tex.sp("250pt")
 local PAGE_MULTIPLE = 100
 local SINGLE_LINE = 50
@@ -131,7 +133,6 @@ local contrib_head,
       emergencystretch,
       info,
       insert_attribute,
-      insert_name,
       max_cost,
       pagenum,
       paragraph_attribute,
@@ -143,11 +144,9 @@ if lmtx then
     debug("LMTX")
     contrib_head = "contributehead"
     stretch_order = "stretchorder"
-    insert_name = "insert"
 else
     contrib_head = "contrib_head"
     stretch_order = "stretch_order"
-    insert_name = "ins"
 end
 
 if context then
@@ -219,8 +218,7 @@ end
      passing this data around would be even worse.
   ]]
 local paragraphs = {}
-
-local insert_count = 1
+local inserts = {}
 
 --[[
     Function definitions
@@ -458,6 +456,10 @@ function lwc.mark_paragraphs(head)
         local top_para = next_of_type(head, hlist_id, { subtype = line_subid })
         local bottom_para = last(head)
 
+        while bottom_para.id == insert_id do
+            bottom_para = bottom_para.prev
+        end
+
         if top_para ~= bottom_para then
             set_attribute(
                 top_para,
@@ -483,16 +485,42 @@ function lwc.mark_paragraphs(head)
     --[[ We need to tag the first element of the hlist before the any insert nodes
          since the insert nodes are removed before `pre_output_filter` gets called.
       ]]
+    local insert_indices = {}
     for insert in traverse_id(insert_id, head) do
-        local hlist_before = next_of_type(insert, hlist_id, { reverse = true} )
-        set_attribute(
-            hlist_before.list,
-            insert_attribute,
-            insert_count + (insert.subtype * INSERT_MULTIPLE)
-        )
-        set_attribute(insert.list, insert_attribute, insert_count)
+        -- Save the found insert nodes for later
+        inserts[#inserts+1] = copy(insert)
 
-        insert_count = insert_count + 1
+        -- Tag the insert's content so that we can find it later
+        set_attribute(insert.list, insert_attribute, #inserts)
+
+        --[[ Each hlist/line can have multiple inserts, but so we can't just tag
+             the hlist as we go. Instead, we need save up all of their indices,
+             then tag the hlist with the first and last indices.
+          ]]
+        insert_indices[#insert_indices+1] = #inserts
+
+        if not insert.next or
+           insert.next.id ~= insert_id
+        then
+            local hlist_before = next_of_type(insert, hlist_id, { reverse = true} )
+
+            --[[ We tag the first element of the hlist/line with an integer
+                 that holds the insert class and the first and last indices
+                 of the inserts contained in the line. This won't work if
+                 the line has multiple classes of inserts, but I don't think
+                 that happens in real-world documents.
+              ]]
+            set_attribute(
+                hlist_before.list,
+                insert_attribute,
+                insert.subtype    * INSERT_CLASS_MULTIPLE +
+                insert_indices[1] * INSERT_FIRST_MULTIPLE +
+                insert_indices[#insert_indices]
+            )
+
+            -- Clear the indices to prepare for the next line
+            insert_indices = {}
+        end
     end
 
     return head
@@ -665,12 +693,12 @@ end
 --- @param last_line node The moved last line
 --- @return table<node> inserts A list of the present inserts
 local function get_inserts(last_line)
-    local inserts = {}
+    local selected_inserts = {}
 
     local n = last_line.list
     while n do -- Iterate through the last line
-        local value
-        value, n = find_attribute(n, insert_attribute)
+        local line_value
+        line_value, n = find_attribute(n, insert_attribute)
 
         if not n then
             break
@@ -685,27 +713,29 @@ local function get_inserts(last_line)
             return {}
         end
 
-        local class = value // INSERT_MULTIPLE
-        local index = value % INSERT_MULTIPLE
+        -- Demux the insert values
+        local class = line_value // INSERT_CLASS_MULTIPLE
+        local first_index = (line_value % INSERT_CLASS_MULTIPLE) // INSERT_FIRST_MULTIPLE
+        local last_index = line_value % INSERT_FIRST_MULTIPLE
+
+        -- Get the output box containing the insert boxes
         local insert_box = tex_box[class]
 
         local m = insert_box.list
         while m do -- Iterate through the insert box
-            local inner_value
-            inner_value, m = find_attribute(m, insert_attribute)
+            local box_value
+            box_value, m = find_attribute(m, insert_attribute)
 
             if not m then
                 break
             end
 
-            if inner_value == index then
+            if box_value >= first_index and
+               box_value <= last_index
+            then
+                -- Remove the respective contents from the insert box
                 insert_box.list = node.remove(insert_box.list, m)
-
-                local new_insert = new_node(insert_name)
-                new_insert.list = m
-                new_insert.subtype = class
-
-                inserts[#inserts + 1] = new_insert
+                selected_inserts[#selected_inserts + 1] = inserts[box_value]
             end
 
             m = m.next
@@ -718,11 +748,15 @@ local function get_inserts(last_line)
         n = n.next
     end
 
-    if #inserts > 0 then
+    --[[ We issue a warning here if we move any inserts since this can often
+         leave a blank space at the bottom of the page. This is unavoidable,
+         although you can have the same problem in (Plain/La) (Knuth/e/pdf) TeX.
+      ]]
+    if #selected_inserts > 0 then
         warning("Moving footnotes on page " .. pagenum())
     end
 
-    return inserts
+    return selected_inserts
 end
 
 
@@ -740,8 +774,8 @@ local function move_last_line(head)
     debug("remove_widows", "moving last line")
 
     -- Here we check to see if the widow/orphan was preceded by a large penalty
-    n = last(head).prev
     local big_penalty_found, last_line, hlist_head
+    local n = last(head).prev
     while n do
         if n.id == glue_id then
             -- Ignore any glue nodes
@@ -783,16 +817,20 @@ local function move_last_line(head)
     end
 
     last_line = copy_list(n)
+
+    -- Reinsert any inserts originally present in this moved line
+    local selected_inserts = get_inserts(last_line)
+    for _, insert in ipairs(selected_inserts) do
+        last(last_line).next = insert
+    end
+
+    -- Add back in the content from the next page
     last(last_line).next = copy_list(tex_lists[contrib_head])
 
     n.prev.prev.next = nil
 
-    local inserts = get_inserts(last_line)
-    for _, insert in ipairs(inserts) do
-        last(last_line).next = insert
-    end
-
-    -- Move the last line to the next page
+    -- Set the content of the next page
+    last(last_line)
     tex_lists[contrib_head] = last_line
 
     return true
