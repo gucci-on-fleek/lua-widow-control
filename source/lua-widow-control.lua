@@ -102,7 +102,6 @@ local insert_token = token.put_next or token.putnext
 local last = node.slide
 local linebreak = tex.linebreak
 local new_node = node.new
-local node_id = node.is_node or node.isnode
 local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
 local tex_box = tex.box
@@ -380,7 +379,8 @@ end
 --- @return node
 function lwc.save_paragraphs(head)
     if (head.id ~= par_id and context) or -- Ensure that we were actually given a par
-        status.output_active -- Don't run during the output routine
+        status.output_active or -- Don't run during the output routine
+        tex.nest.ptr > 1 -- Don't run inside boxes
     then
         return head
     end
@@ -498,6 +498,10 @@ local function mark_inserts(head)
 
         -- Tag the insert's content so that we can find it later
         set_attribute(insert.list, insert_attribute, #inserts)
+
+        for n in traverse(insert.list.next) do
+            set_attribute(n, insert_attribute, -1 * #inserts)
+        end
 
         --[[ Each hlist/line can have multiple inserts, but so we can't just tag
              the hlist as we go. Instead, we need save up all of their indices,
@@ -724,12 +728,15 @@ local function get_inserts(last_line)
                 break
             end
 
-            if box_value >= first_index and
-               box_value <= last_index
+            if abs(box_value) >= first_index and
+               abs(box_value) <= last_index
             then
                 -- Remove the respective contents from the insert box
                 insert_box.list = node.remove(insert_box.list, m)
-                selected_inserts[#selected_inserts + 1] = copy(inserts[box_value])
+
+                if box_value > 0 then
+                    selected_inserts[#selected_inserts + 1] = copy(inserts[box_value])
+                end
             end
 
             m = m.next

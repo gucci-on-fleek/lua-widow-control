@@ -1,19 +1,41 @@
 \documentclass{article}
 
-\usepackage[debug=true]{lua-widow-control}
+\def\lowercontent{
+    one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty
+}
+
+\def\mixedcontent{
+    One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen Twenty
+}
+
+\def\uppercontent{
+    ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE THIRTEEN FOURTEEN FIFTEEN SIXTEEN SEVENTEEN EIGHTEEN NINETEEN TWENTY
+}
+
+\def\completecontent{
+    \lowercontent \mixedcontent \uppercontent
+}
+
+
+\usepackage[paperwidth=140mm,paperheight=213mm]{geometry}
 \parskip=0pt
-\advance\footnotesep by 0.2pt
+
+\usepackage[debug=true]{lua-widow-control}
 
 \usepackage{pgffor}
 
 \begin{document}
-    \foreach \z in {1, ..., 4} {
-        Filler\par
-    }
+    Filler
 
-    \foreach \x in {1, ..., 4} {
-        \foreach \y in {1, ..., 18} {
-            word word word word word\footnote{note}
-        }\par
+    \foreach \x in {1, ..., 6} {
+        Word
+        \foreach \y in {1, ..., 48} {
+            word
+        }%
+        \unskip\footnote{\completecontent}
+        \foreach \y in {1, ..., 11} {
+            word
+        }%
+        \unskip.\par
     }
 \end{document}
