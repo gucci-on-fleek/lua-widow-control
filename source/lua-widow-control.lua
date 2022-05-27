@@ -845,6 +845,9 @@ local function replace_paragraph(head, paragraph_index)
     local target_node = paragraphs[paragraph_index].node
     local free_next_nodes = false
 
+    local start_found = false
+    local end_found = false
+
     -- Loop through all of the nodes on the page with the lwc attribute
     local n = head
     while n do
@@ -862,6 +865,7 @@ local function replace_paragraph(head, paragraph_index)
            value == paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug("remove_widows", "replacement start")
+            start_found = true
 
             -- Fix the `\\baselineskip` glue between paragraphs
             height_difference = (
@@ -888,6 +892,8 @@ local function replace_paragraph(head, paragraph_index)
            value ==       paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
         then
             debug("remove_widows", "replacement end")
+            end_found = true
+
             local target_node_last = last(target_node)
 
             if grid_mode_enabled() then
@@ -909,6 +915,10 @@ local function replace_paragraph(head, paragraph_index)
         else
             n = n.next
         end
+    end
+
+    if not (start_found and end_found) then
+        warning("Paragraph NOT expanded on page " .. pagenum())
     end
 end
 
