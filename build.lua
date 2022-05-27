@@ -32,7 +32,7 @@ function update_tag(name, content, version, date)
         date .. "%2%%%%dashdate"
     ):gsub(
         "(%d%d%d%d/%d%d/%d%d)([^\n]*)%%%%slashdate",
-        date:gsub("-", "/") .. "%2%%%%dashdate"
+        date:gsub("-", "/") .. "%2%%%%slashdate"
     )
 
     return content

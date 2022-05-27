@@ -184,7 +184,7 @@ elseif plain or latex or optex then
         debug("Plain/LaTeX")
         luatexbase.provides_module {
             name = lwc.name,
-            date = "2022/05/14", --%%dashdate
+            date = "2022/05/26", --%%slashdate
             version = "2.1.2", --%%version
             description = [[
 
