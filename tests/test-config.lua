@@ -25,4 +25,6 @@ test_types = {
     },
 }
 
-test_order = { "pdftotext" }
+test_order = { "pdftotext", "log" }
+
+require "l3build-variables.lua"

@@ -219,8 +219,7 @@ end
 local paragraphs = {}
 local inserts = {}
 
---[[
-    Function definitions
+--[[ Function definitions
   ]]
 
 --- Gets the current paragraph and page locations
@@ -268,6 +267,7 @@ end
 
 
 --- Checks if the ConTeXt "grid snapping" is active
+---
 --- @return boolean
 local function grid_mode_enabled()
     -- Compare the token "mode" to see if `\\ifgridsnapping` is `\\iftrue`
@@ -414,11 +414,15 @@ function lwc.save_paragraphs(head)
     if long_info.prevgraf == natural_info.prevgraf + 1 and
        long_cost > 10 -- Any paragraph that is "free" to expand is suspicious
     then
+        local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
+
         table.insert(paragraphs, {
             cost = long_cost,
-            node = next_of_type(long_node, hlist_id, { subtype = line_subid })
+            node = copy_list(saved_node)
         })
     end
+
+    free_list(long_node)
 
     -- Print some debugging information
     get_chars(head)
@@ -452,21 +456,21 @@ local function mark_paragraphs(head)
     -- Tag the paragraphs
     if not status.output_active then -- Don't run during the output routine
         -- Get the start and end of the paragraph
-        local top_para = next_of_type(head, hlist_id, { subtype = line_subid })
-        local bottom_para = last(head)
+        local top = next_of_type(head, hlist_id, { subtype = line_subid })
+        local bottom = last(head)
 
-        while bottom_para.id == insert_id do
-            bottom_para = bottom_para.prev
+        while bottom.id == insert_id do
+            bottom = bottom.prev
         end
 
-        if top_para ~= bottom_para then
+        if top ~= bottom then
             set_attribute(
-                top_para,
+                top,
                 paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum())
             )
             set_attribute(
-                bottom_para,
+                bottom,
                 paragraph_attribute,
                 -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum()))
             )
@@ -474,7 +478,7 @@ local function mark_paragraphs(head)
             -- We need a special tag for a 1-line paragraph since the node can only
             -- have a single attribute value
             set_attribute(
-                top_para,
+                top,
                 paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
             )
@@ -582,12 +586,14 @@ end
 ---
 --- @return nil
 local function reset_state()
+    for _, paragraph in ipairs(paragraphs) do
+        free_list(paragraph.node)
+    end
     paragraphs = {}
 
     for _, insert in ipairs(inserts) do
         free(insert)
     end
-
     inserts = {}
 end
 
@@ -653,21 +659,13 @@ local function best_paragraph(head)
     local best_index = 1
     local best_cost = paragraphs[best_index].cost
 
-    -- We find the current "best" replacement, then free the unused ones
+    -- We find the current "best" replacement
     for index, paragraph in pairs(paragraphs) do
         if paragraph.cost < best_cost and
            index <  last_paragraph_index and
            index >= first_paragraph_index
         then
-            -- Free the old best paragraph
-            free_list(paragraphs[best_index].node)
-            paragraphs[best_index].node = nil
-            -- Set the new best paragraph
             best_index, best_cost = index, paragraph.cost
-        elseif index > 1 then
-            -- Not sure why `i > 1` is required?
-            free_list(paragraph.node)
-            paragraph.node = nil
         end
     end
 
@@ -737,9 +735,11 @@ local function get_inserts(last_line)
                 if box_value > 0 then
                     selected_inserts[#selected_inserts + 1] = copy(inserts[box_value])
                 end
-            end
 
-            m = m.next
+                m = free(m)
+            else
+                m = m.next
+            end
         end
 
         if not insert_box.list then
@@ -824,10 +824,11 @@ local function move_last_line(head)
     -- Add back in the content from the next page
     last(last_line).next = copy_list(tex_lists[contrib_head])
 
+    free_list(n.prev.prev.next)
     n.prev.prev.next = nil
 
     -- Set the content of the next page
-    last(last_line)
+    free_list(tex_lists[contrib_head])
     tex_lists[contrib_head] = last_line
 
     return true
@@ -842,11 +843,11 @@ end
 --- @param head node
 --- @param paragraph_index number
 local function replace_paragraph(head, paragraph_index)
-    local target_node = paragraphs[paragraph_index].node
-    local free_next_nodes = false
+    local target_node = copy_list(paragraphs[paragraph_index].node)
 
     local start_found = false
     local end_found = false
+    local free_nodes_begin
 
     -- Loop through all of the nodes on the page with the lwc attribute
     local n = head
@@ -884,7 +885,7 @@ local function replace_paragraph(head, paragraph_index)
             end
 
             n.prev.next = target_node
-            free_next_nodes = true
+            free_nodes_begin = n
         end
 
         -- Insert the end of the replacement paragraph
@@ -907,17 +908,17 @@ local function replace_paragraph(head, paragraph_index)
                 target_node_last.next = n.next
             end
 
+            n.next = nil
+
             break
         end
 
-        if free_next_nodes then
-            n = free(n)
-        else
-            n = n.next
-        end
+        n = n.next
     end
 
-    if not (start_found and end_found) then
+    if start_found and end_found then
+        free_list(free_nodes_begin)
+    else
         warning("Paragraph NOT expanded on page " .. pagenum())
     end
 end
@@ -952,7 +953,10 @@ function lwc.remove_widows(head)
 
     -- Check the original height of \\box255
     local vsize = tex_dimen.vsize
-    local orig_height_diff = vpack(head).height - vsize
+    local orig_vpack = vpack(head)
+    local orig_height_diff = orig_vpack.height - vsize
+    orig_vpack.list = nil
+    free(orig_vpack)
 
     -- Find the paragraph to expand
     local paragraph_index = best_paragraph(head)
@@ -975,13 +979,19 @@ function lwc.remove_widows(head)
          over/underfull box warnings, so we correct any discrepancies
          here.
       ]]
-    local new_height_diff = vpack(head).height - vsize
+    local new_vpack = vpack(head)
+    local new_height_diff = new_vpack.height - vsize
+    new_vpack.list = nil
+    free(new_vpack)
     -- We need the original height discrepancy in case there are \\vfill's
     local net_height_diff = orig_height_diff - new_height_diff
+    local bls = tex.skip.baselineskip
+    local bls_width = bls.width
+    free(bls)
 
     if abs(net_height_diff) > 0 and
        -- A difference larger than 0.25\\baselineskip is probably not from \lwc/
-       abs(net_height_diff) < tex.skip.baselineskip.width / 4
+       abs(net_height_diff) < bls_width / 4
     then
         local bottom_glue = new_node("glue")
         bottom_glue.width = net_height_diff
