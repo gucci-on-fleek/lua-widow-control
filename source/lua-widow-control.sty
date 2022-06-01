@@ -116,7 +116,11 @@
 }
 
 % Load the Lua code
-\lua_now:n { require "lua-widow-control" }
+\cs_if_exist:NTF \lua_load_module:n {
+    \lua_load_module:n { lua-widow-control }
+} {
+    \lua_now:n { require "lua-widow-control" }
+}
 
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
