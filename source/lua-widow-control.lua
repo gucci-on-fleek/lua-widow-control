@@ -411,16 +411,19 @@ function lwc.save_paragraphs(head)
 
     local long_cost = lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
 
-    if long_info.prevgraf == natural_info.prevgraf + 1 and
-       long_cost > 10 -- Any paragraph that is "free" to expand is suspicious
+    if long_info.prevgraf ~= natural_info.prevgraf + 1 or
+       long_cost < 10 -- Any paragraph that is "free" to expand is suspicious
     then
-        local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
-
-        table.insert(paragraphs, {
-            cost = long_cost,
-            node = copy_list(saved_node)
-        })
+        -- This paragraph is infinitely bad
+        long_cost = math.maxinteger
     end
+
+    local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
+
+    table.insert(paragraphs, {
+        cost = long_cost,
+        node = copy_list(saved_node)
+    })
 
     free_list(long_node)
 
@@ -631,17 +634,23 @@ local function first_last_paragraphs(head)
 
     -- Find the first paragraph on the page, from the top
     local first_val, first_head = find_attribute(head, paragraph_attribute)
-    if first_val // PAGE_MULTIPLE == pagenum() - 1 then
+    while abs(first_val) // PAGE_MULTIPLE == pagenum() - 1 do
         --[[ If the first complete paragraph on the page was initially broken on the
              previous page, then we can't expand it here so we need to skip it.
           ]]
-        first_index = find_attribute(
+        first_val, first_head = find_attribute(
             first_head.next,
             paragraph_attribute
-        ) % PAGE_MULTIPLE
-    else
-        first_index = first_val % PAGE_MULTIPLE
+        )
     end
+
+    first_index = first_val % PAGE_MULTIPLE
+
+    if first_index >= SINGLE_LINE then
+        first_index = first_index - SINGLE_LINE
+    end
+
+    debug("first/last", first_index .. "/" .. last_index)
 
     return first_index, last_index
 end
@@ -675,7 +684,8 @@ local function best_paragraph(head)
     )
 
     if best_cost  >  tex_count[max_cost] or
-       best_index == last_paragraph_index
+       best_index == last_paragraph_index or
+       best_cost  == math.maxinteger
     then
         return nil
     else
@@ -947,6 +957,7 @@ function lwc.remove_widows(head)
 
     -- Nothing that we can do if there aren't any paragraphs available to expand
     if #paragraphs == 0 then
+        debug("failure", "no paragraphs to expand")
         remove_widows_fail()
         return head
     end
@@ -962,12 +973,14 @@ function lwc.remove_widows(head)
     local paragraph_index = best_paragraph(head)
 
     if not paragraph_index then
+        debug("failure", "no good paragraph")
         remove_widows_fail()
         return head
     end
 
     -- Move the last line of the page to the next page
     if not move_last_line(head) then
+        debug("failure", "can't move last line")
         remove_widows_fail()
         return head
     end
