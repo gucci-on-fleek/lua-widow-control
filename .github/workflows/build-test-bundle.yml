@@ -53,10 +53,13 @@ jobs:
             latex-bin-dev
             context
             l3build
-            blindtext
             beebe
+            blindtext
+            hyperxmp
+            ifmtarg
             kantlipsum
             linebreaker
+            luacode
             luatexbase
             optex
             path

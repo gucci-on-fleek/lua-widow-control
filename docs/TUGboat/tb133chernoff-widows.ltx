@@ -13,6 +13,7 @@
 %     journal={TUGboat},
 %     volume={43},
 %     number={1},
+%     pages={28--39},
 %     year={2022},
 %     month=may,
 %     DOI={10.47397/tb/43-1/tb133chernoff-widows},
@@ -156,8 +157,25 @@
     }}%
 }
 
-\let\nameref=\undefined % latex3/hyperref#234
 \usepackage[hidelinks,pdfa]{hyperref}
+
+\usepackage{hyperxmp}
+\hypersetup{
+    pdfdisplaydoctitle=true,
+    pdftitle={Automatically removing widows and orphans with lua-widow-control},
+    pdfauthor={Max Chernoff},
+    pdflang={en},
+    pdfcontacturl={https://github.com/gucci-on-fleek/lua-widow-control},
+    pdfcopyright={SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+},
+    pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0/},
+    pdfdoi={10.47397/tb/43-1/tb133chernoff-widows},
+    pdfpublication={TUGboat},
+    pdfpubtype={journal},
+    pdfvolumenum={43},
+    pdfissuenum={1},
+    pdfpagerange={28-39},
+    pdfdate={2022-05}
+}
 
 \begin{document}
     \maketitle
