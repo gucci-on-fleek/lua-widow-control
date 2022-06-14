@@ -118,9 +118,16 @@ local iftrue = token.create("iftrue")
 local INFINITY = 10000
 local INSERT_CLASS_MULTIPLE = 1000 * 1000
 local INSERT_FIRST_MULTIPLE = 1000
+local llap_offset = math.max(tex.dimen.parindent, tex.sp("12pt"))
 local min_col_width = tex.sp("250pt")
 local PAGE_MULTIPLE = 100
 local SINGLE_LINE = 50
+
+local colours = {
+    expanded = {0.00, 0.70, 0.25},
+    failure  = {0.90, 0.00, 0.25},
+    moved    = {0.25, 0.25, 1.00},
+}
 
 --[[ Package/module initialization.
 
@@ -135,6 +142,7 @@ local contrib_head,
       max_cost,
       pagenum,
       paragraph_attribute,
+      shrink_order,
       stretch_order,
       warning
 
@@ -142,9 +150,11 @@ if lmtx then
     -- LMTX has removed underscores from most of the Lua parts
     debug("LMTX")
     contrib_head = "contributehead"
+    shrink_order = "shrinkorder"
     stretch_order = "stretchorder"
 else
     contrib_head = "contrib_head"
+    shrink_order = "shrink_order"
     stretch_order = "stretch_order"
 end
 
@@ -371,6 +381,93 @@ local function natural_paragraph(head)
 end
 
 
+lwc.draft_mode = false
+--- Changes the text colour in a node list if draft mode is active
+---
+--- @param head node The first node to colour
+--- @param colour table<number> A 3-tuple of RGB values
+--- @return node head The coloured node
+local function colour_list(head, colour)
+    if not lwc.draft_mode then
+        return head
+    end
+
+    -- Adapted from https://tex.stackexchange.com/a/372437
+    -- \\pdfextension colorstack is ignored in LMTX
+    local start_colour = new_node("whatsit", "pdf_colorstack")
+    start_colour.stack = 0
+    start_colour.command = 1
+    start_colour.data = string.format("%.2f %.2f %.2f rg", table.unpack(colour))
+
+    local end_colour = new_node("whatsit", "pdf_colorstack")
+    end_colour.stack = 0
+    end_colour.command = 2
+
+    start_colour.next = head
+    last(head).next = end_colour
+
+    return start_colour
+end
+
+
+--- Generate an \\llap'ed box containing the provided string
+---
+--- @param str string The string to typeset
+--- @return node head The box node
+local function llap_string(str)
+    local current_font = font.current()
+
+    local first = new_node("glue")
+    first.width = llap_offset
+
+    local m = first
+    for letter in str:gmatch(".")  do
+        local n = new_node("glyph")
+        n.font = current_font
+        n.char = string.byte(letter)
+
+        m.next = n
+        m = n
+    end
+
+    local hss = new_node("glue")
+    hss.stretch = 1
+    hss[stretch_order] = 1
+    hss.shrink = 1
+    hss[shrink_order] = 1
+    m.next = hss
+
+    return node.hpack(first, 0, "exactly")
+end
+
+
+--- Typesets the cost of a paragraph beside it in draft mode
+---
+--- @param paragraph node
+--- @param cost number
+--- @return nil
+local function show_cost(paragraph, cost)
+    if not lwc.draft_mode then
+        return
+    end
+
+    local last_hlist_end = last(next_of_type(
+        last(paragraph),
+        hlist_id,
+        { subtype = line_subid, reverse = true }
+    ).list)
+
+    local cost_str
+    if cost < math.maxinteger then
+        cost_str = string.format("%.0f", cost)
+    else
+        cost_str = "infinite"
+    end
+
+    last_hlist_end.next = llap_string(cost_str)
+end
+
+
 --- Saves each paragraph, but lengthened by 1 line
 ---
 --- Called by the `pre_linebreak_filter` callback
@@ -419,6 +516,11 @@ function lwc.save_paragraphs(head)
     end
 
     local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
+
+    show_cost(saved_node, long_cost)
+    for n in traverse_id(hlist_id, saved_node) do
+        n.list = colour_list(n.list, colours.expanded)
+    end
 
     table.insert(paragraphs, {
         cost = long_cost,
@@ -485,6 +587,10 @@ local function mark_paragraphs(head)
                 paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
             )
+        end
+
+        if #paragraphs > 0 then
+            show_cost(head, paragraphs[#paragraphs].cost)
         end
     end
 end
@@ -606,6 +712,25 @@ end
 --- @return nil
 local function remove_widows_fail()
     warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
+
+    local last_line = next_of_type(
+        last(tex_lists.page_head),
+        hlist_id,
+        { subtype = line_subid, reverse = true }
+    )
+    if last_line then
+        last_line.list = colour_list(last_line.list, colours.failure)
+    end
+
+    local next_first_line = next_of_type(
+        tex_lists[contrib_head],
+        hlist_id,
+        { subtype = line_subid }
+    )
+    if next_first_line then
+        next_first_line.list = colour_list(next_first_line.list, colours.failure)
+    end
+
     reset_state()
 end
 
@@ -821,9 +946,18 @@ local function move_last_line(head)
        is_matching_penalty(potential_penalty.penalty)
     then
         warning("Making a new widow/orphan/broken hyphen on page " .. pagenum())
+
+        local second_last_line = next_of_type(
+            potential_penalty,
+            hlist_id,
+            { subtype = line_subid, reverse = true }
+        )
+        second_last_line.list = colour_list(second_last_line.list, colours.failure)
     end
 
     last_line = copy_list(n)
+
+    last_line.list = colour_list(last_line.list, colours.moved)
 
     -- Reinsert any inserts originally present in this moved line
     local selected_inserts = get_inserts(last_line)
@@ -1234,6 +1368,13 @@ register_tex_cmd(
     "debug",
     function(str)
         lwc.debug = str ~= "0" and str ~= "false" and str ~= "stop"
+    end,
+    { "string" }
+)
+register_tex_cmd(
+    "draft",
+    function(str)
+        lwc.draft_mode = str ~= "0" and str ~= "false" and str ~= "stop"
     end,
     { "string" }
 )

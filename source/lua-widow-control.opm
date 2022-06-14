@@ -72,6 +72,7 @@
 \_let\lwcdisable=\.disable
 \_let\lwcdisablecmd=\.disable_cmd
 \_let\lwcdebug=\.debug
+\_let\lwcdraft=\.draft
 \_let\iflwc=\.if_enabled
 \_let\lwcnobreak=\.nobreak
 

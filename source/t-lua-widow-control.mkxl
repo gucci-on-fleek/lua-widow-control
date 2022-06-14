@@ -28,6 +28,8 @@
 
     \lwc_debug{\lwcparameter{debug}}
 
+    \lwc_draft{\lwcparameter{draft}}
+
     \lwc_nobreak{\lwcparameter{nobreak}}
 
     \lwc_max_cost=\lwcparameter{maxcost}
@@ -61,6 +63,7 @@
     emergencystretch=3em,
     \c!state=\v!start,
     debug=\v!stop,
+    draft=\v!stop,
     orphanpenalty=1,
     widowpenalty=1,
     brokenpenalty=1,

@@ -224,8 +224,16 @@
     disable .value_forbidden:n = true,
 
     debug .choice:,
-    debug / true  .code:n = \__lwc_debug:n { true  },
-    debug / false .code:n = \__lwc_debug:n { false },
+    debug / true  .code:n     = \__lwc_debug:n { true  },
+    debug / false .code:n     = \__lwc_debug:n { false },
+    debug .default:n          = true,
+    debug .value_required:n   = false,
+
+    draft .choice:,
+    draft / true  .code:n     = \__lwc_draft:n { true  },
+    draft / false .code:n     = \__lwc_draft:n { false },
+    draft .default:n          = true,
+    draft .value_required:n   = false,
 
     nobreak .code:n           = \__lwc_nobreak:n { #1 },
     nobreak .value_required:n = true,
