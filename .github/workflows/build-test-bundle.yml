@@ -77,6 +77,13 @@ jobs:
               chmod +x ./install.sh
           fi
 
+              cd ~
+              wget "https://github.com/Witiko/markdown/releases/download/2.13.0/markdown.zip"
+              unzip markdown.zip
+              mkdir -p ~/lmtx/tex/texmf-modules
+              unzip markdown.tds.zip -d ~/lmtx/tex/texmf-modules
+          #fi
+
           cd ~/lmtx
           ./install.sh
 
