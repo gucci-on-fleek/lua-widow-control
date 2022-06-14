@@ -27,4 +27,6 @@ test_types = {
 
 test_order = { "pdftotext", "log" }
 
-require "l3build-variables.lua"
+if options.target == "check" then
+    require "l3build-variables.lua"
+end
