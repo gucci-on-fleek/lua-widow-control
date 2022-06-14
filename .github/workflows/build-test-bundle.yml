@@ -75,6 +75,12 @@ jobs:
               unzip context-linux-64.zip
               rm context-linux-64.zip
               chmod +x ./install.sh
+
+              cd ~
+              wget "https://github.com/Witiko/markdown/releases/download/2.13.0/markdown.zip"
+              unzip markdown.zip
+              mkdir -p ~/lmtx/tex/texmf-modules
+              unzip markdown.tds.zip -d ~/lmtx/tex/texmf-modules
           fi
 
           cd ~/lmtx

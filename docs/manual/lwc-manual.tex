@@ -43,6 +43,24 @@
 \definecolor[failure] [r=0.90, g=0.00, b=0.25]
 \definecolor[moved]   [r=0.25, g=0.25, b=1.00]
 
+\usemodule[markdown]
+\define[4]\markdownRendererLinkPrototype{\goto{#1}[url(#3)]}
+\def\markdownOptionHtml{true}
+\def\markdownOptionShiftHeadings{1}
+\startluacode
+    interfaces.implement {
+        name = "markdownRendererHeadingThreePrototype",
+        public = true,
+        arguments = { "string" },
+        actions = function (str)
+            context.subsection {
+                title = str,
+                list = str:match "v%d+%.%d+%.%d+"
+            }
+        end
+    }
+\stopluacode
+
 \startdocument[
     title=lua-widow-control,
     author=Max Chernoff,
@@ -749,6 +767,16 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
 \placelistofpublications
 
 \page
+
+\setuphead[subsection][
+    alternative=normal,
+    style=\ssitb,
+    after={\blank[disable, penalty:10000]}
+]
+\markdownInput{../../CHANGELOG.md}
+
+\page
+
 \setuplayout[
     width=middle,
     backspace=1in,
@@ -765,8 +793,6 @@ If want to offer any improvements to the code below, please open an issue or a \
 \usemodule[scite]
 \setupbodyfont[10pt]
 \setuphead[subsection][
-    alternative=normal,
-    style=\ssita,
     page=yes,
     continue=yes,
 ]
