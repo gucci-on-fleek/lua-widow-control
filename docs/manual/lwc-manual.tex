@@ -539,6 +539,8 @@ You can use the draft mode to visualize how \lwc/ processes pages. Any \color[fa
     \NC\NR
 \stopTABLE
 
+Advanced users may also customize the colours used by modifying the \inlineLUA{lwc.colours} table. The table keys are currently \type{expanded}, \type{failure}, and \type{moved}. The table values are \acronym{RGB} 3-tuples, where each element is a float between zero and one.
+
 \subsection{Debug Mode}
 
 \Lwc/ offers a \q{debug} mode that prints extra information in the log files. This may be helpful to understand how \lwc/ is processing paragraphs and pages, although the information is likely inscrutable unless you are the package's author. If you are reporting an issue with \lwc/ make sure to compile your document with debug mode enabled!
@@ -750,6 +752,8 @@ ultra-short~lines.
     system remove widows or orphans that \lwc/ cannot.
 
     \item \Lwc/ does not move footnotes in \mkxl/ due to limitations with the \LuaMetaTeX{} engine.
+
+    \item Draft mode does not colour any text in \mkxl/. Draft mode will not colour the first line of a page in \mkiv/ and \OpTeX{}.
 \stopitemize
 
 \section{Contributions}

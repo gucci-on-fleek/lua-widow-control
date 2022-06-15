@@ -123,7 +123,7 @@ local min_col_width = tex.sp("250pt")
 local PAGE_MULTIPLE = 100
 local SINGLE_LINE = 50
 
-local colours = {
+lwc.colours = {
     expanded = {0.00, 0.70, 0.25},
     failure  = {0.90, 0.00, 0.25},
     moved    = {0.25, 0.25, 1.00},
@@ -534,7 +534,7 @@ function lwc.save_paragraphs(head)
 
     show_cost(saved_node, long_cost)
     for n in traverse_id(hlist_id, saved_node) do
-        n.list = colour_list(n.list, colours.expanded)
+        n.list = colour_list(n.list, lwc.colours.expanded)
     end
 
     table.insert(paragraphs, {
@@ -734,7 +734,7 @@ local function remove_widows_fail()
         { subtype = line_subid, reverse = true }
     )
     if last_line then
-        last_line.list = colour_list(last_line.list, colours.failure)
+        last_line.list = colour_list(last_line.list, lwc.colours.failure)
     end
 
     local next_first_line = next_of_type(
@@ -743,7 +743,7 @@ local function remove_widows_fail()
         { subtype = line_subid }
     )
     if next_first_line then
-        next_first_line.list = colour_list(next_first_line.list, colours.failure)
+        next_first_line.list = colour_list(next_first_line.list, lwc.colours.failure)
     end
 
     reset_state()
@@ -967,12 +967,12 @@ local function move_last_line(head)
             hlist_id,
             { subtype = line_subid, reverse = true }
         )
-        second_last_line.list = colour_list(second_last_line.list, colours.failure)
+        second_last_line.list = colour_list(second_last_line.list, lwc.colours.failure)
     end
 
     last_line = copy_list(n)
 
-    last_line.list = colour_list(last_line.list, colours.moved)
+    last_line.list = colour_list(last_line.list, lwc.colours.moved)
 
     -- Reinsert any inserts originally present in this moved line
     local selected_inserts = get_inserts(last_line)
