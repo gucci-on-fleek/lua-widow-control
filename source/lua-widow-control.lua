@@ -221,6 +221,23 @@ else -- This shouldn't ever happen
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
+--[[ Select the fonts
+
+     We want to use cmr7 for the draft mode cost displays, and the easiest
+     way to do so is to just hardcode the font id's. This relies on some
+     implementation details; however, it is very unlikely to ever be an issue
+  ]]
+local SMALL_FONT
+if plain then
+    SMALL_FONT = 4
+elseif latex then
+    SMALL_FONT = 7
+elseif optex then
+    SMALL_FONT = 7
+elseif context then
+    SMALL_FONT = 3
+end
+
 --[[ Table to hold the alternate paragraph versions.
 
      This is global(ish) mutable state, which isn't ideal, but any other way of
@@ -415,15 +432,13 @@ end
 --- @param str string The string to typeset
 --- @return node head The box node
 local function llap_string(str)
-    local current_font = font.current()
-
     local first = new_node("glue")
     first.width = llap_offset
 
     local m = first
     for letter in str:gmatch(".")  do
         local n = new_node("glyph")
-        n.font = current_font
+        n.font = SMALL_FONT
         n.char = string.byte(letter)
 
         m.next = n

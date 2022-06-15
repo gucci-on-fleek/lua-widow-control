@@ -1,0 +1,24 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\input lua-widow-control
+
+% Emulate standard LaTeX settings for ease of testing
+\hsize=345pt
+\hoffset=62pt
+\vsize=550pt
+\voffset=56pt
+
+\def\pagebreakcommand{\vfill\eject}
+\def\texcsname#1{{\tt\char`\\#1}}
+\def\emph#1{{\it#1}}
+\def\quotation#1{``#1''}
+\def\printlocation#1{\write16{===#1:\the\count0===}}
+
+\lwcdraft1
+
+\input basic
+
+\bye
