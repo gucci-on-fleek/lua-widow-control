@@ -194,8 +194,8 @@ elseif plain or latex or optex then
         debug("Plain/LaTeX")
         luatexbase.provides_module {
             name = lwc.name,
-            date = "2022/05/26", --%%slashdate
-            version = "2.1.2", --%%version
+            date = "2022/06/17", --%%slashdate
+            version = "2.2.0", --%%version
             description = [[
 
 This module provides a LuaTeX-based solution to prevent

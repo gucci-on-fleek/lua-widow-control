@@ -7,7 +7,15 @@
 Changelog
 =========
 
-All notable changes to lua-widow-control will be listed here, in reverse chronological order. Versions are assigned _very_ roughly according to [semantic versioning](https://semver.org/). **Changes listed in bold** are breaking changes.
+All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
+
+## v2.2.0 (2022-06-17)
+
+- Fix paragraphs not being properly saved for potential expansion. **May affect page breaks.**
+- Add a new `draft` option ([#36](https://github.com/gucci-on-fleek/lua-widow-control/issues/36)).
+- Fix a node memory leak ([#29](https://github.com/gucci-on-fleek/lua-widow-control/issues/29)). You should now be able to use lua-widow-control on documents with > 10 000 pages.
+- Use `\lua_load_module:n` when available.
+- Add additional metadata to the documentation.
 
 
 ## [v2.1.2 (2022-05-27)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-3744f3e78bdf02fc63d508a0f80595260191607c)
