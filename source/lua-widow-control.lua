@@ -344,23 +344,17 @@ local function long_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
+    if lmtx then
+        tex.preparelinebreak(head)
+    end
+
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
-    local parfillskip
-    if lmtx or last(head).id ~= glue_id then
-        -- LMTX does not automatically add the \\parfillskip glue
-        parfillskip = new_node("glue", "parfillskip")
-    else
-        parfillskip = last(head)
-    end
+    local parfillskip = last(head)
 
     if tex.hsize > min_col_width then
         parfillskip[stretch_order] = 0
         parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
-    end
-
-    if lmtx or last(head).id ~= glue_id then
-        last(head).next = parfillskip
     end
 
     -- Break the paragraph 1 line longer than natural
@@ -379,15 +373,8 @@ local function natural_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
-    --[[ Contrary to the documentation, LMTX does not automatically add
-         the \\parfillskip glue before `pre_linebreak_filter`, so we need
-         to add it here so that our \\prevgraf comparisons are correct.
-      ]]
     if lmtx then
-        parfillskip = new_node("glue", "parfillskip")
-        parfillskip[stretch_order] = 1
-        parfillskip.stretch = 1 -- 0pt plus 1fil
-        last(head).next = parfillskip
+        tex.preparelinebreak(head)
     end
 
     -- Break the paragraph naturally to get \\prevgraf
