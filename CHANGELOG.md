@@ -9,7 +9,12 @@ Changelog
 
 All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
 
-## v2.2.0 (2022-06-17)
+## v2.2.1 (2022-07-28)
+
+- Fix crashes with recent LuaMetaTeX (ConTeXt MkXL)
+- No longer show "left parfill skip" warnings with ConTeXt LMTX/MkXL ([#7](https://github.com/gucci-on-fleek/lua-widow-control/issues/7))
+
+## [v2.2.0 (2022-06-17)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-9a5deba53545adc5ab25a5caa0b8ebf4104843f9)
 
 - Fix paragraphs not being properly saved for potential expansion. **May affect page breaks.**
 - Add a new `draft` option ([#36](https://github.com/gucci-on-fleek/lua-widow-control/issues/36)).
