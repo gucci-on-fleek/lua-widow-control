@@ -102,6 +102,7 @@ local insert_token = token.put_next or token.putnext
 local last = node.slide
 local linebreak = tex.linebreak
 local new_node = node.new
+local remove = node.remove
 local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
 local tex_box = tex.box
@@ -137,6 +138,7 @@ lwc.colours = {
   ]]
 local contrib_head,
       emergencystretch,
+      hold_head,
       info,
       insert_attribute,
       max_cost,
@@ -152,10 +154,12 @@ if lmtx then
     contrib_head = "contributehead"
     shrink_order = "shrinkorder"
     stretch_order = "stretchorder"
+    hold_head = "holdhead"
 else
     contrib_head = "contrib_head"
     shrink_order = "shrink_order"
     stretch_order = "stretch_order"
+    hold_head = "hold_head"
 end
 
 if context then
@@ -309,7 +313,7 @@ end
 --- @param args table?
 ---     subtype: number = The node subtype
 ---     reverse: bool = Whether we should iterate backwards
---- @return node
+--- @return node?
 local function next_of_type(head, id, args)
     args = args or {}
 
@@ -331,6 +335,13 @@ local function next_of_type(head, id, args)
             end
             head = head.prev
         end
+    end
+
+    -- Needed for the special `tex.lists` nodes
+    if head and head.id == id and
+       (head.subtype == args.subtype or args.subtype == nil)
+    then
+        return head
     end
 end
 
@@ -854,33 +865,47 @@ local function get_inserts(last_line)
         -- Get the output box containing the insert boxes
         local insert_box = tex_box[class]
 
-        local m = insert_box.list
-        while m do -- Iterate through the insert box
-            local box_value
-            box_value, m = find_attribute(m, insert_attribute)
+        -- Get any portions of the insert held over until the next page
+        local split_insert = next_of_type(
+            tex_lists[hold_head],
+            insert_id,
+            { subtype = class }
+        )
 
-            if not m then
-                break
-            end
+        for i, insert in ipairs { insert_box, split_insert } do
+            local m = insert and insert.list
 
-            if abs(box_value) >= first_index and
-               abs(box_value) <= last_index
-            then
-                -- Remove the respective contents from the insert box
-                insert_box.list = node.remove(insert_box.list, m)
+            while m do -- Iterate through the insert box
+                local box_value
+                box_value, m = find_attribute(m, insert_attribute)
 
-                if box_value > 0 then
-                    selected_inserts[#selected_inserts + 1] = copy(inserts[box_value])
+                if not m then
+                    break
                 end
 
-                m = free(m)
-            else
-                m = m.next
+                if abs(box_value) >= first_index and
+                   abs(box_value) <= last_index
+                then
+                    -- Remove the respective contents from the insert box
+                    insert.list = remove(insert.list, m)
+
+                    if box_value > 0 and i == 1 then
+                        table.insert(selected_inserts, copy(inserts[box_value]))
+                    end
+
+                    m = free(m)
+                else
+                    m = m.next
+                end
             end
         end
 
         if not insert_box.list then
             tex_box[class] = nil
+        end
+
+        if split_insert and not split_insert.list then
+            remove(tex_lists[hold_head], split_insert)
         end
 
         n = n.next

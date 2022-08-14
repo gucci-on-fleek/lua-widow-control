@@ -1,0 +1,20 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+% From issue #37:
+\documentclass{article}
+
+\usepackage[debug=true]{lua-widow-control}
+\usepackage{blindtext}
+
+\begin{document}
+
+\vspace*{30\baselineskip}
+
+\blindtext
+
+Some text\footnote{\blindtext}. \blindtext\footnote{\blindtext}
+
+\end{document}
