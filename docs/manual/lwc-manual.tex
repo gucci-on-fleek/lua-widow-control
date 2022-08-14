@@ -741,19 +741,15 @@ ultra-short~lines.
     interword glue. Narrow columns also stretch more easily than wide columns
     since you need to expand a paragraph by less to make a new line.
 
-    \item When running under \LuaMetaTeX{} (\ConTeXt{}), the log may
-    contain many lines like \q{\type{luatex warning > tex: left parfill skip is gone}}. These messages
-    are completely harmless (although admittedly quite annoying). \githubissue{7}
-
     \item \Lwc/ only attempts to expand paragraphs on a page with
     a \woo/. A global system like in \titlecite[global] would solve this;
     however, this is both \acronym{NP}-complete\cite[plass] and
     impossible to solve in a single pass. Very rarely would such a
     system remove widows or orphans that \lwc/ cannot.
 
-    \item \Lwc/ does not move footnotes in \mkxl/ due to limitations with the \LuaMetaTeX{} engine.
+    \item \Lwc/ does not move footnotes in \mkxl/ due to limitations with the \LuaMetaTeX{} engine. \githubissue{38}
 
-    \item Draft mode does not colour any text in \mkxl/. Draft mode will not colour the first line of a page in \mkiv/ and \OpTeX{}.
+    \item Draft mode does not colour any text in \mkxl/. Draft mode will not colour the first line of a page in \mkiv/ and \OpTeX{}. \githubissue{39}
 \stopitemize
 
 \section{Contributions}
