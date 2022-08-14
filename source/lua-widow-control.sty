@@ -27,9 +27,6 @@
     {v2.2.1} %%version
     {Use Lua to remove widows and orphans}
 
-% Unconditional Package Loads
-\RequirePackage { l3keys2e }
-
 % Message and String Constants
 \str_const:Nn \c__lwc_name_str { lua-widow-control }
 
@@ -268,7 +265,12 @@
 }
 
 % Add the user interface for the keys
-\exp_args:NV \ProcessKeysPackageOptions { \c__lwc_name_str }
+\IfFormatAtLeastTF { 2022-06-01 } {
+    \ProcessKeyOptions [ \c__lwc_name_str ]
+}{
+    \RequirePackage { l3keys2e }
+    \exp_args:NV \ProcessKeysOptions { \c__lwc_name_str }
+}
 
 \cs_generate_variant:Nn \keys_set:nn { Vn }
 \NewDocumentCommand \lwcsetup {m} {

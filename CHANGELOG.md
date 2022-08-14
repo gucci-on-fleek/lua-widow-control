@@ -9,10 +9,15 @@ Changelog
 
 All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
 
-## v2.2.1 (2022-07-28)
+## Unreleased
 
-- Fix crashes with recent LuaMetaTeX (ConTeXt MkXL)
-- No longer show "left parfill skip" warnings with ConTeXt LMTX/MkXL ([#7](https://github.com/gucci-on-fleek/lua-widow-control/issues/7))
+- Use the built-in LaTeX key–value interface where available.
+- Add support for split footnotes ([#37](https://github.com/gucci-on-fleek/lua-widow-control/issues/37)).
+
+## [v2.2.1 (2022-07-28)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-45c3146d5fc5a86606a931212395a28ffb48f925)
+
+- Fix crashes with recent LuaMetaTeX (ConTeXt MkXL). See also [this thread](https://mailman.ntg.nl/pipermail/ntg-context/2022/106331.html).
+- No longer show "left parfill skip" warnings with ConTeXt LMTX/MkXL ([#7](https://github.com/gucci-on-fleek/lua-widow-control/issues/7)).
 
 ## [v2.2.0 (2022-06-17)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-9a5deba53545adc5ab25a5caa0b8ebf4104843f9)
 
