@@ -11,7 +11,12 @@ All notable changes to lua-widow-control will be listed here, in reverse chronol
 
 ## Unreleased
 
+- Add support for inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
+
 - Use the built-in LaTeX key–value interface where available.
+
+  This means that lua-widow-control now also reads the global class options.
+
 - Add support for split footnotes ([#37](https://github.com/gucci-on-fleek/lua-widow-control/issues/37)).
 
 ## [v2.2.1 (2022-07-28)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-45c3146d5fc5a86606a931212395a28ffb48f925)

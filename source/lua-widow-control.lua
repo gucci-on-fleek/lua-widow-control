@@ -640,6 +640,14 @@ local function mark_inserts(head)
         then
             local hlist_before = next_of_type(insert, hlist_id, { reverse = true} )
 
+            local insert_class
+            if lmtx then
+                -- FIXME: temporarily hardcode the main "footnote" class
+                insert_class = 4 -- insert.index
+            else
+                insert_class = insert.subtype
+            end
+
             --[[ We tag the first element of the hlist/line with an integer
                  that holds the insert class and the first and last indices
                  of the inserts contained in the line. This won't work if
@@ -649,7 +657,7 @@ local function mark_inserts(head)
             set_attribute(
                 hlist_before.list,
                 insert_attribute,
-                insert.subtype    * INSERT_CLASS_MULTIPLE +
+                insert_class      * INSERT_CLASS_MULTIPLE +
                 insert_indices[1] * INSERT_FIRST_MULTIPLE +
                 insert_indices[#insert_indices]
             )
@@ -848,22 +856,19 @@ local function get_inserts(last_line)
             break
         end
 
-        --[[ With LuaMetaTeX, the subtype of `insert` nodes is always zero,
-             so we cannot detect their class therefore we can't fix any moved
-             footnotes.
-          ]]
-        if lmtx then
-            warning("!!!Incorrect footnotes on page " .. pagenum() .. "!!!")
-            return {}
-        end
-
         -- Demux the insert values
         local class = line_value // INSERT_CLASS_MULTIPLE
         local first_index = (line_value % INSERT_CLASS_MULTIPLE) // INSERT_FIRST_MULTIPLE
         local last_index = line_value % INSERT_FIRST_MULTIPLE
 
         -- Get the output box containing the insert boxes
-        local insert_box = tex_box[class]
+        local insert_box
+
+        if lmtx then
+            insert_box = tex.getinsertcontent(class)
+        else
+            insert_box = tex_box[class]
+        end
 
         -- Get any portions of the insert held over until the next page
         local split_insert = next_of_type(
