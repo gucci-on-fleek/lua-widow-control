@@ -9,9 +9,9 @@ Changelog
 
 All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
 
-## Unreleased
+## v2.2.2 (2022-08-23)
 
-- Add support for inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
+- Add preliminary support for inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
 
 - Use the built-in LaTeX key–value interface where available.
 
