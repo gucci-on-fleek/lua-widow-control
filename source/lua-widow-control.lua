@@ -69,7 +69,7 @@ elseif format:find("latex") then -- lualatex, lualatex-dev, ...
 elseif format == "luatex" or format == "luahbtex" then -- Plain
     plain = true
 elseif format:find("optex") then -- OpTeX
-    optex = true
+    optex = _G.optex
 end
 
 --[[
@@ -407,12 +407,21 @@ local function colour_list(head, colour)
         return head
     end
 
+    local pdf_literal = string.format("%.2f %.2f %.2f rg", table.unpack(colour))
+
+    if optex and optex.set_node_color then
+        for n in node.traverse(head) do
+	    optex.set_node_color(n, pdf_literal)
+	end
+	return head
+    end
+
     -- Adapted from https://tex.stackexchange.com/a/372437
     -- \\pdfextension colorstack is ignored in LMTX
     local start_colour = new_node("whatsit", "pdf_colorstack")
     start_colour.stack = 0
     start_colour.command = 1
-    start_colour.data = string.format("%.2f %.2f %.2f rg", table.unpack(colour))
+    start_colour.data = pdf_literal
 
     local end_colour = new_node("whatsit", "pdf_colorstack")
     end_colour.stack = 0
