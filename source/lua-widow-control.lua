@@ -400,20 +400,29 @@ lwc.draft_mode = false
 --- Changes the text colour in a node list if draft mode is active
 ---
 --- @param head node The first node to colour
---- @param colour table<number> A 3-tuple of RGB values
+--- @param colour string The name of a colour in `lwc.colours`
 --- @return node head The coloured node
 local function colour_list(head, colour)
     if not lwc.draft_mode then
         return head
     end
 
-    local pdf_literal = string.format("%.2f %.2f %.2f rg", table.unpack(colour))
+    local pdf_colour = string.format(
+        "%.2f %.2f %.2f rg",
+        table.unpack(lwc.colours[colour])
+    )
 
     if optex and optex.set_node_color then
         for n in node.traverse(head) do
-	    optex.set_node_color(n, pdf_literal)
-	end
-	return head
+            optex.set_node_color(n, pdf_colour)
+        end
+
+        return head
+    end
+
+    if context then
+        nodes.tracers.colors.setlist(head, "lwc_" .. colour)
+        return head
     end
 
     -- Adapted from https://tex.stackexchange.com/a/372437
@@ -421,7 +430,7 @@ local function colour_list(head, colour)
     local start_colour = new_node("whatsit", "pdf_colorstack")
     start_colour.stack = 0
     start_colour.command = 1
-    start_colour.data = pdf_literal
+    start_colour.data = pdf_colour
 
     local end_colour = new_node("whatsit", "pdf_colorstack")
     end_colour.stack = 0
@@ -541,7 +550,7 @@ function lwc.save_paragraphs(head)
 
     show_cost(saved_node, long_cost)
     for n in traverse_id(hlist_id, saved_node) do
-        n.list = colour_list(n.list, lwc.colours.expanded)
+        n.list = colour_list(n.list, "expanded")
     end
 
     table.insert(paragraphs, {
@@ -749,7 +758,7 @@ local function remove_widows_fail()
         { subtype = line_subid, reverse = true }
     )
     if last_line then
-        last_line.list = colour_list(last_line.list, lwc.colours.failure)
+        last_line.list = colour_list(last_line.list, "failure")
     end
 
     local next_first_line = next_of_type(
@@ -758,7 +767,7 @@ local function remove_widows_fail()
         { subtype = line_subid }
     )
     if next_first_line then
-        next_first_line.list = colour_list(next_first_line.list, lwc.colours.failure)
+        next_first_line.list = colour_list(next_first_line.list, "failure")
     end
 
     reset_state()
@@ -993,12 +1002,12 @@ local function move_last_line(head)
             hlist_id,
             { subtype = line_subid, reverse = true }
         )
-        second_last_line.list = colour_list(second_last_line.list, lwc.colours.failure)
+        second_last_line.list = colour_list(second_last_line.list, "failure")
     end
 
     last_line = copy_list(n)
 
-    last_line.list = colour_list(last_line.list, lwc.colours.moved)
+    last_line.list = colour_list(last_line.list, "moved")
 
     -- Reinsert any inserts originally present in this moved line
     local selected_inserts = get_inserts(last_line)
@@ -1468,6 +1477,16 @@ if (plain or latex) and
    not LWC_NO_DEBUG --- @diagnostic disable-line
 then
     silence_luatexbase()
+end
+
+-- Register colours for ConTeXt
+if context then
+    for colour, values in pairs(lwc.colours) do
+        attributes.colors.defineprocesscolor(
+            "lwc_" .. colour,
+            string.format("r=%.2f, g=%.2f, b=%.2f", table.unpack(values))
+        )
+    end
 end
 
 -- Activate \lwc/
