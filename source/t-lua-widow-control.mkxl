@@ -11,13 +11,16 @@
 \startmodule[lua-widow-control]
 \unprotect
 
+% Preliminaries
 \installnamespace{lwc}
 
-\installcommandhandler \????lwc {lwc} \????lwc
+\installswitchcommandhandler \????lwc {lwc} \????lwc
 
+% Set up the options
 \newdimen\lwc_emergency_stretch
 \newcount\lwc_max_cost
-\appendtoks
+
+\starttexdefinition lwc_set_parameters
     \lwc_emergency_stretch=\lwcparameter{emergencystretch}
 
     \doifelse{\lwcparameter{\c!state}}\v!start{
@@ -55,22 +58,66 @@
     \stopsetups
 
     \setups[*default]
-\to\everysetuplwc
+\stoptexdefinition
 
+% Load the main Lua file
 \ctxloadluafile{lua-widow-control}
 
-\setuplwc[
+% Define the presets
+\definelwc[default][
     emergencystretch=3em,
-    \c!state=\v!start,
-    debug=\v!stop,
-    draft=\v!stop,
+    maxcost=2147483647,
+    nobreak=keep,
     orphanpenalty=1,
     widowpenalty=1,
     brokenpenalty=1,
-    nobreak=keep,
-    maxcost=2147483647,
 ]
 
+\definelwc[strict][
+    emergencystretch=0pt,
+    maxcost=5000,
+    nobreak=warn,
+    widowpenalty=1,
+    orphanpenalty=1,
+    brokenpenalty=1,
+]
+
+\definelwc[balanced][
+    emergencystretch=1em,
+    maxcost=10000
+    nobreak=keep,
+    widowpenalty=500,
+    orphanpenalty=500,
+    brokenpenalty=500,
+]
+
+% Set up the default options
+\setuplwc[
+    \c!state=\v!start,
+    debug=\v!stop,
+    draft=\v!stop,
+]
+
+\setuplwc[default]
+
+\appendtoks
+    \ifcase\lwcsetupmode
+        % can't happen
+    \or % \setuplwc[name][key=value]
+      \ifx\previouslwc\currentlwc
+        \let\currentlwc\currentlwc
+        \lwc_set_parameters
+      \fi
+    \or % \setuplwc[key=value]
+      \let\currentlwc\previouslwc
+      \lwc_set_parameters
+    \or % \setuplwc[name]
+      \glet\currentlwc\currentlwc % global
+      \lwc_set_parameters
+    \fi
+\to \everysetuplwc
+
+\lwc_set_parameters
 
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
@@ -97,6 +144,7 @@
     \fi%
 }
 
+% Add the default patches
 \prependtoks\lwc_patch_pre\to\everybeforesectionheadhandle % Sectioning
 \prependtoks\lwc_patch_post\to\everyaftersectionheadhandle
 

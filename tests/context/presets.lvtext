@@ -1,0 +1,18 @@
+\usemodule[lua-widow-control]
+
+\setuplwc[draft=start]
+
+\setuppapersize[A6]
+
+\starttext
+    \setuplwc[default]
+    \dorecurse{7}{Hello }
+
+    \dorecurse{140}{Hello }
+
+    \page
+    \setuplwc[strict]
+    \dorecurse{7}{Hello }
+
+    \dorecurse{140}{Hello }
+\stoptext

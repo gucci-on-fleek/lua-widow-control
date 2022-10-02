@@ -567,11 +567,13 @@ presets that you can use to set multiple options at once. These presets are
 a good starting point for most documents, and you can always manually
 override individual options.
 
-Currently, these presets are \LaTeX{}-only.
+Presets are available only with \LaTeX{} and \ConTeXt{}.
 
 \startTABLE[setups=commandtable]
     \NC \LaTeX{}
     \NC\inlineTEX{\lwcsetup{$\meta{preset}$}}\NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[$\meta{preset}$]}\NC\NR
 \stopTABLE
 
 \subsection{\type{default}}
