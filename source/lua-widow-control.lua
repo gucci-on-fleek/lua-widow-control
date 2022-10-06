@@ -91,6 +91,7 @@ local linebreakpenalty_subid = 1
 local par_id = id_from_name("par") or id_from_name("local_par")
 local pdf_literal_subid = 16
 local penalty_id = id_from_name("penalty")
+local vlist_id = id_from_name("vlist")
 local whatsit_id = id_from_name("whatsit")
 local write_subid = 1
 
@@ -107,6 +108,7 @@ local insert_token = token.put_next or token.putnext
 local last = node.slide
 local linebreak = tex.linebreak
 local new_node = node.new
+local next_glyph = node.has_glyph or node.hasglyph
 local remove = node.remove
 local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
@@ -459,6 +461,7 @@ end
 --- @param head node A node containing a node list
 --- @return node? ocg_start The found OCG start whatsit
 --- @return node? ocg_end The found OCG end whatsit
+--- @return node? ocg_write The found OCG write whatsit
 local function get_ocg_nodes(head)
     local ocg_start = next_of_type(
         head.list,
@@ -470,6 +473,12 @@ local function get_ocg_nodes(head)
         last(head.list),
         whatsit_id,
         { subtype = pdf_literal_subid, reverse = true }
+    )
+
+    local ocg_write = next_of_type(
+        last(head.list),
+        whatsit_id,
+        { subtype = write_subid, reverse = true }
     )
 
     if ocg_start then
@@ -488,14 +497,33 @@ local function get_ocg_nodes(head)
     end
 
     if ocg_start == ocg_end then
-        return nil, nil
+        return nil, nil, nil
     end
 
-    return ocg_start, ocg_end
+    return ocg_start, ocg_end, ocg_write
+end
+
+
+--- Recursively checks a node list to see if it has any glyphs
+--- @param head node
+--- @return boolean
+local function check_glyph(head)
+    for n, id in traverse(head) do
+        if next_glyph(n) then
+            return true
+        end
+
+        if id == hlist_id or id == vlist_id then
+            return check_glyph(n.list)
+        end
+    end
+
+    return false
 end
 
 
 local show_costs = false
+local last_ocg_start, last_ocg_end, last_ocg_write
 --- Typesets the cost of a paragraph beside it in draft mode
 ---
 --- @param paragraph node
@@ -506,13 +534,30 @@ local function show_cost(paragraph, cost)
         return
     end
 
+    if not check_glyph(paragraph) then
+        return
+    end
+
     local last_hlist = next_of_type(
         last(paragraph),
         hlist_id,
         { subtype = line_subid, reverse = true }
     )
 
-    ocg_start, ocg_end = get_ocg_nodes(last_hlist)
+    local ocg_start, ocg_end, ocg_write = get_ocg_nodes(last_hlist)
+
+    if ocg_start and ocg_end then
+        last_ocg_start = ocg_start
+        last_ocg_end = ocg_end
+        last_ocg_write = ocg_write
+    elseif show_costs then
+        ocg_start = copy(last_ocg_start)
+        ocg_end = copy(last_ocg_end)
+        ocg_write = copy(last_ocg_write)
+
+        ocg_write.data:gsub("@%d+", "@" .. pagenum())
+        node.write(ocg_write)
+    end
 
     local offset = new_node("glue")
     offset.width = llap_offset
