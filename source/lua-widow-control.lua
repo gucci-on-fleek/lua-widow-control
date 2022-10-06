@@ -454,6 +454,47 @@ local function colour_list(head, colour)
 end
 
 
+--- Gets the OCG whatsits from a node list
+---
+--- @param head node A node containing a node list
+--- @return node? ocg_start The found OCG start whatsit
+--- @return node? ocg_end The found OCG end whatsit
+local function get_ocg_nodes(head)
+    local ocg_start = next_of_type(
+        head.list,
+        whatsit_id,
+        { subtype = pdf_literal_subid }
+    )
+
+    local ocg_end = next_of_type(
+        last(head.list),
+        whatsit_id,
+        { subtype = pdf_literal_subid, reverse = true }
+    )
+
+    if ocg_start then
+        head.list = remove(head.list, ocg_start)
+    end
+
+    if ocg_end and ocg_end ~= ocg_start then
+        head.list = remove(head.list, ocg_end)
+    end
+
+    if not (ocg_start and ocg_end) then
+        free(ocg_start)
+        ocg_start = nil
+        free(ocg_end)
+        ocg_end = nil
+    end
+
+    if ocg_start == ocg_end then
+        return nil, nil
+    end
+
+    return ocg_start, ocg_end
+end
+
+
 local show_costs = false
 --- Typesets the cost of a paragraph beside it in draft mode
 ---
@@ -465,46 +506,13 @@ local function show_cost(paragraph, cost)
         return
     end
 
-    local first_hlist = next_of_type(
-        paragraph,
-        hlist_id,
-        { subtype = line_subid }
-    )
     local last_hlist = next_of_type(
         last(paragraph),
         hlist_id,
         { subtype = line_subid, reverse = true }
     )
 
-    local ocg_start = next_of_type(
-        first_hlist.list,
-        whatsit_id,
-        { subtype = pdf_literal_subid }
-    )
-    local ocg_end = next_of_type(
-        last(last_hlist.list),
-        whatsit_id,
-        { subtype = pdf_literal_subid, reverse = true }
-    )
-
-    if ocg_start then
-        first_hlist.list = remove(first_hlist.list, ocg_start)
-    end
-
-    if ocg_end and ocg_end ~= ocg_start then
-        last_hlist.list = remove(last_hlist.list, ocg_end)
-    end
-
-    if not (ocg_start and ocg_end) then
-        free(ocg_start)
-        ocg_start = nil
-        free(ocg_end)
-        ocg_end = nil
-    end
-
-    if ocg_start == ocg_end then
-        return
-    end
+    ocg_start, ocg_end = get_ocg_nodes(last_hlist)
 
     local offset = new_node("glue")
     offset.width = llap_offset

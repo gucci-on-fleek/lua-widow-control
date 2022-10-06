@@ -206,6 +206,12 @@
 % Show the costs in a toggle-able layer
 \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
     \bool_if:NT \g__lwc_ocg_bool {
+        % Correctly registering the OCG's is quite complicated to do
+        % correctly. We could do it all from Lua, but an easier solution
+        % is to load another package to do it for us. Then, we can use
+        % the package's API to create an empty OCG at the end of each
+        % paragraph. When we typeset the costs, we move the OCG whatsits
+        % to surround the cost text.
         \RequirePackage { ocgbase }
 
         \ocgbase_new_ocg:nnn { Paragraph~Costs } {
@@ -213,14 +219,11 @@
             /Export << /ExportState /OFF >>
         } { On }
 
-        \hook_gput_code:nnn { para / begin } { \c__lwc_name_str } {
-            \__lwc_if_enabled:T {
-                \ocgbase_oc_bdc:n { \ocgbase_last_ocg: }
-            }
-        }
+        \tl_gset:Nx \g__lwc_ocg_int { \ocgbase_last_ocg: }
 
         \hook_gput_code:nnn { para / end } { \c__lwc_name_str } {
             \__lwc_if_enabled:T {
+                \ocgbase_oc_bdc:n { \g__lwc_ocg_int }
                 \ocgbase_oc_emc:
             }
         }
