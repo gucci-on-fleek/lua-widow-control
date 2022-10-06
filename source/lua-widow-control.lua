@@ -7,6 +7,7 @@
 
 --- Tell the linter about node attributes
 --- @class node
+--- @field data string
 --- @field depth integer
 --- @field height integer
 --- @field id integer
@@ -88,7 +89,10 @@ local insert_id = id_from_name("insert") or id_from_name("ins")
 local line_subid = 1
 local linebreakpenalty_subid = 1
 local par_id = id_from_name("par") or id_from_name("local_par")
+local pdf_literal_subid = 16
 local penalty_id = id_from_name("penalty")
+local whatsit_id = id_from_name("whatsit")
+local write_subid = 1
 
 -- Local versions of globals
 local abs = math.abs
@@ -98,6 +102,7 @@ local find_attribute = node.find_attribute or node.findattribute
 local free = node.free
 local free_list = node.flush_list or node.flushlist
 local get_attribute = node.get_attribute or node.getattribute
+local get_macro = token.get_macro or token.getmacro
 local insert_token = token.put_next or token.putnext
 local last = node.slide
 local linebreak = tex.linebreak
@@ -317,8 +322,14 @@ end
 local function next_of_type(head, id, args)
     args = args or {}
 
-    if lmtx or not args.reverse then
+    if lmtx then
         for n, subtype in traverse_id(id, head, args.reverse) do
+            if (subtype == args.subtype) or (args.subtype == nil) then
+                return n
+            end
+        end
+    elseif not args.reverse then
+        for n, subtype in traverse_id(id, head) do
             if (subtype == args.subtype) or (args.subtype == nil) then
                 return n
             end
@@ -443,16 +454,71 @@ local function colour_list(head, colour)
 end
 
 
---- Generate an \\llap'ed box containing the provided string
+local show_costs = false
+--- Typesets the cost of a paragraph beside it in draft mode
 ---
---- @param str string The string to typeset
---- @return node head The box node
-local function llap_string(str)
-    local first = new_node("glue")
-    first.width = llap_offset
+--- @param paragraph node
+--- @param cost number
+--- @return nil
+local function show_cost(paragraph, cost)
+    if not (lwc.draft_mode or show_costs) then
+        return
+    end
 
-    local m = first
-    for letter in str:gmatch(".")  do
+    local first_hlist = next_of_type(
+        paragraph,
+        hlist_id,
+        { subtype = line_subid }
+    )
+    local last_hlist = next_of_type(
+        last(paragraph),
+        hlist_id,
+        { subtype = line_subid, reverse = true }
+    )
+
+    local ocg_start = next_of_type(
+        first_hlist.list,
+        whatsit_id,
+        { subtype = pdf_literal_subid }
+    )
+    local ocg_end = next_of_type(
+        last(last_hlist.list),
+        whatsit_id,
+        { subtype = pdf_literal_subid, reverse = true }
+    )
+
+    if ocg_start then
+        first_hlist.list = remove(first_hlist.list, ocg_start)
+    end
+
+    if ocg_end and ocg_end ~= ocg_start then
+        last_hlist.list = remove(last_hlist.list, ocg_end)
+    end
+
+    if not (ocg_start and ocg_end) then
+        free(ocg_start)
+        ocg_start = nil
+        free(ocg_end)
+        ocg_end = nil
+    end
+
+    if ocg_start == ocg_end then
+        return
+    end
+
+    local offset = new_node("glue")
+    offset.width = llap_offset
+    offset.next = ocg_start
+
+    local cost_str
+    if cost < math.maxinteger then
+        cost_str = string.format("%.0f", cost)
+    else
+        cost_str = "infinite"
+    end
+
+    local m = ocg_start or offset
+    for letter in cost_str:gmatch(".")  do
         local n = new_node("glyph")
         n.font = SMALL_FONT
         n.char = string.byte(letter)
@@ -466,36 +532,15 @@ local function llap_string(str)
     hss[stretch_order] = 1
     hss.shrink = 1
     hss[shrink_order] = 1
-    m.next = hss
 
-    return node.hpack(first, 0, "exactly")
-end
-
-
---- Typesets the cost of a paragraph beside it in draft mode
----
---- @param paragraph node
---- @param cost number
---- @return nil
-local function show_cost(paragraph, cost)
-    if not lwc.draft_mode then
-        return
-    end
-
-    local last_hlist_end = last(next_of_type(
-        last(paragraph),
-        hlist_id,
-        { subtype = line_subid, reverse = true }
-    ).list)
-
-    local cost_str
-    if cost < math.maxinteger then
-        cost_str = string.format("%.0f", cost)
+    if ocg_end then
+        m.next = ocg_end
+        ocg_end.next = hss
     else
-        cost_str = "infinite"
+        m.next = hss
     end
 
-    last_hlist_end.next = llap_string(cost_str)
+    last(last_hlist.list).next = node.hpack(offset, 0, "exactly")
 end
 
 
@@ -1427,6 +1472,11 @@ register_tex_cmd(
         lwc.draft_mode = str ~= "0" and str ~= "false" and str ~= "stop"
     end,
     { "string" }
+)
+register_tex_cmd(
+    "show_costs",
+    function() show_costs = true end,
+    {}
 )
 
 --- Silence the luatexbase "Enabling/Removing <callback>" info messages

@@ -110,6 +110,12 @@
                                       \ttl@part@ii,     % titlesec part
                                     },
     disablecmds .usage:n          = preamble,
+
+    show-costs .bool_gset:N      = \g__lwc_ocg_bool,
+    show-costs .value_required:n = false,
+    show-costs .initial:n        = false,
+    show-costs .default:n        = true,
+    show-costs .usage:n          = preamble,
 }
 
 % Load the Lua code
@@ -195,6 +201,32 @@
 
 \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
     \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:n
+}
+
+% Show the costs in a toggle-able layer
+\hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+    \bool_if:NT \g__lwc_ocg_bool {
+        \RequirePackage { ocgbase }
+
+        \ocgbase_new_ocg:nnn { Paragraph~Costs } {
+            /Print  << /PrintState  /OFF >>
+            /Export << /ExportState /OFF >>
+        } { On }
+
+        \hook_gput_code:nnn { para / begin } { \c__lwc_name_str } {
+            \__lwc_if_enabled:T {
+                \ocgbase_oc_bdc:n { \ocgbase_last_ocg: }
+            }
+        }
+
+        \hook_gput_code:nnn { para / end } { \c__lwc_name_str } {
+            \__lwc_if_enabled:T {
+                \ocgbase_oc_emc:
+            }
+        }
+
+        \__lwc_show_costs:
+    }
 }
 
 %%% Class and package-specifc patches
