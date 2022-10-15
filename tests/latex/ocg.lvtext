@@ -1,0 +1,33 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+\documentclass{article}
+
+\usepackage[show-costs]{lua-widow-control}
+
+
+\begin{document}
+   Hello
+
+   Two\\lines
+
+   \clearpage
+
+   Hello
+
+   Two\\lines
+
+   \begin{equation}
+      a = b + c
+   \end{equation}
+
+   Hello
+
+   Two\\lines
+
+   \clearpage
+   \lwcsetup{draft}
+
+
+\end{document}
