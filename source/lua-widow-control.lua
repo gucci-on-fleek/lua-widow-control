@@ -239,7 +239,10 @@ elseif latex then
 elseif optex then
     SMALL_FONT = 7
 elseif context then
-    SMALL_FONT = 3
+    SMALL_FONT = fonts.definers.define({
+        name = "LMRoman7-Regular",
+        size = tex.sp("7pt"),
+    })
 end
 
 --[[ Table to hold the alternate paragraph versions.
@@ -660,8 +663,7 @@ local function mark_inserts(head)
 
             local insert_class
             if lmtx then
-                -- FIXME: temporarily hardcode the main "footnote" class
-                insert_class = 4 -- insert.index
+                insert_class = insert.index
             else
                 insert_class = insert.subtype
             end
