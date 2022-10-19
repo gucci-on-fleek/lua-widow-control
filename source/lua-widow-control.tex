@@ -14,6 +14,9 @@
 
 \catcode`@=11
 
+% We need to change some code if we're using LuaMetaTeX
+\def\lwc@iflmtx{\ifnum\luatexversion>200}
+
 \input ltluatex % \LuaTeX{}Base
 
 \clubpenalty=1
@@ -32,11 +35,19 @@
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
 % lengthened paragraphs to not have terrible spacing.
-\expandglyphsinfont\the\font 20 20 5
-\adjustspacing=2
+\lwc@iflmtx\else
+    \expandglyphsinfont\the\font 20 20 5
+    \adjustspacing=2
+\fi
 
 % Enable \lwc/ by default when the package is loaded.
 \lwc@enable
+
+% Make the parinit skips visible from Lua
+\lwc@iflmtx
+    \normalizelinemode=\numexpression\normalizelinemode bor 2\relax
+\fi
+
 
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
@@ -80,7 +91,9 @@
 }
 
 \begingroup
-    \suppressoutererror=1
+    \lwc@iflmtx\else
+        \suppressoutererror=1
+    \fi
     \lwcdisablecmd{\beginsection} % Sectioning
 \endgroup
 

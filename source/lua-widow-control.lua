@@ -59,17 +59,27 @@ end
 local format = tex.formatname
 local context, latex, plain, optex, lmtx
 
+if status.luatex_engine == "luametatex" then
+    lmtx = true
+end
+
 if format:find("cont") then -- cont-en, cont-fr, cont-nl, ...
     context = true
-    if status.luatex_engine == "luametatex" then
-        lmtx = true
-    end
 elseif format:find("latex") then -- lualatex, lualatex-dev, ...
     latex = true
 elseif format == "luatex" or format == "luahbtex" then -- Plain
     plain = true
 elseif format:find("optex") then -- OpTeX
     optex = _G.optex
+end
+
+-- LuaMetaLaTeX and LuaMetaPlain don't seem to set the format name correctly
+if lmtx and format == "" then
+    if token.create("documentclass").cmdname == "undefined_cs" then
+        plain = true
+    else
+        latex = true
+    end
 end
 
 --[[
@@ -89,6 +99,12 @@ local line_subid = 1
 local linebreakpenalty_subid = 1
 local par_id = id_from_name("par") or id_from_name("local_par")
 local penalty_id = id_from_name("penalty")
+local parfill_subids = {
+    parfillleftskip = 17,
+    parfillrightskip = 16,
+    parinitleftskip = 19,
+    parinitrightskip = 18,
+}
 
 -- Local versions of globals
 local abs = math.abs
@@ -143,6 +159,7 @@ local contrib_head,
       insert_attribute,
       max_cost,
       pagenum,
+      page_head,
       paragraph_attribute,
       shrink_order,
       stretch_order,
@@ -155,11 +172,13 @@ if lmtx then
     shrink_order = "shrinkorder"
     stretch_order = "stretchorder"
     hold_head = "holdhead"
+    page_head = "pagehead"
 else
     contrib_head = "contrib_head"
     shrink_order = "shrink_order"
     stretch_order = "stretch_order"
     hold_head = "hold_head"
+    page_head = "page_head"
 end
 
 if context then
@@ -223,6 +242,28 @@ else -- This shouldn't ever happen
     error [[Unsupported format.
 
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
+end
+
+-- Missing functions in LMTX
+if (latex or plain) and lmtx then
+    local todirect = node.direct.tovaliddirect
+    local tonode = node.direct.tonode
+
+    local direct_slide = node.direct.slide
+    last = function (n)
+        return tonode(direct_slide(todirect(n)))
+    end
+
+    local direct_vpack = node.direct.vpack
+    vpack = function (n)
+        return tonode(direct_vpack(todirect(n)))
+    end
+
+    local direct_findattribute = node.direct.findattribute
+    find_attribute = function (n, a)
+        local v, n = direct_findattribute(todirect(n), a)
+        return v, tonode(n)
+    end
 end
 
 --[[ Select the fonts
@@ -349,6 +390,38 @@ local function next_of_type(head, id, args)
 end
 
 
+--- Ensures that a paragraph is ready to be broken
+---
+--- Only applies to LMTX
+--- @param head node
+--- @return nil
+local function prepare_linebreak(head)
+    if not lmtx then
+        return
+    end
+
+    local parfills = {}
+    local count = 0
+    for name, subid in pairs(parfill_subids) do
+        parfills[name] = next_of_type(head, glue_id, { subtype = subid })
+        if parfills[name] then
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        -- Usual case
+        tex.preparelinebreak(head)
+    elseif count == 4 then
+        -- Already prepared for some reason, ignored
+    else
+        -- Uh oh
+        warning("Weird par(fill/init)skips found!")
+        tex.preparelinebreak(head) -- Try to fix it
+    end
+end
+
+
 --- Breaks a paragraph one line longer than natural
 ---
 --- @param head node The unbroken paragraph
@@ -358,9 +431,7 @@ local function long_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
-    if lmtx then
-        tex.preparelinebreak(head)
-    end
+    prepare_linebreak(head)
 
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
@@ -387,9 +458,7 @@ local function natural_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
-    if lmtx then
-        tex.preparelinebreak(head)
-    end
+    prepare_linebreak(head)
 
     -- Break the paragraph naturally to get \\prevgraf
     local natural_node, natural_info = linebreak(head)
@@ -755,7 +824,7 @@ local function remove_widows_fail()
     warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
 
     local last_line = next_of_type(
-        last(tex_lists.page_head),
+        last(tex_lists[page_head]),
         hlist_id,
         { subtype = line_subid, reverse = true }
     )

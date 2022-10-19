@@ -3,10 +3,6 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
-\RequirePackage[enable-debug, check-declarations]{expl3}
-\ExplSyntaxOn
-\debug_on:n {all}
-\ExplSyntaxOff
 \documentclass{article}
 
 \usepackage{lua-widow-control}

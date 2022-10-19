@@ -145,6 +145,14 @@
     \fi
 }
 
+\prg_new_conditional:Nnn \__lwc_if_lmtx: { T, F, TF } {
+    \int_compare:nNnTF { \tex_luatexversion:D } > { 200 } {
+        \prg_return_true:
+    } {
+        \prg_return_false:
+    }
+}
+
 % Expansion of some parts of the document, such as section headings, is quite
 % undesirable, so we'll disable \lwc/ for certain commands.
 \int_new:N \g__lwc_disable_int
@@ -195,6 +203,12 @@
 
 \hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
     \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:n
+}
+
+\__lwc_if_lmtx:T {
+    \int_gset:Nn \normalizelinemode {
+        \numexpression\normalizelinemode bor 2\relax
+    }
 }
 
 %%% Class and package-specifc patches
