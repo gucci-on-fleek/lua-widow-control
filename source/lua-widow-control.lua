@@ -119,7 +119,6 @@ local iftrue = token.create("iftrue")
 local INFINITY = 10000
 local INSERT_CLASS_MULTIPLE = 1000 * 1000
 local INSERT_FIRST_MULTIPLE = 1000
-local llap_offset = math.max(tex.dimen.parindent, tex.sp("12pt"))
 local min_col_width = tex.sp("250pt")
 local PAGE_MULTIPLE = 100
 local SINGLE_LINE = 50
@@ -137,6 +136,7 @@ lwc.colours = {
      worrying about any format/engine differences.
   ]]
 local contrib_head,
+      draft_offset,
       emergencystretch,
       hold_head,
       info,
@@ -181,6 +181,7 @@ if context then
 
     -- Dimen names
     emergencystretch = "lwc_emergency_stretch"
+    draft_offset = "lwc_draft_offset"
     max_cost = "lwc_max_cost"
 elseif plain or latex or optex then
     pagenum = function() return tex_count[0] end
@@ -188,9 +189,11 @@ elseif plain or latex or optex then
     -- Dimen names
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
+        draft_offset = "g__lwc_draftoffset_dim"
         max_cost = "g__lwc_maxcost_int"
     else
         emergencystretch = "lwcemergencystretch"
+        draft_offset = "lwcdraftoffset"
         max_cost = "lwcmaxcost"
     end
 
@@ -446,35 +449,6 @@ local function colour_list(head, colour)
 end
 
 
---- Generate an \\llap'ed box containing the provided string
----
---- @param str string The string to typeset
---- @return node head The box node
-local function llap_string(str)
-    local first = new_node("glue")
-    first.width = llap_offset
-
-    local m = first
-    for letter in str:gmatch(".")  do
-        local n = new_node("glyph")
-        n.font = SMALL_FONT
-        n.char = string.byte(letter)
-
-        m.next = n
-        m = n
-    end
-
-    local hss = new_node("glue")
-    hss.stretch = 1
-    hss[stretch_order] = 1
-    hss.shrink = 1
-    hss[shrink_order] = 1
-    m.next = hss
-
-    return node.hpack(first, 0, "exactly")
-end
-
-
 --- Typesets the cost of a paragraph beside it in draft mode
 ---
 --- @param paragraph node
@@ -485,11 +459,11 @@ local function show_cost(paragraph, cost)
         return
     end
 
-    local last_hlist_end = last(next_of_type(
+    local last_hlist = next_of_type(
         last(paragraph),
         hlist_id,
         { subtype = line_subid, reverse = true }
-    ).list)
+    )
 
     local cost_str
     if cost < math.maxinteger then
@@ -498,7 +472,42 @@ local function show_cost(paragraph, cost)
         cost_str = "infinite"
     end
 
-    last_hlist_end.next = llap_string(cost_str)
+    local m, first
+    for letter in cost_str:gmatch(".")  do
+        local n = new_node("glyph")
+        n.font = SMALL_FONT
+        n.char = string.byte(letter)
+
+        if not first then
+            first = n
+        else
+            m.next = n
+        end
+        m = n
+    end
+
+    local hss = new_node("glue")
+    hss.stretch = 1
+    hss[stretch_order] = 1
+    hss.shrink = 1
+    hss[shrink_order] = 1
+
+    local hbox
+    local offset = new_node("glue")
+    local offset_width = tex_dimen[draft_offset]
+
+    if offset_width >= 0 then
+        offset.width = offset_width
+        m.next = hss
+        hbox = node.hpack(first, 0, "exactly")
+    else
+        offset.width = offset_width - last_hlist.width
+        hss.next = first
+        hbox = node.hpack(hss, 0, "exactly")
+    end
+
+    last(last_hlist.list).next = offset
+    offset.next = hbox
 end
 
 

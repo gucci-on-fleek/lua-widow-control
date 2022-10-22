@@ -76,6 +76,10 @@
     emergencystretch .value_required:n = true,
     emergencystretch .initial:x        = \dim_max:nn { 3em } { 30pt },
 
+    draftoffset .dim_gset:N       = \g__lwc_draftoffset_dim,
+    draftoffset .value_required:n = true,
+    draftoffset .initial:x        = \dim_max:nn { \parindent } { 12pt },
+
     max-cost .int_gset:N       = \g__lwc_maxcost_int,
     max-cost .value_required:n = true,
     max-cost .initial:x        = \c_max_int,

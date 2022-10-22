@@ -18,10 +18,12 @@
 
 % Set up the options
 \newdimen\lwc_emergency_stretch
+\newdimen\lwc_draft_offset
 \newcount\lwc_max_cost
 
 \starttexdefinition lwc_set_parameters
     \lwc_emergency_stretch=\lwcparameter{emergencystretch}
+    \lwc_draft_offset=\lwcparameter{draftoffset}
 
     \doifelse{\lwcparameter{\c!state}}\v!start{
         \lwc_enable
@@ -96,6 +98,7 @@
     \c!state=\v!start,
     debug=\v!stop,
     draft=\v!stop,
+    draftoffset=12pt,
 ]
 
 \setuplwc[default]

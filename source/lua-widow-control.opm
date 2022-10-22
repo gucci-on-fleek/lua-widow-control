@@ -14,6 +14,9 @@
 \_newdimen\lwcemergencystretch
 \lwcemergencystretch=3em
 
+\_newdimen\lwcdraftoffset
+\lwcdraftoffset=\parindent
+
 \_newcount\lwcmaxcost
 \lwcmaxcost=2147483647
 

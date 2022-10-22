@@ -1,0 +1,24 @@
+\documentclass{article}
+
+\usepackage[draft]{lua-widow-control}
+
+\parindent=0pt
+\parskip=\baselineskip
+
+\begin{document}
+
+One \hfill one.
+
+\lwcsetup{draftoffset=0pt} Two \hfill two.
+
+\lwcsetup{draftoffset=1in} Three \hfill three.
+
+\lwcsetup{draftoffset=-1sp} Four \hfill four.
+
+\lwcsetup{draftoffset=-1in} Five \hfill five.
+
+\lwcsetup{draftoffset=1em} Six \hfill six \hfill six.
+
+Seven \hfill seven \hfill seven.
+
+\end{document}
