@@ -525,8 +525,13 @@ sets the values to~5\,000 and 10\,000 respectively.
 
 \subsection{Draft Mode}
 
-You can use the draft mode to visualize how \lwc/ processes pages. Any \color[failure]{remaining widows and orphans will be coloured red}, any \color[expanded]{expanded paragraphs will be coloured green}, and any \color[moved]{lines moved to the next page will be coloured blue}. In addition, the cost of each paragraph is shown in the right margin.
+\setuplwc[draft=start]
+\definecolor[lwc_expanded][s=0]
+\definecolor[lwc_failure][s=0]
+\definecolor[lwc_moved][s=0]
+You can use the draft mode to visualize how \lwc/ processes pages. Any \color[failure]{remaining widows and orphans will be coloured red}, any \color[expanded]{expanded paragraphs will be coloured green}, and any \color[moved]{lines moved to the next page will be coloured blue}. In addition, the cost of each paragraph is shown in the right margin as it is here.
 
+\setuplwc[draft=stop]
 \startTABLE[setups=commandtable]
     \NC \plainop/
     \NC\inlineTEX{\lwcdraft 1}
@@ -539,8 +544,30 @@ You can use the draft mode to visualize how \lwc/ processes pages. Any \color[fa
     \NC\NR
 \stopTABLE
 
+\setuplwc[draft=start]
 Advanced users may also customize the colours used by modifying the \inlineLUA{lwc.colours} table. The table keys are currently \type{expanded}, \type{failure}, and \type{moved}. The table values are \acronym{RGB} 3-tuples, where each element is a float between zero and one.
 
+\subsection{Draft Offset}
+
+In draft mode, the paragraph costs are printed in the right margin, offset a certain distance from the right edge of the paragraph. By default, this offset is the same length as the paragraph indent; however, you can change this to any value that you want:
+
+\setuplwc[draft=stop]
+\startTABLE[setups=commandtable]
+    \NC \plainop/
+    \NC\inlineTEX{\lwcdraftoffset = $\meta{dimension}$}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{draftoffset = $\meta{dimension}$}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[draftoffset = $\meta{dimension}$]}
+    \NC\NR
+\stopTABLE
+
+\setuplwc[draft=start, draftoffset=-1em]
+If you set the \q{draft offset} to a negative value, the paragraph costs will instead be printed to the left of the paragraph, as it is here.
+
+\setuplwc[draft=stop]
 \subsection{Debug Mode}
 
 \Lwc/ offers a \q{debug} mode that prints extra information in the log files. This may be helpful to understand how \lwc/ is processing paragraphs and pages, although the information is likely inscrutable unless you are the package's author. If you are reporting an issue with \lwc/ make sure to compile your document with debug mode enabled!

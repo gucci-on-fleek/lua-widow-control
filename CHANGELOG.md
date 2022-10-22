@@ -11,6 +11,8 @@ All notable changes to lua-widow-control will be listed here, in reverse chronol
 
 ## Unreleased
 
+- Add the ability to configure the horizontal offset for the paragraph costs printed in draft mode.
+
 - Fully support inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
 
 - Add support for presets in ConTeXt.
