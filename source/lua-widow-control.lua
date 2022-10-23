@@ -497,6 +497,11 @@ local function colour_list(head, colour)
         return head
     end
 
+    if lmtx and (latex or plain) then
+        -- TODO: Colours don't currently work here
+        return head
+    end
+
     -- Adapted from https://tex.stackexchange.com/a/372437
     -- \\pdfextension colorstack is ignored in LMTX
     local start_colour = new_node("whatsit", "pdf_colorstack")
@@ -955,16 +960,26 @@ local function get_inserts(last_line)
 
         if lmtx then
             insert_box = tex.getinsertcontent(class)
+            tex.setinsertcontent(class, insert_box)
         else
             insert_box = tex_box[class]
         end
 
         -- Get any portions of the insert held over until the next page
-        local split_insert = next_of_type(
-            tex_lists[hold_head],
-            insert_id,
-            { subtype = class }
-        )
+        local split_insert
+        if lmtx then
+            split_insert = next_of_type(
+                tex_lists[hold_head],
+                insert_id,
+                { index = class }
+            )
+        else
+            split_insert = next_of_type(
+                tex_lists[hold_head],
+                insert_id,
+                { subtype = class }
+            )
+        end
 
         for i, insert in ipairs { insert_box, split_insert } do
             local m = insert and insert.list
@@ -972,6 +987,7 @@ local function get_inserts(last_line)
             while m do -- Iterate through the insert box
                 local box_value
                 box_value, m = find_attribute(m, insert_attribute)
+                local next = m.next
 
                 if not m then
                     break
@@ -987,10 +1003,10 @@ local function get_inserts(last_line)
                         table.insert(selected_inserts, copy(inserts[box_value]))
                     end
 
-                    m = free(m)
-                else
-                    m = m.next
+                    free(m)
                 end
+
+                m = next
             end
         end
 

@@ -15,7 +15,7 @@
 \catcode`@=11
 
 % We need to change some code if we're using LuaMetaTeX
-\def\lwc@iflmtx{\ifnum\luatexversion>200}
+\def\lwc@iflmtx{\ifnum\luatexversion>200\relax}
 
 \input ltluatex % \LuaTeX{}Base
 
@@ -43,9 +43,10 @@
 % Enable \lwc/ by default when the package is loaded.
 \lwc@enable
 
-% Make the parinit skips visible from Lua
+% Fix some strange LMTX bugs
 \lwc@iflmtx
     \normalizelinemode=\numexpression\normalizelinemode bor 2\relax
+    \everypar=\expandafter{\the\everypar\ifdim\parskip=0sp \parskip=1sp\fi}
 \fi
 
 
