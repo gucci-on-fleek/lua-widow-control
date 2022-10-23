@@ -6,6 +6,8 @@
 \voffset=56pt
 \parskip=0pt
 
+\def\footnoterule{\kern-3pt \hrule width 2in \kern 2.6pt}
+
 Hello hello hello hello hello hello hello hello hello hello hello hello hello hello
 hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello
 hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello

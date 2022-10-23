@@ -1,0 +1,10 @@
+#!/bin/sh
+set -euo pipefail
+
+luametatex="$(kpsewhich -var-value SELFAUTOLOC)/luametatex"
+format=$(echo "$@" | sed -E 's/^.*--fmt=([^ ]*) .*$/\1/')
+format_file="$(kpsewhich --engine luametatex $format.fmt)"
+lua="$(kpsewhich  luametalatex.lua)"
+filename=$(echo "$@" | sed -E 's/^.*\input ([^ ]*).*$/\1/')
+
+exec "$luametatex" --lua="$lua" --fmt="$format_file" "$filename"
