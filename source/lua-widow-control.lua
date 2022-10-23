@@ -74,6 +74,7 @@ elseif format:find("optex") then -- OpTeX
 end
 
 -- LuaMetaLaTeX and LuaMetaPlain don't seem to set the format name correctly
+-- TODO Fix this at some point
 if lmtx and format == "" then
     if token.create("documentclass").cmdname == "undefined_cs" then
         plain = true
@@ -1124,7 +1125,19 @@ end
 --- @param head node
 --- @param paragraph_index number
 local function replace_paragraph(head, paragraph_index)
-    local target_node = copy_list(paragraphs[paragraph_index].node)
+    -- Remove any inserts
+    local target_node, last_target_node
+    for n in traverse(paragraphs[paragraph_index].node) do
+        if n.id ~= insert_id then
+            if not target_node then
+                target_node = copy(n)
+                last_target_node = target_node
+            else
+                last_target_node.next = copy(n)
+                last_target_node = last_target_node.next
+            end
+        end
+    end
 
     local start_found = false
     local end_found = false
