@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euo pipefail
+set -eu
 
 luametatex="$(kpsewhich -var-value SELFAUTOLOC)/luametatex"
 format=$(echo "$@" | sed -E 's/^.*--fmt=([^ ]*) .*$/\1/')
