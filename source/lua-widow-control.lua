@@ -89,22 +89,27 @@ local line_subid = 1
 local linebreakpenalty_subid = 1
 local par_id = id_from_name("par") or id_from_name("local_par")
 local penalty_id = id_from_name("penalty")
+local vlist_id = id_from_name("vlist")
 
 -- Local versions of globals
 local abs = math.abs
 local copy = node.copy
 local copy_list = node.copy_list or node.copylist
+local effective_glue = node.effective_glue or node.effectiveglue
 local find_attribute = node.find_attribute or node.findattribute
 local free = node.free
 local free_list = node.flush_list or node.flushlist
 local get_attribute = node.get_attribute or node.getattribute
 local insert_token = token.put_next or token.putnext
+local is_node = node.is_node or node.isnode
 local last = node.slide
 local linebreak = tex.linebreak
 local new_node = node.new
 local remove = node.remove
 local set_attribute = node.set_attribute or node.setattribute
-local string_char = string.char
+local str_byte = string.byte
+local str_char = string.char
+local str_format = string.format
 local tex_box = tex.box
 local tex_count = tex.count
 local tex_dimen = tex.dimen
@@ -255,6 +260,7 @@ end
   ]]
 local paragraphs = {}
 local inserts = {}
+local costs = {}
 
 --[[ Function definitions
   ]]
@@ -277,7 +283,7 @@ local function get_chars(head)
     for n in traverse(head) do
         if n.id == glyph_id then
             if n.char < 127 then -- Only ASCII
-                chars = chars .. string_char(n.char)
+                chars = chars .. str_char(n.char)
             else
                 chars = chars .. "#"  -- Replacement for an unknown glyph
             end
@@ -375,10 +381,19 @@ local function long_paragraph(head)
     end
 
     -- Break the paragraph 1 line longer than natural
-    return linebreak(head, {
+    local long_node, long_info =  linebreak(head, {
         looseness = 1,
         emergencystretch = tex_dimen[emergencystretch],
     })
+
+    -- For the costs display
+    set_attribute(
+        last(long_node),
+        paragraph_attribute,
+        -1 * (#paragraphs + 1 + (PAGE_MULTIPLE * pagenum()))
+    )
+
+    return long_node, long_info
 end
 
 
@@ -413,7 +428,7 @@ local function colour_list(head, colour)
         return head
     end
 
-    local pdf_colour = string.format(
+    local pdf_colour = str_format(
         "%.2f %.2f %.2f rg",
         table.unpack(lwc.colours[colour])
     )
@@ -446,68 +461,6 @@ local function colour_list(head, colour)
     last(head).next = end_colour
 
     return start_colour
-end
-
-
---- Typesets the cost of a paragraph beside it in draft mode
----
---- @param paragraph node
---- @param cost number
---- @return nil
-local function show_cost(paragraph, cost)
-    if not lwc.draft_mode then
-        return
-    end
-
-    local last_hlist = next_of_type(
-        last(paragraph),
-        hlist_id,
-        { subtype = line_subid, reverse = true }
-    )
-
-    local cost_str
-    if cost < math.maxinteger then
-        cost_str = string.format("%.0f", cost)
-    else
-        cost_str = "infinite"
-    end
-
-    local m, first
-    for letter in cost_str:gmatch(".")  do
-        local n = new_node("glyph")
-        n.font = SMALL_FONT
-        n.char = string.byte(letter)
-
-        if not first then
-            first = n
-        else
-            m.next = n
-        end
-        m = n
-    end
-
-    local hss = new_node("glue")
-    hss.stretch = 1
-    hss[stretch_order] = 1
-    hss.shrink = 1
-    hss[shrink_order] = 1
-
-    local hbox
-    local offset = new_node("glue")
-    local offset_width = tex_dimen[draft_offset]
-
-    if offset_width >= 0 then
-        offset.width = offset_width
-        m.next = hss
-        hbox = node.hpack(first, 0, "exactly")
-    else
-        offset.width = offset_width - last_hlist.width
-        hss.next = first
-        hbox = node.hpack(hss, 0, "exactly")
-    end
-
-    last(last_hlist.list).next = offset
-    offset.next = hbox
 end
 
 
@@ -560,7 +513,6 @@ function lwc.save_paragraphs(head)
 
     local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
 
-    show_cost(saved_node, long_cost)
     for n in traverse_id(hlist_id, saved_node) do
         n.list = colour_list(n.list, "expanded")
     end
@@ -571,6 +523,8 @@ function lwc.save_paragraphs(head)
     })
 
     free_list(long_node)
+
+    costs[#paragraphs + (PAGE_MULTIPLE * pagenum())] = long_cost
 
     -- Print some debugging information
     get_chars(head)
@@ -630,10 +584,6 @@ local function mark_paragraphs(head)
                 paragraph_attribute,
                 #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
             )
-        end
-
-        if #paragraphs > 0 then
-            show_cost(head, paragraphs[#paragraphs].cost)
         end
     end
 end
@@ -1219,6 +1169,108 @@ function lwc.remove_widows(head)
 end
 
 
+--- Add the paragraph to the list of paragraphs on the page.
+---
+--- Called immediately before the page is shipped out so that we can get
+--- the costs on the correct side in multi-column layouts.
+---
+--- @param head node The box to be shipped out
+--- @return true
+function lwc.show_costs (head)
+    if not lwc.draft_mode then
+        return true
+    end
+
+    local pagewidth = tex.pagewidth or layouts.getpagedimensions()
+
+    local function recurse(n, width, level, parent)
+        for m in traverse(n) do
+            local self_width = 0
+            if m.id == glue_id and parent.id == hlist_id then
+                self_width = effective_glue(m, parent)
+            elseif m.width and parent.id == hlist_id then
+                self_width = m.width
+            end
+
+            -- if m.shift and
+            --    (parent.id == vlist_id or
+            --     not is_node(parent))
+            -- then
+            --     width = width + m.shift
+            -- end
+
+            width = width + self_width
+
+            local attr = get_attribute(m, paragraph_attribute)
+            if attr and attr < 0 then
+                local cost = costs[abs(attr)]
+                local cost_str
+                if cost < math.maxinteger then
+                    cost_str = str_format("%.0f", cost)
+                else
+                    cost_str = "infinite"
+                end
+
+                local prev, first
+                for letter in cost_str:gmatch(".")  do
+                    local curr = new_node("glyph")
+                    curr.font = SMALL_FONT
+                    curr.char = str_byte(letter)
+
+                    if not first then
+                        first = curr
+                    else
+                        prev.next = curr
+                    end
+                    prev = curr
+                end
+
+                local hss = new_node("glue")
+                hss.stretch = 1
+                hss[stretch_order] = 1
+                hss.shrink = 1
+                hss[shrink_order] = 1
+
+                local hbox
+                local offset = new_node("glue")
+
+                if (width >= pagewidth / 2) or
+                   (m.width >= 0.4 * pagewidth)
+                then
+                    offset.width = (
+                        pagewidth -
+                        width -
+                        m.width -
+                        m.shift -
+                        tex_dimen[draft_offset]
+                    )
+                    prev.next = hss
+                    hbox = node.hpack(first, 0, "exactly")
+                else
+                    offset.width = tex_dimen[draft_offset] - m.width - width
+                    hss.next = first
+                    hbox = node.hpack(hss, 0, "exactly")
+                end
+
+                last(m.list).next = offset
+                offset.next = hbox
+            elseif m.list then
+                recurse(m.list, width - self_width, level + 1, m)
+            end
+        end
+    end
+
+    recurse(
+        head.list,
+        (tex.hoffset or 0) + tex.sp "1in",
+        0,
+        {}
+    )
+
+    return true
+end
+
+
 --- Create a table of functions to enable or disable a given callback
 ---
 --- @param t table Parameters of the callback to create
@@ -1307,6 +1359,13 @@ lwc.callbacks = {
         name     = "mark_paragraphs",
         category = "finalizers",
         position = "after",
+    }),
+    show_costs = register_callback({
+        callback = "pre_shipout_filter",
+        func     = lwc.show_costs,
+        name     = "show_costs",
+        category = "shipouts",
+        position = "finishers",
     }),
 }
 
@@ -1495,12 +1554,13 @@ if context then
     for colour, values in pairs(lwc.colours) do
         attributes.colors.defineprocesscolor(
             "lwc_" .. colour,
-            string.format("r=%.2f, g=%.2f, b=%.2f", table.unpack(values))
+            str_format("r=%.2f, g=%.2f, b=%.2f", table.unpack(values))
         )
     end
 end
 
 -- Activate \lwc/
 lwc.callbacks.remove_widows.enable()
+lwc.callbacks.show_costs.enable()
 
 return lwc
