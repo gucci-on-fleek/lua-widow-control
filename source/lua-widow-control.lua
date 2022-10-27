@@ -1193,6 +1193,14 @@ function lwc.show_costs (head)
                 self_width = m.width
             end
 
+            local shift = 0
+            if m.shift and
+               (parent.id == vlist_id or
+                not is_node(parent))
+            then
+                shift = m.shift
+            end
+
             width = width + self_width
 
             local attr = get_attribute(m, paragraph_attribute)
@@ -1231,11 +1239,17 @@ function lwc.show_costs (head)
                 if (width >= pagewidth / 2) or
                    (m.width >= 0.4 * pagewidth)
                 then
-                    offset.width = tex_dimen[draft_offset]
+                    offset.width = (
+                        pagewidth -
+                        width -
+                        m.width -
+                        shift -
+                        tex_dimen[draft_offset]
+                    )
                     prev.next = hss
                     hbox = hpack(first, 0, "exactly")
                 else
-                    offset.width = -tex_dimen[draft_offset] - m.width
+                    offset.width = tex_dimen[draft_offset] - m.width - width - shift
                     hss.next = first
                     hbox = hpack(hss, 0, "exactly")
                 end
@@ -1243,7 +1257,7 @@ function lwc.show_costs (head)
                 last(m.list).next = offset
                 offset.next = hbox
             elseif m.list then
-                recurse(m.list, width - self_width, level + 1, m)
+                recurse(m.list, width - self_width + shift, level + 1, m)
             end
         end
     end
