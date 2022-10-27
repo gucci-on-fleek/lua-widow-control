@@ -133,6 +133,7 @@ lwc.colours = {
     expanded = {0.00, 0.70, 0.25},
     failure  = {0.90, 0.00, 0.25},
     moved    = {0.25, 0.25, 1.00},
+    cost     = {0.50, 0.50, 0.50},
 }
 
 --[[ Package/module initialization.
@@ -1227,6 +1228,8 @@ function lwc.show_costs (head)
                     prev = curr
                 end
 
+                local text = hpack(colour_list(first, "cost"))
+
                 local hss = new_node("glue")
                 hss.stretch = 1
                 hss[stretch_order] = 1
@@ -1246,11 +1249,11 @@ function lwc.show_costs (head)
                         shift -
                         tex_dimen[draft_offset]
                     )
-                    prev.next = hss
-                    hbox = hpack(first, 0, "exactly")
+                    text.next = hss
+                    hbox = hpack(text, 0, "exactly")
                 else
                     offset.width = tex_dimen[draft_offset] - m.width - width - shift
-                    hss.next = first
+                    hss.next = text
                     hbox = hpack(hss, 0, "exactly")
                 end
 
@@ -1367,7 +1370,7 @@ lwc.callbacks = {
         func     = lwc.show_costs,
         name     = "show_costs",
         category = "shipouts",
-        position = "finishers",
+        position = "normalizers",
     }),
 }
 
