@@ -415,14 +415,14 @@ local function natural_paragraph(head)
 end
 
 
-lwc.draft_mode = false
+local show_colours = false
 --- Changes the text colour in a node list if draft mode is active
 ---
 --- @param head node The first node to colour
 --- @param colour string The name of a colour in `lwc.colours`
 --- @return node head The coloured node
 local function colour_list(head, colour)
-    if not lwc.draft_mode then
+    if not show_colours then
         return head
     end
 
@@ -1169,6 +1169,7 @@ function lwc.remove_widows(head)
 end
 
 
+local show_costs = false
 --- Add the paragraph to the list of paragraphs on the page.
 ---
 --- Called immediately before the page is shipped out so that we can get
@@ -1177,7 +1178,7 @@ end
 --- @param head node The box to be shipped out
 --- @return true
 function lwc.show_costs (head)
-    if not lwc.draft_mode then
+    if not show_costs then
         return true
     end
 
@@ -1479,9 +1480,16 @@ register_tex_cmd(
     { "string" }
 )
 register_tex_cmd(
-    "draft",
+    "show_costs",
     function(str)
-        lwc.draft_mode = str ~= "0" and str ~= "false" and str ~= "stop"
+        show_costs = str ~= "0" and str ~= "false" and str ~= "stop"
+    end,
+    { "string" }
+)
+register_tex_cmd(
+    "show_colours",
+    function(str)
+        show_colours = str ~= "0" and str ~= "false" and str ~= "stop"
     end,
     { "string" }
 )

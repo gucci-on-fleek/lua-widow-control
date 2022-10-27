@@ -33,7 +33,8 @@
 
     \lwc_debug{\lwcparameter{debug}}
 
-    \lwc_draft{\lwcparameter{draft}}
+    \lwc_show_costs{\lwcparameter{draft}}
+    \lwc_show_colours{\lwcparameter{draft}}
 
     \lwc_nobreak{\lwcparameter{nobreak}}
 

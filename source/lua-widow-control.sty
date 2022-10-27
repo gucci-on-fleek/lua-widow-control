@@ -231,8 +231,10 @@
     debug .value_required:n   = false,
 
     draft .choice:,
-    draft / true  .code:n     = \__lwc_draft:n { true  },
-    draft / false .code:n     = \__lwc_draft:n { false },
+    draft / true  .code:n     = \__lwc_show_costs:n   { true  }
+                                \__lwc_show_colours:n { true  },
+    draft / false .code:n     = \__lwc_show_costs:n   { false }
+                                \__lwc_show_colours:n { false },
     draft .default:n          = true,
     draft .value_required:n   = false,
 

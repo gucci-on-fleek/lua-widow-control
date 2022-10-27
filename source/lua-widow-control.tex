@@ -91,7 +91,10 @@
 \let\lwcenable=\lwc@enable
 \let\lwcdisable=\lwc@disable
 \let\lwcdebug=\lwc@debug
-\let\lwcdraft=\lwc@draft
+\def\lwcdraft#1{%
+    \lwc@show@costs{#1}%
+    \lwc@show@colours{#1}%
+}
 \let\iflwc=\lwc@if@enabled
 \let\lwcnobreak=\lwc@nobreak
 
