@@ -147,7 +147,6 @@ local contrib_head,
       info,
       insert_attribute,
       max_cost,
-      pagenum,
       paragraph_attribute,
       shrink_order,
       stretch_order,
@@ -182,15 +181,12 @@ if context then
     end
     paragraph_attribute = attributes.public(lwc.name .. "_paragraph")
     insert_attribute = attributes.public(lwc.name .. "_insert")
-    pagenum = function() return tex_count["realpageno"] end
 
     -- Dimen names
     emergencystretch = "lwc_emergency_stretch"
     draft_offset = "lwc_draft_offset"
     max_cost = "lwc_max_cost"
 elseif plain or latex or optex then
-    pagenum = function() return tex_count[0] end
-
     -- Dimen names
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
@@ -261,6 +257,7 @@ end
 local paragraphs = {}
 local inserts = {}
 local costs = {}
+local pagenum = 0
 
 --[[ Function definitions
   ]]
@@ -268,7 +265,7 @@ local costs = {}
 --- Gets the current paragraph and page locations
 --- @return string
 local function get_location()
-    return "At " .. pagenum() .. "/" .. #paragraphs
+    return "At " .. pagenum .. "/" .. #paragraphs
 end
 
 
@@ -390,7 +387,7 @@ local function long_paragraph(head)
     set_attribute(
         last(long_node),
         paragraph_attribute,
-        -1 * (#paragraphs + 1 + (PAGE_MULTIPLE * pagenum()))
+        -1 * (#paragraphs + 1 + (PAGE_MULTIPLE * pagenum))
     )
 
     return long_node, long_info
@@ -524,7 +521,7 @@ function lwc.save_paragraphs(head)
 
     free_list(long_node)
 
-    costs[#paragraphs + (PAGE_MULTIPLE * pagenum())] = long_cost
+    costs[#paragraphs + (PAGE_MULTIPLE * pagenum)] = long_cost
 
     -- Print some debugging information
     get_chars(head)
@@ -569,12 +566,12 @@ local function mark_paragraphs(head)
             set_attribute(
                 top,
                 paragraph_attribute,
-                #paragraphs + (PAGE_MULTIPLE * pagenum())
+                #paragraphs + (PAGE_MULTIPLE * pagenum)
             )
             set_attribute(
                 bottom,
                 paragraph_attribute,
-                -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum()))
+                -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum))
             )
         else
             -- We need a special tag for a 1-line paragraph since the node can only
@@ -582,7 +579,7 @@ local function mark_paragraphs(head)
             set_attribute(
                 top,
                 paragraph_attribute,
-                #paragraphs + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
+                #paragraphs + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
             )
         end
     end
@@ -704,6 +701,8 @@ local function reset_state()
         free(insert)
     end
     inserts = {}
+
+    pagenum = pagenum + 1
 end
 
 
@@ -711,7 +710,7 @@ end
 ---
 --- @return nil
 local function remove_widows_fail()
-    warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum())
+    warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum)
 
     local last_line = next_of_type(
         last(tex_lists.page_head),
@@ -759,7 +758,7 @@ local function first_last_paragraphs(head)
 
     -- Find the first paragraph on the page, from the top
     local first_val, first_head = find_attribute(head, paragraph_attribute)
-    while abs(first_val) // PAGE_MULTIPLE == pagenum() - 1 do
+    while abs(first_val) // PAGE_MULTIPLE == pagenum - 1 do
         --[[ If the first complete paragraph on the page was initially broken on the
              previous page, then we can't expand it here so we need to skip it.
           ]]
@@ -805,7 +804,7 @@ local function best_paragraph(head)
 
     debug(
         "selected para",
-        pagenum() .. "/" .. best_index .. " (" .. best_cost .. ")"
+        pagenum .. "/" .. best_index .. " (" .. best_cost .. ")"
     )
 
     if best_cost  >  tex_count[max_cost] or
@@ -896,7 +895,7 @@ local function get_inserts(last_line)
     end
 
     if #selected_inserts ~= 0 then
-        info("Moving footnotes on page " .. pagenum())
+        info("Moving footnotes on page " .. pagenum)
     end
 
     return selected_inserts
@@ -956,7 +955,7 @@ local function move_last_line(head)
        potential_penalty.subtype == linebreakpenalty_subid and
        is_matching_penalty(potential_penalty.penalty)
     then
-        warning("Making a new widow/orphan/broken hyphen on page " .. pagenum())
+        warning("Making a new widow/orphan/broken hyphen on page " .. pagenum)
 
         local second_last_line = next_of_type(
             potential_penalty,
@@ -1017,8 +1016,8 @@ local function replace_paragraph(head, paragraph_index)
         debug("remove_widows", "found " .. value)
 
         -- Insert the start of the replacement paragraph
-        if value == paragraph_index + (PAGE_MULTIPLE * pagenum()) or
-           value == paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
+        if value == paragraph_index + (PAGE_MULTIPLE * pagenum) or
+           value == paragraph_index + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
         then
             debug("remove_widows", "replacement start")
             start_found = true
@@ -1044,8 +1043,8 @@ local function replace_paragraph(head, paragraph_index)
         end
 
         -- Insert the end of the replacement paragraph
-        if value == -1 * (paragraph_index + (PAGE_MULTIPLE * pagenum())) or
-           value ==       paragraph_index + (PAGE_MULTIPLE * pagenum()) + SINGLE_LINE
+        if value == -1 * (paragraph_index + (PAGE_MULTIPLE * pagenum)) or
+           value ==       paragraph_index + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
         then
             debug("remove_widows", "replacement end")
             end_found = true
@@ -1074,7 +1073,7 @@ local function replace_paragraph(head, paragraph_index)
     if start_found and end_found then
         free_list(free_nodes_begin)
     else
-        warning("Paragraph NOT expanded on page " .. pagenum())
+        warning("Paragraph NOT expanded on page " .. pagenum)
     end
 end
 
@@ -1160,7 +1159,7 @@ function lwc.remove_widows(head)
         "Widow/orphan/broken hyphen successfully removed at paragraph "
         .. paragraph_index
         .. " on page "
-        .. pagenum()
+        .. pagenum
     )
 
     reset_state()
