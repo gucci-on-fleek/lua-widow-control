@@ -100,6 +100,7 @@ local find_attribute = node.find_attribute or node.findattribute
 local free = node.free
 local free_list = node.flush_list or node.flushlist
 local get_attribute = node.get_attribute or node.getattribute
+local hpack = node.hpack
 local insert_token = token.put_next or token.putnext
 local is_node = node.is_node or node.isnode
 local last = node.slide
@@ -1191,13 +1192,6 @@ function lwc.show_costs (head)
                 self_width = m.width
             end
 
-            -- if m.shift and
-            --    (parent.id == vlist_id or
-            --     not is_node(parent))
-            -- then
-            --     width = width + m.shift
-            -- end
-
             width = width + self_width
 
             local attr = get_attribute(m, paragraph_attribute)
@@ -1236,19 +1230,13 @@ function lwc.show_costs (head)
                 if (width >= pagewidth / 2) or
                    (m.width >= 0.4 * pagewidth)
                 then
-                    offset.width = (
-                        pagewidth -
-                        width -
-                        m.width -
-                        m.shift -
-                        tex_dimen[draft_offset]
-                    )
+                    offset.width = tex_dimen[draft_offset]
                     prev.next = hss
-                    hbox = node.hpack(first, 0, "exactly")
+                    hbox = hpack(first, 0, "exactly")
                 else
-                    offset.width = tex_dimen[draft_offset] - m.width - width
+                    offset.width = -tex_dimen[draft_offset] - m.width
                     hss.next = first
-                    hbox = node.hpack(hss, 0, "exactly")
+                    hbox = hpack(hss, 0, "exactly")
                 end
 
                 last(m.list).next = offset
