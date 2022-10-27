@@ -237,15 +237,15 @@ end
   ]]
 local SMALL_FONT
 if plain then
-    SMALL_FONT = 4
+    SMALL_FONT = 5
 elseif latex then
-    SMALL_FONT = 7
+    SMALL_FONT = 6
 elseif optex then
-    SMALL_FONT = 7
+    SMALL_FONT = 8
 elseif context then
     SMALL_FONT = fonts.definers.define({
-        name = "LMRoman7-Regular",
-        size = tex.sp("7pt"),
+        name = "LMRoman6-Regular",
+        size = tex.sp("6pt"),
     })
 end
 
@@ -257,7 +257,7 @@ end
 local paragraphs = {}
 local inserts = {}
 local costs = {}
-local pagenum = 0
+local pagenum = 1
 
 --[[ Function definitions
   ]]
