@@ -231,6 +231,17 @@ else -- This shouldn't ever happen
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
+local horigin
+if optex then
+    horigin = 0
+else
+    horigin = tex.sp("1in")
+end
+
+if plain then
+    luatexbase.create_callback('pre_shipout_filter', 'list')
+end
+
 --[[ Select the fonts
 
      We want to use cmr7 for the draft mode cost displays, and the easiest
@@ -1205,10 +1216,17 @@ function lwc.show_costs (head)
             width = width + self_width
 
             local attr = get_attribute(m, paragraph_attribute)
-            if attr and attr < 0 then
-                local cost = costs[abs(attr)]
+            if attr and abs(attr) % PAGE_MULTIPLE >= SINGLE_LINE then
+                attr = -1 * (abs(attr) - SINGLE_LINE)
+            end
+
+            local cost = costs[abs(attr or 0)]
+
+            if attr and attr < 0 and cost then
                 local cost_str
-                if cost < math.maxinteger then
+                if not cost then
+                    return
+                elseif cost < math.maxinteger then
                     cost_str = str_format("%.0f", cost)
                 else
                     cost_str = "infinite"
@@ -1267,7 +1285,7 @@ function lwc.show_costs (head)
 
     recurse(
         head.list,
-        (tex.hoffset or 0) + tex.sp "1in",
+        (tex.hoffset or 0) + horigin,
         0,
         {}
     )
@@ -1509,6 +1527,13 @@ register_tex_cmd(
         show_colours = str ~= "0" and str ~= "false" and str ~= "stop"
     end,
     { "string" }
+)
+register_tex_cmd(
+    "pre_shipout",
+    function(box)
+        luatexbase.call_callback('pre_shipout_filter', tex_box[box])
+    end,
+    { "integer" }
 )
 
 --- Silence the luatexbase "Enabling/Removing <callback>" info messages

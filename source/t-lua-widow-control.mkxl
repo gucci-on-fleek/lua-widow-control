@@ -99,7 +99,7 @@
     \c!state=\v!start,
     debug=\v!stop,
     draft=\v!stop,
-    draftoffset=12pt,
+    draftoffset=1in,
 ]
 
 \setuplwc[default]
