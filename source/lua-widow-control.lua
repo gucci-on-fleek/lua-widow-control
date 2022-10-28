@@ -245,27 +245,6 @@ else -- This shouldn't ever happen
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
--- Missing functions in LMTX
-if (latex or plain) and lmtx then
-    local todirect = node.direct.tovaliddirect
-    local tonode = node.direct.tonode
-
-    local direct_slide = node.direct.slide
-    last = function (n)
-        return tonode(direct_slide(todirect(n)))
-    end
-
-    local direct_vpack = node.direct.vpack
-    vpack = function (n)
-        return tonode(direct_vpack(todirect(n)))
-    end
-
-    local direct_findattribute = node.direct.findattribute
-    find_attribute = function (n, a)
-        local v, n = direct_findattribute(todirect(n), a)
-        return v, tonode(n)
-    end
-end
 
 --[[ Select the fonts
 
