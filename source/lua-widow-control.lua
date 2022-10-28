@@ -67,20 +67,13 @@ if format:find("cont") then -- cont-en, cont-fr, cont-nl, ...
     context = true
 elseif format:find("latex") then -- lualatex, lualatex-dev, ...
     latex = true
-elseif format == "luatex" or format == "luahbtex" then -- Plain
+elseif format == "luatex" or
+       format == "luahbtex" or
+       format:find("plain")
+then -- Plain
     plain = true
 elseif format:find("optex") then -- OpTeX
     optex = _G.optex
-end
-
--- LuaMetaLaTeX and LuaMetaPlain don't seem to set the format name correctly
--- TODO Fix this at some point
-if lmtx and format == "" then
-    if token.create("documentclass").cmdname == "undefined_cs" then
-        plain = true
-    else
-        latex = true
-    end
 end
 
 --[[
