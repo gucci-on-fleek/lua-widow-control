@@ -531,7 +531,6 @@ sets the values to~5\,000 and 10\,000 respectively.
 \definecolor[lwc_moved][s=0]
 You can use the draft mode to visualize how \lwc/ processes pages. Any \color[failure]{remaining widows and orphans will be coloured red}, any \color[expanded]{expanded paragraphs will be coloured green}, and any \color[moved]{lines moved to the next page will be coloured blue}. In addition, the cost of each paragraph is shown in the right margin as it is here.
 
-\setuplwc[draft=stop]
 \startTABLE[setups=commandtable]
     \NC \plainop/
     \NC\inlineTEX{\lwcdraft 1}
@@ -544,14 +543,29 @@ You can use the draft mode to visualize how \lwc/ processes pages. Any \color[fa
     \NC\NR
 \stopTABLE
 
-\setuplwc[draft=start]
 Advanced users may also customize the colours used by modifying the \inlineLUA{lwc.colours} table. The table keys are currently \type{expanded}, \type{failure}, and \type{moved}. The table values are \acronym{RGB} 3-tuples, where each element is a float between zero and one.
+
+You can also show or hide the costs and colours independently of each other.
+
+\startTABLE[setups=commandtable]
+    \NC \plainop/
+    \NC\inlineTEX{\lwcshowcosts 1}
+    \NC\NR\NC\NC\inlineTEX{\lwcshowcolours 1}
+    \NC\NR
+    \NC \LaTeX{}
+    \NC\inlineTEX{\lwcsetup{showcosts = true}}
+    \NC\NR\NC\NC\inlineTEX{\lwcsetup{showcolours = true}}
+    \NC\NR
+    \NC \ConTeXt{}
+    \NC\inlineTEX{\setuplwc[showcosts = start]}
+    \NC\NR\NC\NC\inlineTEX{\setuplwc[showcolours = start]}
+    \NC\NR
+\stopTABLE
 
 \subsection{Draft Offset}
 
-In draft mode, the paragraph costs are printed in the right margin, offset a certain distance from the page edge. By default, this offset is set to \unit{1 inch}; however, you can change this to any value that you want:
+In draft mode, the paragraph costs are printed in the margins, offset a certain distance from the page edge. By default, this offset is set to \unit{1 inch}; however, you can change this to any value that you want:
 
-\setuplwc[draft=stop]
 \startTABLE[setups=commandtable]
     \NC \plainop/
     \NC\inlineTEX{\lwcdraftoffset = $\meta{dimension}$}

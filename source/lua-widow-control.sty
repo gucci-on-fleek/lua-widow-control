@@ -230,11 +230,22 @@
     debug .default:n          = true,
     debug .value_required:n   = false,
 
-    draft .choice:,
-    draft / true  .code:n     = \__lwc_show_costs:n   { true  }
-                                \__lwc_show_colours:n { true  },
-    draft / false .code:n     = \__lwc_show_costs:n   { false }
-                                \__lwc_show_colours:n { false },
+    showcolours .choice:,
+    showcolours / true  .code:n     = \__lwc_show_colours:n { true  },
+    showcolours / false .code:n     = \__lwc_show_colours:n { false },
+    showcolours .default:n          = true,
+    showcolours .value_required:n   = false,
+
+    showcosts .choice:,
+    showcosts / true  .code:n     = \__lwc_show_costs:n   { true  },
+    showcosts / false .code:n     = \__lwc_show_costs:n   { false },
+    showcosts .default:n          = true,
+    showcosts .value_required:n   = false,
+
+    draft .meta:n   = {
+        showcolours = { #1 },
+        showcosts   = { #1 },
+    },
     draft .default:n          = true,
     draft .value_required:n   = false,
 

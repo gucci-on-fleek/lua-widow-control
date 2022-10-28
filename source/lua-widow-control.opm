@@ -79,6 +79,8 @@
     \.show_costs{#1}%
     \.show_colours{#1}%
 }
+\_let\lwcshowcosts=\.show_costs
+\_let\lwcshowcolours=\.show_colours
 \_let\iflwc=\.if_enabled
 \_let\lwcnobreak=\.nobreak
 

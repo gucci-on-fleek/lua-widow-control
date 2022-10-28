@@ -33,8 +33,18 @@
 
     \lwc_debug{\lwcparameter{debug}}
 
-    \lwc_show_costs{\lwcparameter{draft}}
-    \lwc_show_colours{\lwcparameter{draft}}
+    \doif{\lwcparameter{draft}}\v!start{
+        \setlwcparameter{showcosts}{\v!start}
+        \setlwcparameter{showcolours}{\v!start}
+    }
+
+    \doif{\lwcparameter{draft}}\v!stop{
+        \setlwcparameter{showcosts}{\v!stop}
+        \setlwcparameter{showcolours}{\v!stop}
+    }
+
+    \lwc_show_costs{\lwcparameter{showcosts}}
+    \lwc_show_colours{\lwcparameter{showcolours}}
 
     \lwc_nobreak{\lwcparameter{nobreak}}
 
@@ -98,7 +108,9 @@
 \setuplwc[
     \c!state=\v!start,
     debug=\v!stop,
-    draft=\v!stop,
+    draft=,
+    showcosts=\v!stop,
+    showcolours=\v!stop,
     draftoffset=1in,
 ]
 

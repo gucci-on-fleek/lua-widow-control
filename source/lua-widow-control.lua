@@ -232,7 +232,7 @@ Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
 local horigin
-if optex then
+if optex or lmtx then
     horigin = 0
 else
     horigin = tex.sp("1in")
@@ -1388,7 +1388,7 @@ lwc.callbacks = {
         func     = lwc.show_costs,
         name     = "show_costs",
         category = "shipouts",
-        position = "normalizers",
+        position = "finishers",
     }),
 }
 
