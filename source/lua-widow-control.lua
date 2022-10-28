@@ -1222,7 +1222,7 @@ function lwc.show_costs (head)
 
             local cost = costs[abs(attr or 0)]
 
-            if attr and attr < 0 and cost then
+            if attr and attr < 0 and cost and m.list then
                 local cost_str
                 if not cost then
                     return
