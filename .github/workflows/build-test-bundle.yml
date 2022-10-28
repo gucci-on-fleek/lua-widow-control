@@ -91,6 +91,7 @@ jobs:
           echo "lmtx_context=$HOME/lmtx/tex/texmf-linux-64/bin/context" >> $GITHUB_ENV
           echo "tl_context=$HOME/texlive/bin/x86_64-linux/context" >> $GITHUB_ENV
           echo "TEXMFHOME=$GITHUB_WORKSPACE/texmf" >> $GITHUB_ENV
+          tlmgr paper letter
 
       - name: Build Documentation
         run: |
