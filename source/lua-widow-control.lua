@@ -115,6 +115,7 @@ local new_node = node.new
 local remove = node.remove
 local set_attribute = node.set_attribute or node.setattribute
 local string_char = string.char
+local subtype = node.subtype
 local tex_box = tex.box
 local tex_count = tex.count
 local tex_dimen = tex.dimen
@@ -155,6 +156,7 @@ local contrib_head,
       pagenum,
       page_head,
       paragraph_attribute,
+      set_whatsit_field,
       shrink_order,
       stretch_order,
       warning
@@ -167,12 +169,14 @@ if lmtx then
     stretch_order = "stretchorder"
     hold_head = "holdhead"
     page_head = "pagehead"
+    set_whatsit_field = node.setwhatsitfield
 else
     contrib_head = "contrib_head"
     shrink_order = "shrink_order"
     stretch_order = "stretch_order"
     hold_head = "hold_head"
     page_head = "page_head"
+    set_whatsit_field = node.setfield
 end
 
 if context then
@@ -470,21 +474,16 @@ local function colour_list(head, colour)
         return head
     end
 
-    if lmtx and (latex or plain) then
-        -- TODO: Colours don't currently work here
-        return head
-    end
-
     -- Adapted from https://tex.stackexchange.com/a/372437
     -- \\pdfextension colorstack is ignored in LMTX
-    local start_colour = new_node("whatsit", "pdf_colorstack")
-    start_colour.stack = 0
-    start_colour.command = 1
-    start_colour.data = pdf_colour
+    local start_colour = new_node("whatsit", subtype("pdf_colorstack"))
+    set_whatsit_field(start_colour, "stack", 0)
+    set_whatsit_field(start_colour, "command", 1)
+    set_whatsit_field(start_colour, "data", pdf_colour)
 
-    local end_colour = new_node("whatsit", "pdf_colorstack")
-    end_colour.stack = 0
-    end_colour.command = 2
+    local end_colour = new_node("whatsit", subtype("pdf_colorstack"))
+    set_whatsit_field(end_colour, "stack", 0)
+    set_whatsit_field(end_colour, "command", 2)
 
     start_colour.next = head
     last(head).next = end_colour
