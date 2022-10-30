@@ -11,6 +11,8 @@ All notable changes to lua-widow-control will be listed here, in reverse chronol
 
 ## Unreleased
 
+- Add support for [LuaMetaLaTeX and LuaMetaPlain](https://github.com/zauguin/luametalatex). All features should work identically to the LuaTeX-based version, although there are a few minor bugs. ([#40](https://github.com/gucci-on-fleek/lua-widow-control/pull/40))
+
 - Fully support inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
 
 - Add support for presets in ConTeXt.
