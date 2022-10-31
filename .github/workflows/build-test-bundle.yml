@@ -26,6 +26,7 @@ jobs:
           sudo apt-get install --no-install-recommends -y
           poppler-utils
           xsltproc
+          libcurl4-openssl-dev
           ) & disown
 
       # From https://github.com/zauguin/install-texlive
@@ -92,6 +93,19 @@ jobs:
           echo "tl_context=$HOME/texlive/bin/x86_64-linux/context" >> $GITHUB_ENV
           echo "TEXMFHOME=$GITHUB_WORKSPACE/texmf" >> $GITHUB_ENV
           tlmgr paper letter
+
+      - name: Install LuaMetaLaTeX
+        run: |
+          cd ~
+          git clone --depth 1 https://github.com/zauguin/luametalatex.git
+          cd luametalatex
+          l3build install
+          mktexlsr
+
+          cd ~
+          wget https://lmltx.typesetting.eu/installer-linux64.zip
+          unzip installer-linux64.zip
+          ./installer
 
       - name: Build Documentation
         run: |

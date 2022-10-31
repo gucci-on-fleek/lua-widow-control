@@ -17,7 +17,7 @@ test_types = {
         reference = ".tltext",
         rewrite = function(source, result)
             os.execute(
-                "pdftotext -bbox-layout " .. source .. " -" ..
+                "pdftotext -enc ASCII7 -bbox-layout " .. source .. " -" ..
                 "| xsltproc --novalid --output " .. result ..
                 " " .. prefix .. "tests/transform.xslt -"
             )

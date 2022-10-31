@@ -59,14 +59,18 @@ end
 local format = tex.formatname
 local context, latex, plain, optex, lmtx
 
+if status.luatex_engine == "luametatex" then
+    lmtx = true
+end
+
 if format:find("cont") then -- cont-en, cont-fr, cont-nl, ...
     context = true
-    if status.luatex_engine == "luametatex" then
-        lmtx = true
-    end
 elseif format:find("latex") then -- lualatex, lualatex-dev, ...
     latex = true
-elseif format == "luatex" or format == "luahbtex" then -- Plain
+elseif format == "luatex" or
+       format == "luahbtex" or
+       format:find("plain")
+then -- Plain
     plain = true
 elseif format:find("optex") then -- OpTeX
     optex = _G.optex
@@ -89,6 +93,12 @@ local line_subid = 1
 local linebreakpenalty_subid = 1
 local par_id = id_from_name("par") or id_from_name("local_par")
 local penalty_id = id_from_name("penalty")
+local parfill_subids = {
+    parfillleftskip = 17,
+    parfillrightskip = 16,
+    parinitleftskip = 19,
+    parinitrightskip = 18,
+}
 local vlist_id = id_from_name("vlist")
 
 -- Local versions of globals
@@ -111,6 +121,7 @@ local set_attribute = node.set_attribute or node.setattribute
 local str_byte = string.byte
 local str_char = string.char
 local str_format = string.format
+local subtype = node.subtype
 local tex_box = tex.box
 local tex_count = tex.count
 local tex_dimen = tex.dimen
@@ -136,6 +147,15 @@ lwc.colours = {
     cost     = {0.50, 0.50, 0.50},
 }
 
+-- TODO temporary fix
+if not effective_glue then
+    local direct_effective_glue = node.direct.effectiveglue
+    local todirect = node.direct.todirect
+    effective_glue = function(n, m)
+        return direct_effective_glue(todirect(n), todirect(m))
+    end
+end
+
 --[[ Package/module initialization.
 
      Here, we replace any format/engine-specific variables/functions with some
@@ -149,7 +169,9 @@ local contrib_head,
       info,
       insert_attribute,
       max_cost,
+      page_head,
       paragraph_attribute,
+      set_whatsit_field,
       shrink_order,
       stretch_order,
       warning
@@ -161,11 +183,15 @@ if lmtx then
     shrink_order = "shrinkorder"
     stretch_order = "stretchorder"
     hold_head = "holdhead"
+    page_head = "pagehead"
+    set_whatsit_field = node.setwhatsitfield
 else
     contrib_head = "contrib_head"
     shrink_order = "shrink_order"
     stretch_order = "stretch_order"
     hold_head = "hold_head"
+    page_head = "page_head"
+    set_whatsit_field = node.setfield
 end
 
 if context then
@@ -232,7 +258,7 @@ Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
 local horigin
-if optex or lmtx then
+if optex or (lmtx and context) then
     horigin = 0
 else
     horigin = tex.sp("1in")
@@ -241,6 +267,7 @@ end
 if plain then
     luatexbase.create_callback('pre_shipout_filter', 'list')
 end
+
 
 --[[ Select the fonts
 
@@ -368,6 +395,38 @@ local function next_of_type(head, id, args)
 end
 
 
+--- Ensures that a paragraph is ready to be broken
+---
+--- Only applies to LMTX
+--- @param head node
+--- @return nil
+local function prepare_linebreak(head)
+    if not lmtx then
+        return
+    end
+
+    local parfills = {}
+    local count = 0
+    for name, subid in pairs(parfill_subids) do
+        parfills[name] = next_of_type(head, glue_id, { subtype = subid })
+        if parfills[name] then
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        -- Usual case
+        tex.preparelinebreak(head)
+    elseif count == 4 then
+        -- Already prepared for some reason, ignored
+    else
+        -- Uh oh
+        warning("Weird par(fill/init)skips found!")
+        tex.preparelinebreak(head) -- Try to fix it
+    end
+end
+
+
 --- Breaks a paragraph one line longer than natural
 ---
 --- @param head node The unbroken paragraph
@@ -377,9 +436,7 @@ local function long_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
-    if lmtx then
-        tex.preparelinebreak(head)
-    end
+    prepare_linebreak(head)
 
     -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
     -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
@@ -415,9 +472,7 @@ local function natural_paragraph(head)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
-    if lmtx then
-        tex.preparelinebreak(head)
-    end
+    prepare_linebreak(head)
 
     -- Break the paragraph naturally to get \\prevgraf
     local natural_node, natural_info = linebreak(head)
@@ -458,14 +513,14 @@ local function colour_list(head, colour)
 
     -- Adapted from https://tex.stackexchange.com/a/372437
     -- \\pdfextension colorstack is ignored in LMTX
-    local start_colour = new_node("whatsit", "pdf_colorstack")
-    start_colour.stack = 0
-    start_colour.command = 1
-    start_colour.data = pdf_colour
+    local start_colour = new_node("whatsit", subtype("pdf_colorstack"))
+    set_whatsit_field(start_colour, "stack", 0)
+    set_whatsit_field(start_colour, "command", 1)
+    set_whatsit_field(start_colour, "data", pdf_colour)
 
-    local end_colour = new_node("whatsit", "pdf_colorstack")
-    end_colour.stack = 0
-    end_colour.command = 2
+    local end_colour = new_node("whatsit", subtype("pdf_colorstack"))
+    set_whatsit_field(end_colour, "stack", 0)
+    set_whatsit_field(end_colour, "command", 2)
 
     start_colour.next = head
     last(head).next = end_colour
@@ -726,7 +781,7 @@ local function remove_widows_fail()
     warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum)
 
     local last_line = next_of_type(
-        last(tex_lists.page_head),
+        last(tex_lists[page_head]),
         hlist_id,
         { subtype = line_subid, reverse = true }
     )
@@ -857,16 +912,26 @@ local function get_inserts(last_line)
 
         if lmtx then
             insert_box = tex.getinsertcontent(class)
+            tex.setinsertcontent(class, insert_box)
         else
             insert_box = tex_box[class]
         end
 
         -- Get any portions of the insert held over until the next page
-        local split_insert = next_of_type(
-            tex_lists[hold_head],
-            insert_id,
-            { subtype = class }
-        )
+        local split_insert
+        if lmtx then
+            split_insert = next_of_type(
+                tex_lists[hold_head],
+                insert_id,
+                { index = class }
+            )
+        else
+            split_insert = next_of_type(
+                tex_lists[hold_head],
+                insert_id,
+                { subtype = class }
+            )
+        end
 
         for i, insert in ipairs { insert_box, split_insert } do
             local m = insert and insert.list
@@ -874,6 +939,7 @@ local function get_inserts(last_line)
             while m do -- Iterate through the insert box
                 local box_value
                 box_value, m = find_attribute(m, insert_attribute)
+                local next = m.next
 
                 if not m then
                     break
@@ -889,10 +955,10 @@ local function get_inserts(last_line)
                         table.insert(selected_inserts, copy(inserts[box_value]))
                     end
 
-                    m = free(m)
-                else
-                    m = m.next
+                    free(m)
                 end
+
+                m = next
             end
         end
 
@@ -1010,7 +1076,19 @@ end
 --- @param head node
 --- @param paragraph_index number
 local function replace_paragraph(head, paragraph_index)
-    local target_node = copy_list(paragraphs[paragraph_index].node)
+    -- Remove any inserts
+    local target_node, last_target_node
+    for n in traverse(paragraphs[paragraph_index].node) do
+        if n.id ~= insert_id then
+            if not target_node then
+                target_node = copy(n)
+                last_target_node = target_node
+            else
+                last_target_node.next = copy(n)
+                last_target_node = last_target_node.next
+            end
+        end
+    end
 
     local start_found = false
     local end_found = false

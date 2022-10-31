@@ -4,7 +4,9 @@
 \hoffset=62pt
 \vsize=550pt
 \voffset=56pt
-\parskip=0pt
+\parskip=1sp
+
+\def\footnoterule{\kern-3pt \hrule width 2in \kern 2.6pt}
 
 Hello hello hello hello hello hello hello hello hello hello hello hello hello hello
 hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello

@@ -1,0 +1,11 @@
+#!/bin/sh
+# lua-widow-control
+# https://github.com/gucci-on-fleek/lua-widow-control
+# SPDX-License-Identifier: MPL-2.0+
+# SPDX-FileCopyrightText: 2022 Max Chernoff
+set -eu
+
+format=$(echo "$@" | sed -E 's/^.*--fmt=([^ ]*) .*$/\1/')
+filename=$(echo "$@" | sed -E 's/^.*\input ([^ ]*).*$/\1/')
+
+exec "$format" "$filename"

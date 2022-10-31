@@ -12,7 +12,20 @@ end
 
 dofile(prefix .. "tests/test-config.lua")
 
+local common = abspath(prefix .. "tests/common")
+
 -- Plain
-checkengines = { "luatex" }
-checkformat = "tex"
+specialformats = { plain = {
+    luatex = {
+        binary = "luatex",
+        format = "luatex"
+    },
+    luametatex = {
+        binary = common .. "/luametatex-wrapper",
+        format = "luametaplain"
+    },
+}}
+
+checkengines = { "luatex", "luametatex" }
+checkformat = "plain"
 testfiledir = prefix .. "tests/plain"

@@ -2,6 +2,9 @@
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
+\ifnum\luatexversion>200\relax
+    \shipout\vbox{}\csname@@end\endcsname
+\fi
 
 \RequirePackage[2016/01/01]{latexrelease}
 
