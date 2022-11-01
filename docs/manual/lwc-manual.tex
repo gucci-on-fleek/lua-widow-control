@@ -42,6 +42,7 @@
 \definecolor[expanded][r=0.00, g=0.70, b=0.25]
 \definecolor[failure] [r=0.90, g=0.00, b=0.25]
 \definecolor[moved]   [r=0.25, g=0.25, b=1.00]
+\definecolor[cost]    [r=0.50, g=0.50, b=0.50]
 
 \usemodule[markdown]
 \define[4]\markdownRendererLinkPrototype{\goto{#1}[url(#3)]}
@@ -533,7 +534,7 @@ sets the values to~5\,000 and 10\,000 respectively.
 \definecolor[lwc_expanded][s=0]
 \definecolor[lwc_failure][s=0]
 \definecolor[lwc_moved][s=0]
-You can use the draft mode to visualize how \lwc/ processes pages. Any \color[failure]{remaining widows and orphans will be coloured red}, any \color[expanded]{expanded paragraphs will be coloured green}, and any \color[moved]{lines moved to the next page will be coloured blue}. In addition, the cost of each paragraph is shown in the right margin as it is here.
+You can use the draft mode to visualize how \lwc/ processes pages. Any \color[failure]{remaining widows and orphans will be coloured red}, any \color[expanded]{expanded paragraphs will be coloured green}, and any \color[moved]{lines moved to the next page will be coloured blue}. In addition, the \color[cost]{cost of each paragraph is shown in the right margin} as it is here.
 
 \startTABLE[setups=commandtable]
     \NC \plainop/
@@ -547,7 +548,7 @@ You can use the draft mode to visualize how \lwc/ processes pages. Any \color[fa
     \NC\NR
 \stopTABLE
 
-Advanced users may also customize the colours used by modifying the \inlineLUA{lwc.colours} table. The table keys are currently \type{expanded}, \type{failure}, and \type{moved}. The table values are \acronym{RGB} 3-tuples, where each element is a float between zero and one.
+Advanced users may also customize the colours used by modifying the \inlineLUA{lwc.colours} table. The table keys are currently \type{expanded}, \type{failure}, \type{moved}, and \type{cost}. The table values are \acronym{RGB} 3-tuples, where each element is a float between zero and one.
 
 You can also show or hide the costs and colours independently of each other.
 

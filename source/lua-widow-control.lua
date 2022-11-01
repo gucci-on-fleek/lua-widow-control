@@ -44,7 +44,14 @@ local function debug(title, text)
     local filler = 15 - #title
 
     if text then
-        write_nl(write_log, "LWC (" .. title .. string_rep(" ", filler) .. "): " .. text)
+        write_nl(
+            write_log,
+            "LWC (" ..
+            title ..
+            string_rep(" ", filler) ..
+            "): " ..
+            text
+        )
     else
         write_nl(write_log, "LWC: " .. string_rep(" ", 18) .. title)
     end
@@ -52,9 +59,9 @@ end
 
 
 --[[
-    \lwc/ is intended to be format-agonistic. It only runs on Lua\TeX{},
-    but there are still some slight differences between formats. Here, we
-    detect the format name then set some flags for later processing.
+    \lwc/ is intended to be format-agonistic. It only runs on Lua\TeX{} and
+    LuaMeta\TeX{}, but there are still some slight differences between formats.
+    Here, we detect the format name then set some flags for later processing.
   ]]
 local format = tex.formatname
 local context, latex, plain, optex, lmtx
@@ -210,7 +217,7 @@ if context then
     paragraph_attribute = attributes.public(lwc.name .. "_paragraph")
     insert_attribute = attributes.public(lwc.name .. "_insert")
 
-    -- Dimen names
+    -- Dimen/count names
     emergencystretch = "lwc_emergency_stretch"
     draft_offset = "lwc_draft_offset"
     max_cost = "lwc_max_cost"
@@ -257,6 +264,8 @@ else -- This shouldn't ever happen
 Please use LaTeX, Plain TeX, ConTeXt or OpTeX.]]
 end
 
+-- We can't get the value of \\horigin from Lua, but we can guess it
+-- based on the format.
 local horigin
 if optex or (lmtx and context) then
     horigin = 0
@@ -264,6 +273,7 @@ else
     horigin = tex.sp("1in")
 end
 
+-- Plain is the only format without a `pre_shipout_filter`
 if plain then
     luatexbase.create_callback('pre_shipout_filter', 'list')
 end
@@ -271,9 +281,9 @@ end
 
 --[[ Select the fonts
 
-     We want to use cmr7 for the draft mode cost displays, and the easiest
+     We want to use cmr6 for the draft mode cost displays, and the easiest
      way to do so is to just hardcode the font id's. This relies on some
-     implementation details; however, it is very unlikely to ever be an issue
+     implementation details; however, it is very unlikely to ever be an issue.
   ]]
 local SMALL_FONT
 if plain then
@@ -289,15 +299,11 @@ elseif context then
     })
 end
 
---[[ Table to hold the alternate paragraph versions.
-
-     This is global(ish) mutable state, which isn't ideal, but any other way of
-     passing this data around would be even worse.
-  ]]
-local paragraphs = {}
-local inserts = {}
-local costs = {}
-local pagenum = 1
+-- Global variables
+local paragraphs = {} -- The expanded paragraphs on each page
+local inserts = {} -- Copies of all the inserts on each page
+local costs = {} -- All of the paragraph costs for the document
+local pagenum = 1 -- The current page/column number
 
 --[[ Function definitions
   ]]
@@ -309,7 +315,9 @@ local function get_location()
 end
 
 
---- Prints the starting glyphs and glue of an `hlist`
+--- Prints the starting glyphs and glue of an `hlist`.
+---
+--- Useful for debugging purposes.
 ---
 --- @param head node
 --- @return nil
@@ -373,9 +381,8 @@ local function next_of_type(head, id, args)
             end
         end
     else
-        --[[ Only LMTX has the built-in backwards traverser, so we need to do it
-             ourselves here.
-          ]]
+        -- Only LMTX has the built-in backwards traverser, so we need to do
+        -- it manually otherwise.
         while head do
             if head.id == id and
                (head.subtype == args.subtype or args.subtype == nil)
@@ -397,7 +404,8 @@ end
 
 --- Ensures that a paragraph is ready to be broken
 ---
---- Only applies to LMTX
+--- Only applies to LuaMetaTeX
+---
 --- @param head node
 --- @return nil
 local function prepare_linebreak(head)
@@ -405,6 +413,7 @@ local function prepare_linebreak(head)
         return
     end
 
+    -- See how many of the par[left/right][init/fill]skips we have
     local parfills = {}
     local count = 0
     for name, subid in pairs(parfill_subids) do
@@ -438,13 +447,14 @@ local function long_paragraph(head)
 
     prepare_linebreak(head)
 
-    -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow columns
-    -- Equivalent to \\parfillskip=0pt plus 0.8\\hsize
+    -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow
+    -- columns. Equivalent to \\parfillskip=0pt plus 0.8\\hsize
     local parfillskip = last(head)
 
     if tex.hsize > min_col_width then
         parfillskip[stretch_order] = 0
-        parfillskip.stretch = 0.8 * tex.hsize -- Last line must be at least 20% long
+        -- Last line must be at least 20% long
+        parfillskip.stretch = 0.8 * tex.hsize
     end
 
     -- Break the paragraph 1 line longer than natural
@@ -453,7 +463,7 @@ local function long_paragraph(head)
         emergencystretch = tex_dimen[emergencystretch],
     })
 
-    -- For the costs display
+    -- Mark the last line for the costs display
     set_attribute(
         last(long_node),
         paragraph_attribute,
@@ -511,8 +521,8 @@ local function colour_list(head, colour)
         return head
     end
 
-    -- Adapted from https://tex.stackexchange.com/a/372437
-    -- \\pdfextension colorstack is ignored in LMTX
+    -- Adapted from https://tex.stackexchange.com/a/372437 and
+    -- https://github.com/zauguin/luametalatex/issues/8.
     local start_colour = new_node("whatsit", subtype("pdf_colorstack"))
     set_whatsit_field(start_colour, "stack", 0)
     set_whatsit_field(start_colour, "command", 1)
@@ -533,10 +543,10 @@ end
 ---
 --- Called by the `pre_linebreak_filter` callback
 ---
---- @param head node
---- @return node
+--- @param head node The pre-broken paragraph
+--- @return node head The unmodified `head` argument
 function lwc.save_paragraphs(head)
-    if (head.id ~= par_id and context) or -- Ensure that we were actually given a par
+    if (head.id ~= par_id and context) or -- Make sure that `head` is a paragraph
         status.output_active or -- Don't run during the output routine
         tex.nest.ptr > 1 -- Don't run inside boxes
     then
@@ -576,6 +586,8 @@ function lwc.save_paragraphs(head)
         long_cost = math.maxinteger
     end
 
+    -- The initial glue can disappear in ConTeXt's grid mode, so we
+    -- save starting at the first hlsit
     local saved_node = next_of_type(long_node, hlist_id, { subtype = line_subid })
 
     for n in traverse_id(hlist_id, saved_node) do
@@ -621,35 +633,40 @@ end
 --- @return nil
 local function mark_paragraphs(head)
     -- Tag the paragraphs
-    if not status.output_active then -- Don't run during the output routine
-        -- Get the start and end of the paragraph
-        local top = next_of_type(head, hlist_id, { subtype = line_subid })
-        local bottom = last(head)
+    if status.output_active then
+        -- Don't run during the output routine
+        return
+    end
 
-        while bottom.id == insert_id do
-            bottom = bottom.prev
-        end
+    -- Get the start and end of the paragraph
+    local top = next_of_type(head, hlist_id, { subtype = line_subid })
+    local bottom = last(head)
 
-        if top ~= bottom then
-            set_attribute(
-                top,
-                paragraph_attribute,
-                #paragraphs + (PAGE_MULTIPLE * pagenum)
-            )
-            set_attribute(
-                bottom,
-                paragraph_attribute,
-                -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum))
-            )
-        else
-            -- We need a special tag for a 1-line paragraph since the node can only
-            -- have a single attribute value
-            set_attribute(
-                top,
-                paragraph_attribute,
-                #paragraphs + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
-            )
-        end
+    -- The inserts disappear before `pre_output_routine`, so we shouldn't
+    -- mark them.
+    while bottom.id == insert_id do
+        bottom = bottom.prev
+    end
+
+    if top ~= bottom then
+        set_attribute(
+            top,
+            paragraph_attribute,
+            #paragraphs + (PAGE_MULTIPLE * pagenum)
+        )
+        set_attribute(
+            bottom,
+            paragraph_attribute,
+            -1 * (#paragraphs + (PAGE_MULTIPLE * pagenum))
+        )
+    else
+        -- We need a special tag for a 1-line paragraph since the node can only
+        -- have a single attribute value
+        set_attribute(
+            top,
+            paragraph_attribute,
+            #paragraphs + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
+        )
     end
 end
 
@@ -670,14 +687,15 @@ local function mark_inserts(head)
         -- Tag the insert's content so that we can find it later
         set_attribute(insert.list, insert_attribute, #inserts)
 
+        -- We need to tag all lines---not just the start and the end---since
+        -- \TeX{} can split the insert between pages at any point.
         for n in traverse(insert.list.next) do
             set_attribute(n, insert_attribute, -1 * #inserts)
         end
 
-        --[[ Each hlist/line can have multiple inserts, but so we can't just tag
-             the hlist as we go. Instead, we need save up all of their indices,
-             then tag the hlist with the first and last indices.
-          ]]
+        -- Each hlist/line can have multiple inserts, but so we can't just tag
+        -- the hlist as we go. Instead, we need save up all of their indices,
+        -- then tag the hlist with the first and last indices.
         insert_indices[#insert_indices+1] = #inserts
 
         if not insert.next or
@@ -692,12 +710,13 @@ local function mark_inserts(head)
                 insert_class = insert.subtype
             end
 
-            --[[ We tag the first element of the hlist/line with an integer
-                 that holds the insert class and the first and last indices
-                 of the inserts contained in the line. This won't work if
-                 the line has multiple classes of inserts, but I don't think
-                 that happens in real-world documents.
-              ]]
+            -- We tag the first element of the hlist/line with an integer
+            -- that holds the insert class and the first and last indices
+            -- of the inserts contained in the line. This won't work if
+            -- the line has multiple classes of inserts, but I don't think
+            -- that happens in real-world documents. If this does turn out
+            -- to be an issue, we can get the insert's class from it's copy
+            -- at `pre_output_filter` instead of saving it now.
             set_attribute(
                 hlist_before.list,
                 insert_attribute,
@@ -716,8 +735,8 @@ end
 --- Saves the inserts and tags a typeset paragraph. Called by the
 --- `post_linebreak_filter` callback.
 ---
---- @param head node
---- @return node
+--- @param head node The head of the broken paragraph
+--- @return node head The unmodified `head` parameter
 function lwc.mark_paragraphs(head)
     mark_paragraphs(head)
     mark_inserts(head)
@@ -738,7 +757,9 @@ function is_matching_penalty(penalty)
 
     penalty = penalty - tex.interlinepenalty
 
-    -- https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf#subsection.0.2.1
+    -- Adapted from https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf.
+    -- This only takes into account the original \TeX{} penalties, not the
+    -- "new" \eTeX{} \\(club/widow/broken)penalties commands.
     return penalty ~= 0 and
            penalty <  INFINITY and (
                penalty == widowpenalty or
@@ -757,6 +778,10 @@ end
 
 
 --- Reset any state saved between pages
+---
+--- This function is *vital* to ensure that we don't leak any nodes.
+--- If we do leak nodes, then very large documents will slow down and
+--- eventually fail to compile.
 ---
 --- @return nil
 local function reset_state()
@@ -778,7 +803,7 @@ end
 ---
 --- @return nil
 local function remove_widows_fail()
-    warning("Widow/Orphan/broken hyphen NOT removed on page " .. pagenum)
+    warning("Widow/Orphan/Broken Hyphen NOT removed on page " .. pagenum)
 
     local last_line = next_of_type(
         last(tex_lists[page_head]),
@@ -827,9 +852,11 @@ local function first_last_paragraphs(head)
     -- Find the first paragraph on the page, from the top
     local first_val, first_head = find_attribute(head, paragraph_attribute)
     while abs(first_val) // PAGE_MULTIPLE == pagenum - 1 do
-        --[[ If the first complete paragraph on the page was initially broken on the
-             previous page, then we can't expand it here so we need to skip it.
-          ]]
+        -- If the first complete paragraph on the page was initially broken on the
+        -- previous page, then we can't expand it here. Why can't we expand it?
+        -- Well, expanding it will nearly always change how the first few lines
+        -- are printed, but we can't modify those since they've already been
+        -- shipped out. So, we need to skip these paragraphs.
         first_val, first_head = find_attribute(
             first_head.next,
             paragraph_attribute
@@ -876,7 +903,7 @@ local function best_paragraph(head)
     )
 
     if best_cost  >  tex_count[max_cost] or
-       best_index == last_paragraph_index or
+       best_index == last_paragraph_index or -- Shouldn't happen
        best_cost  == math.maxinteger
     then
         return nil
@@ -904,7 +931,8 @@ local function get_inserts(last_line)
 
         -- Demux the insert values
         local class = line_value // INSERT_CLASS_MULTIPLE
-        local first_index = (line_value % INSERT_CLASS_MULTIPLE) // INSERT_FIRST_MULTIPLE
+        local first_index = (line_value % INSERT_CLASS_MULTIPLE)
+                            // INSERT_FIRST_MULTIPLE
         local last_index = line_value % INSERT_FIRST_MULTIPLE
 
         -- Get the output box containing the insert boxes
@@ -912,12 +940,14 @@ local function get_inserts(last_line)
 
         if lmtx then
             insert_box = tex.getinsertcontent(class)
+            -- `getinsertcontent` resets the insert box, so we need to
+            -- re-set it.
             tex.setinsertcontent(class, insert_box)
         else
             insert_box = tex_box[class]
         end
 
-        -- Get any portions of the insert held over until the next page
+        -- Get any portions of the insert "held over" until the next page
         local split_insert
         if lmtx then
             split_insert = next_of_type(
@@ -933,6 +963,7 @@ local function get_inserts(last_line)
             )
         end
 
+        -- We use the same procedure for this page and the next page
         for i, insert in ipairs { insert_box, split_insert } do
             local m = insert and insert.list
 
@@ -962,6 +993,8 @@ local function get_inserts(last_line)
             end
         end
 
+        -- If the box has no contents, then void it so that any \\ifvoid
+        -- tests work correctly in the output routine.
         if not insert_box.list then
             tex_box[class] = nil
         end
@@ -974,6 +1007,10 @@ local function get_inserts(last_line)
     end
 
     if #selected_inserts ~= 0 then
+        -- This is a somewhat-risky process, so we print an info
+        -- message just in case something goes wrong. We can probably
+        -- remove this in the future if we're sure that everything
+        -- is working correctly.
         info("Moving footnotes on page " .. pagenum)
     end
 
@@ -989,7 +1026,7 @@ lwc.nobreak_behaviour = "keep"
 --- some low-level node shuffling.
 ---
 --- @param head node The node representing the start of the page
---- @return boolean success
+--- @return boolean success Set to false if something went wrong
 local function move_last_line(head)
     -- Start of final paragraph
     debug("remove_widows", "moving last line")
@@ -1076,9 +1113,13 @@ end
 --- @param head node
 --- @param paragraph_index number
 local function replace_paragraph(head, paragraph_index)
-    -- Remove any inserts
+    -- Remove any inserts. They are completely ignored after
+    -- the page has been broken, but they can upset LuaMetaLaTeX if
+    -- they're found somewhere unexpected.
     local target_node, last_target_node
     for n in traverse(paragraphs[paragraph_index].node) do
+        -- Just removing the inserts from the list doesn't work properly,
+        -- so we instead copy over everything that isn't an insert.
         if n.id ~= insert_id then
             if not target_node then
                 target_node = copy(n)
@@ -1094,7 +1135,7 @@ local function replace_paragraph(head, paragraph_index)
     local end_found = false
     local free_nodes_begin
 
-    -- Loop through all of the nodes on the page with the lwc attribute
+    -- Loop through all of the nodes on the page with the \lwc/ attribute
     local n = head
     while n do
         local value
@@ -1116,7 +1157,9 @@ local function replace_paragraph(head, paragraph_index)
             -- Fix the `\\baselineskip` glue between paragraphs
             height_difference = (
                 next_of_type(n, hlist_id, { subtype = line_subid }).height -
-                next_of_type(target_node, hlist_id, { subtype = line_subid }).height
+                next_of_type(
+                    target_node, hlist_id, { subtype = line_subid }
+                ).height
             )
 
             local prev_bls = next_of_type(
@@ -1134,8 +1177,8 @@ local function replace_paragraph(head, paragraph_index)
         end
 
         -- Insert the end of the replacement paragraph
-        if value == -1 * (paragraph_index + (PAGE_MULTIPLE * pagenum)) or
-           value ==       paragraph_index + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
+        if value == -(paragraph_index + (PAGE_MULTIPLE * pagenum)) or
+           value ==   paragraph_index + (PAGE_MULTIPLE * pagenum) + SINGLE_LINE
         then
             debug("remove_widows", "replacement end")
             end_found = true
@@ -1223,10 +1266,9 @@ function lwc.remove_widows(head)
     -- Replace the chosen paragraph with its expanded version
     replace_paragraph(head, paragraph_index)
 
-    --[[ The final \\box255 needs to be exactly \\vsize tall to avoid
-         over/underfull box warnings, so we correct any discrepancies
-         here.
-      ]]
+    -- The final \\box255 needs to be exactly \\vsize tall to avoid
+    -- over/underfull box warnings, so we correct any discrepancies
+    -- here.
     local new_vpack = vpack(head)
     local new_height_diff = new_vpack.height - vsize
     new_vpack.list = nil
@@ -1238,7 +1280,8 @@ function lwc.remove_widows(head)
     free(bls)
 
     if abs(net_height_diff) > 0 and
-       -- A difference larger than 0.25\\baselineskip is probably not from \lwc/
+       -- A difference larger than 0.25\\baselineskip is probably not from
+       -- \lwc/, so we let those warnings surface
        abs(net_height_diff) < bls_width / 4
     then
         local bottom_glue = new_node("glue")
@@ -1265,6 +1308,10 @@ local show_costs = false
 --- Called immediately before the page is shipped out so that we can get
 --- the costs on the correct side in multi-column layouts.
 ---
+--- To evenly align all of the costs in the margins, we need to know the
+--- the exact position of the start and end of the paragraph on the page.
+--- This is surprisingly complicated.
+---
 --- @param head node The box to be shipped out
 --- @return true
 function lwc.show_costs (head)
@@ -1274,8 +1321,16 @@ function lwc.show_costs (head)
 
     local pagewidth = tex.pagewidth or layouts.getpagedimensions()
 
-    local function recurse(n, width, level, parent)
+    --- Loop over each sublist, add up the total width, and show the costs.
+    ---
+    --- @param n node The node to loop over
+    --- @param width number The accumulated width so far
+    --- @param parent node The parent node of the current list
+    --- @return nil
+    local function recurse(n, width, parent)
         for m in traverse(n) do
+            -- Anything with an \\hbox parent and a width is actual width.
+            -- (If it had a \\vbox parent, then n.width would actually be height.)
             local self_width = 0
             if m.id == glue_id and parent.id == hlist_id then
                 self_width = effective_glue(m, parent)
@@ -1283,6 +1338,10 @@ function lwc.show_costs (head)
                 self_width = m.width
             end
 
+            -- A node's "shift" attribute is horizontal only if the parent is
+            -- a \\vbox. This corresponds to the primatives \\moveleft and
+            -- \\moveright. (If the parent is a \\hbox, then n.shift is
+            -- vertical and corresponds to \\raise.)
             local shift = 0
             if m.shift and
                (parent.id == vlist_id or
@@ -1301,6 +1360,9 @@ function lwc.show_costs (head)
             local cost = costs[abs(attr or 0)]
 
             if attr and attr < 0 and cost and m.list then
+                -- We've found the end of a marked paragraph!
+
+                -- Generate the \\hbox containing the formatted cost
                 local cost_str
                 if not cost then
                     return
@@ -1326,6 +1388,7 @@ function lwc.show_costs (head)
 
                 local text = hpack(colour_list(first, "cost"))
 
+                -- Make an \\hss to make sure that our `\\hbox`es aren't overfull
                 local hss = new_node("glue")
                 hss.stretch = 1
                 hss[stretch_order] = 1
@@ -1337,7 +1400,8 @@ function lwc.show_costs (head)
 
                 if (width >= pagewidth / 2) or
                    (m.width >= 0.4 * pagewidth)
-                then
+                then -- Right column or single-column
+                    -- Costs in the right margin
                     offset.width = (
                         pagewidth -
                         width -
@@ -1347,8 +1411,14 @@ function lwc.show_costs (head)
                     )
                     text.next = hss
                     hbox = hpack(text, 0, "exactly")
-                else
-                    offset.width = tex_dimen[draft_offset] - m.width - width - shift
+                else -- Left column
+                    -- Costs in the left margin
+                    offset.width = (
+                        tex_dimen[draft_offset] -
+                        m.width -
+                        width -
+                        shift
+                    )
                     hss.next = text
                     hbox = hpack(hss, 0, "exactly")
                 end
@@ -1356,18 +1426,15 @@ function lwc.show_costs (head)
                 last(m.list).next = offset
                 offset.next = hbox
             elseif m.list then
-                recurse(m.list, width - self_width + shift, level + 1, m)
+                recurse(m.list, width - self_width + shift, m)
             end
         end
     end
 
-    recurse(
-        head.list,
-        (tex.hoffset or 0) + horigin,
-        0,
-        {}
-    )
+    -- Start at the root of the page
+    recurse(head.list, (tex.hoffset or 0) + horigin, {})
 
+    -- LaTeX requires us to always return true here
     return true
 end
 
@@ -1380,8 +1447,8 @@ end
 ---     name: string = The name/ID of the callback
 ---     category: string = The category for a \ConTeXt{} "Action"
 ---     position: string = The "position" for a \ConTeXt{} "Action"
----     lowlevel: boolean = If we should use a lowlevel \LuaTeX{} callback instead of a
----                      \ConTeXt{} "Action"
+---     lowlevel: boolean = If we should use a lowlevel \LuaTeX{} callback
+---                         instead of a \ConTeXt{} "Action"
 --- @return table t Enablers/Disablers for the callback
 ---     enable: function = Enable the callback
 ---     disable: function = Disable the callback
@@ -1397,9 +1464,8 @@ local function register_callback(t)
         }
     elseif context and not t.lowlevel then
         return {
-            --[[ Register the callback when the table is created,
-                 but activate it when `enable()` is called.
-              ]]
+            -- Register the callback when the table is created,
+            -- but activate it when `enable()` is called.
             enable = nodes.tasks.appendaction(t.category, t.position, "lwc." .. t.name)
                 or function()
                     nodes.tasks.enableaction(t.category, "lwc." .. t.name)
@@ -1409,18 +1475,18 @@ local function register_callback(t)
             end,
         }
     elseif context and t.lowlevel then
-        --[[ Some of the callbacks in \ConTeXt{} have no associated "actions". Unlike
-             with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks unregistered
-             and unfrozen. Because of this, we need to register some callbacks at the
-             engine level. This is fragile though, because a future \ConTeXt{} update
-             may decide to register one of these functions, in which case
-             \lwc/ will crash with a cryptic error message.
-          ]]
+        -- Some of the callbacks in \ConTeXt{} have no associated "actions".
+        -- Unlike with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks
+        -- unregistered and unfrozen. Because of this, we need to register some
+        -- callbacks at the engine level. This is fragile though, because a
+        -- future \ConTeXt{} update may decide to register one of these
+        -- functions, in which case \lwc/ will crash with a cryptic error
+        -- message.
         return {
             enable = function() callback.register(t.callback, t.func) end,
             disable = function() callback.register(t.callback, nil) end,
         }
-    elseif optex then -- Op\TeX{} is very similar to luatexbase
+    elseif optex then -- Op\TeX{} is luckily very similar to luatexbase
         return {
             enable = function()
                 callback.add_to_callback(t.callback, t.func, t.name)
@@ -1492,11 +1558,10 @@ function lwc.disable_callbacks()
     if lwc_enabled then
         lwc.callbacks.save_paragraphs.disable()
         lwc.callbacks.mark_paragraphs.disable()
-        --[[ We do \emph{not} disable `remove_widows` callback, since we still want
-             to expand any of the previously-saved paragraphs if we hit an orphan
-             or a widow.
-          ]]
 
+        -- We do *not* disable `remove_widows` callback, since we still want
+        -- to expand any of the previously-saved paragraphs if we hit an orphan
+        -- or a widow.
         lwc_enabled = false
     else
         info("Already disabled")
@@ -1547,6 +1612,8 @@ local function register_tex_cmd(name, func, args)
             scanners[#scanners+1] = token['scan_' .. arg]
         end
 
+        -- An intermediate function that properly "scans" for its arguments
+        -- in the \TeX{} side.
         scanning_func = function()
             local values = {}
             for _, scanner in ipairs(scanners) do
@@ -1574,7 +1641,8 @@ local function register_tex_cmd(name, func, args)
     end
 end
 
-
+--[[ Make all of the \lwc/ Lua commands available from \TeX{}
+  ]]
 register_tex_cmd("if_enabled", lwc.if_lwc_enabled, {})
 register_tex_cmd("enable", lwc.enable_callbacks, {})
 register_tex_cmd("disable", lwc.disable_callbacks, {})
@@ -1627,8 +1695,8 @@ register_tex_cmd(
 --- with useless error messages, so we disable it here.
 ---
 --- This uses the Lua `debug` library to internally modify the log upvalue in the
---- `add_to_callback` function. This is almost certainly a terrible idea, but I don't
---- know of a better way.
+--- `add_to_callback` function. This is almost certainly a terrible idea, but I
+--- don't know of a better way to do it.
 ---
 --- @return nil
 local function silence_luatexbase()
@@ -1654,10 +1722,9 @@ local function silence_luatexbase()
 end
 
 
---[[ Call `silence_luatexbase` in Plain and LaTeX, unless the undocmented global
-     `LWC_NO_DEBUG` is set. We provide this opt-out in case something goes awry
-     with the `debug` library calls.
-  ]]
+-- Call `silence_luatexbase` in Plain and LaTeX, unless the undocmented global
+-- `LWC_NO_DEBUG` is set. We provide this opt-out in case something goes awry
+-- with the `debug` library calls.
 if (plain or latex) and
    not LWC_NO_DEBUG --- @diagnostic disable-line
 then
