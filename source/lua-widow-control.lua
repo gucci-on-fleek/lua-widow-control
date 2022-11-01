@@ -154,14 +154,6 @@ lwc.colours = {
     cost     = {0.50, 0.50, 0.50},
 }
 
--- TODO temporary fix
-if not effective_glue then
-    local direct_effective_glue = node.direct.effectiveglue
-    local todirect = node.direct.todirect
-    effective_glue = function(n, m)
-        return direct_effective_glue(todirect(n), todirect(m))
-    end
-end
 
 --[[ Package/module initialization.
 
