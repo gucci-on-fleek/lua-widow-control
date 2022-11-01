@@ -17,6 +17,18 @@
 \def\quotation#1{``#1''}
 \def\printlocation#1{\write16{===#1:\the\count0===}}
 
+\newbox\tempshipoutbox
+\output={
+    \setbox\tempshipoutbox=\vbox{
+        \makeheadline
+        \pagebody
+        \makefootline
+    }
+    \lwcpreshipout\the\tempshipoutbox
+    \shipout\box\tempshipoutbox
+    \advancepageno
+}
+
 \lwcdraft1
 
 \input basic

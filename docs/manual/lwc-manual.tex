@@ -567,6 +567,24 @@ You can also show or hide the costs and colours independently of each other.
     \NC\NR
 \stopTABLE
 
+Plain~\TeX{} users will need to modify their output routines to be able to see the costs. Before you ship out the page, you should call \inlineTEX{\lwcpreshipout} with a box number as its argument. For example, here is some sample code to correctly reproduce the standard Plain~\TeX{} output routine:
+
+\startTEX
+\newbox\tempshipoutbox
+\output={
+    \setbox\tempshipoutbox=\vbox{
+        \makeheadline
+        \pagebody
+        \makefootline
+    }
+    \lwcpreshipout\the\tempshipoutbox
+    \shipout\box\tempshipoutbox
+    \advancepageno
+}
+\stopTEX
+
+Setting the output routine like this is automatic in all other formats. \Lwc/ does not modify the output routine in Plain~\TeX{} since most of its users likely have their own output routines.
+
 \subsection{Draft Offset}
 
 In draft mode, the paragraph costs are printed in the margins, offset a certain distance from the page edge. By default, this offset is set to \unit{1 inch}; however, you can change this to any value that you want:

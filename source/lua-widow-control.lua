@@ -1679,7 +1679,7 @@ register_tex_cmd(
     function(box)
         luatexbase.call_callback('pre_shipout_filter', tex_box[box])
     end,
-    { "integer" }
+    { "int" }
 )
 
 --- Silence the luatexbase "Enabling/Removing <callback>" info messages
