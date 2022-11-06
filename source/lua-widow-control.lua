@@ -143,7 +143,6 @@ local iftrue = token.create("iftrue")
 local INFINITY = 10000
 local INSERT_CLASS_MULTIPLE = 1000 * 1000
 local INSERT_FIRST_MULTIPLE = 1000
-local min_col_width = tex.sp("250pt")
 local PAGE_MULTIPLE = 100
 local SINGLE_LINE = 50
 
@@ -431,23 +430,24 @@ end
 --- Breaks a paragraph one line longer than natural
 ---
 --- @param head node The unbroken paragraph
+--- @param parfillskip table<number> The {width, stretch, shrink,
+---                                  stretch_order, shrink_order} to set
+---                                  for the \\parfillskip
 --- @return node long_node The broken paragraph
 --- @return table long_info An info table about the broken paragraph
-local function long_paragraph(head)
+local function long_paragraph(head, parfillskip)
     -- We can't modify the original paragraph
     head = copy_list(head)
 
     prepare_linebreak(head)
 
-    -- Prevent ultra-short last lines (\TeX{}Book p. 104), except with narrow
-    -- columns. Equivalent to \\parfillskip=0pt plus 0.8\\hsize
-    local parfillskip = last(head)
-
-    if tex.hsize > min_col_width then
-        parfillskip[stretch_order] = 0
-        -- Last line must be at least 20% long
-        parfillskip.stretch = 0.8 * tex.hsize
-    end
+    -- TODO node.setglue is broken in LMTX, so we have to do this manually
+    local n = last(head)
+    n.width = parfillskip[1]
+    n.stretch = parfillskip[2]
+    n.shrink = parfillskip[3]
+    n[stretch_order] = parfillskip[4]
+    n[shrink_order] = parfillskip[5]
 
     -- Break the paragraph 1 line longer than natural
     local long_node, long_info =  linebreak(head, {
@@ -554,9 +554,26 @@ function lwc.save_paragraphs(head)
         lwc.callbacks.disable_box_warnings.enable()
     end
 
-    long_node, long_info = long_paragraph(head)
-
     natural_info = natural_paragraph(head)
+
+    -- Prevent ultra-short last lines (\TeX{}book p. 104). Equivalent to
+    -- \\parfillskip=0.75\\hsize plus 0.05\\hsize minus 0.75\\hsize.
+    -- From http://petr.olsak.net/ftp/olsak/tbn/tbn.pdf p. 234 (via Jan Sustek)
+    long_node, long_info = long_paragraph(
+        head,
+        {0.75 * tex.hsize, 0.05 * tex.hsize, 0.75 * tex.hsize, 0, 0}
+    )
+
+    if long_info.prevgraf ~= natural_info.prevgraf + 1 then
+        -- The \\parfillskip settings with \\looseness=1 can sometimes
+        -- lengthen paragraphs by two lines instead of one. If this happens,
+        -- we fall back to a slightly-worse \\parfillskip setting.
+        free_list(long_node)
+        long_node, long_info = long_paragraph(
+            head,
+            {0, 0.8 * tex.hsize, false, 0, false}
+        )
+    end
 
     if renable_box_warnings then
         lwc.callbacks.disable_box_warnings.disable()
@@ -1738,3 +1755,4 @@ lwc.callbacks.remove_widows.enable()
 lwc.callbacks.show_costs.enable()
 
 return lwc
+
