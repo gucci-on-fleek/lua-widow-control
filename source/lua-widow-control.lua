@@ -339,8 +339,11 @@ end
 ---
 --- @param demerits number The demerits of the broken paragraph
 --- @param lines number The number of lines in the broken paragraph
---- @return number The cost of the broken paragraph
-function lwc.paragraph_cost(demerits, lines)
+--- @param nat_demerits number The demerits of the naturally-broken paragraph
+--- @param nat_lines number The number of lines in the naturally-broken paragraph
+--- @param head node The head of the broken paragraph
+--- @return number cost The cost of the broken paragraph
+function lwc.paragraph_cost(demerits, lines, nat_demerits, nat_lines, head)
     return demerits / math.sqrt(lines)
 end
 
@@ -586,7 +589,13 @@ function lwc.save_paragraphs(head)
         last(long_node).next = prevdepth
     end
 
-    local long_cost = lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
+    local long_cost = lwc.paragraph_cost(
+        long_info.demerits,
+        long_info.prevgraf,
+        natural_info.demerits,
+        natural_info.prevgraf,
+        long_node
+    )
 
     if long_info.prevgraf ~= natural_info.prevgraf + 1 or
        long_cost < 10 -- Any paragraph that is "free" to expand is suspicious
@@ -613,19 +622,21 @@ function lwc.save_paragraphs(head)
     costs[#paragraphs + (PAGE_MULTIPLE * pagenum)] = long_cost
 
     -- Print some debugging information
-    get_chars(head)
-    debug(get_location(), "nat  lines    " .. natural_info.prevgraf)
-    debug(
-        get_location(),
-        "nat  cost " ..
-        lwc.paragraph_cost(natural_info.demerits, natural_info.prevgraf)
-    )
-    debug(get_location(), "long lines    " .. long_info.prevgraf)
-    debug(
-        get_location(),
-        "long cost " ..
-        lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
-    )
+    if lwc.debug then
+        get_chars(head)
+        debug(get_location(), "nat  lines    " .. natural_info.prevgraf)
+        debug(
+            get_location(),
+            "nat  cost " ..
+            lwc.paragraph_cost(natural_info.demerits, natural_info.prevgraf)
+        )
+        debug(get_location(), "long lines    " .. long_info.prevgraf)
+        debug(
+            get_location(),
+            "long cost " ..
+            lwc.paragraph_cost(long_info.demerits, long_info.prevgraf)
+        )
+    end
 
     -- \ConTeXt{} crashes if we return `true`
     return head
@@ -758,7 +769,7 @@ end
 ---
 --- @param penalty number
 --- @return boolean
-function is_matching_penalty(penalty)
+local function is_matching_penalty(penalty)
     local widowpenalty = tex.widowpenalty
     local clubpenalty = tex.clubpenalty
     local displaywidowpenalty = tex.displaywidowpenalty
@@ -785,6 +796,18 @@ function is_matching_penalty(penalty)
            )
 end
 
+
+--- Determines if we should "activate" \lwc/ for the current page/column.
+---
+--- Users can redefine this if they wish.
+---
+--- @param penalty number The \\outputpenalty for the current page/column
+--- @param paragraphs table<table<string, node|number>> The `paragraphs` table
+--- @param head node The head of the current page/column
+--- @return boolean activate True if \lwc/ should move the last line on this page
+function lwc.should_remove_widows(penalty, paragraphs, head)
+    return is_matching_penalty(penalty)
+end
 
 --- Reset any state saved between pages
 ---
@@ -1235,7 +1258,7 @@ function lwc.remove_widows(head)
     debug("outputpenalty", tex.outputpenalty .. " " .. #paragraphs)
 
     -- See if there is a widow/orphan for us to remove
-    if not is_matching_penalty(tex.outputpenalty) then
+    if not lwc.should_remove_widows(tex.outputpenalty, paragraphs, head) then
         reset_state()
         return head
     end

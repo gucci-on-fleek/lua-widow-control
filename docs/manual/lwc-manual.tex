@@ -526,7 +526,7 @@ sets the values to~5\,000 and 10\,000 respectively.
 
 \Lwc/ uses a \q{cost function} $C$ that is initially defined as \startformula
     C = \frac{d}{\sqrt{l}}
-\stopformula where $d$ is the total demerits of the paragraph, and $l$ is the number of lines in the paragraph; however, advanced users may also set a custom cost function by redefining the \inlineLUA{lwc.paragraph_cost(demerits, lines)} function.
+\stopformula where $d$ is the total demerits of the paragraph, and $l$ is the number of lines in the paragraph.
 
 \subsection{Draft Mode}
 
@@ -689,6 +689,46 @@ still requires a little manual intervention.
         \NC brokenpenalty \NC 1 \NC 500 \NC 1 \NC\NR
     \stopTABLE
 \stopplacetable
+
+\section{Lua Interface}
+
+\Lwc/ provides a few public functions and tables that you can safely use or modify as documented. Any Lua interfaces that aren't documented below are subject to change at any time, but ff you do want to use an undocumented interface, please let me know and can easily document it.
+
+\subsection{Costs}
+
+\Lwc/ uses a \q{cost function} to select which paragraph to expand. Typically, this depends on the number of lines and demerits in the broken paragraph; however, you can redefine this function to do something else if you want. The default function is defined as:
+
+\startLUA
+--- The "cost function" to use.
+---
+--- @param demerits number The demerits of the broken paragraph
+--- @param lines number The number of lines in the broken paragraph
+--- @param nat_demerits number The demerits of the naturally-broken paragraph
+--- @param nat_lines number The number of lines in the naturally-broken paragraph
+--- @param head node The head of the broken paragraph
+--- @return number cost The cost of the broken paragraph
+function lwc.paragraph_cost(demerits, lines, nat_demerits, nat_lines, head)
+    return demerits / math.sqrt(lines)
+end
+\stopLUA
+
+\subsection{Activation}
+
+Typically, \lwc/ determines if there are \waos/ at the end of a page by checking the \tex{outputpenalty} register. However, you can use a custom check if you want. The default check is defined as:
+
+\startLUA
+--- Determines if we should "activate" lwc for the current page/column.
+---
+--- @param penalty number The \outputpenalty for the current page/column
+--- @param paragraphs table<table<string, node|number>> The `paragraphs` table
+--- @param head node The head of the current page/column
+--- @return boolean activate True if lwc should move the last line on this page
+function lwc.should_remove_widows(penalty, paragraphs, head)
+    return is_matching_penalty(penalty)
+end
+\stopLUA
+
+By setting a custom activation and cost function, you can transform \lwc/ from a \wao/ remover into a custom layout customization tool.
 
 \section{Compatibility}
 

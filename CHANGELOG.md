@@ -11,6 +11,8 @@ All notable changes to lua-widow-control will be listed here, in reverse chronol
 
 ## Unreleased
 
+- Add and document the public Lua interfaces.
+
 - Change `\parfillskip` settings for lengthened paragraphs to more strongly prevent short last lines. **May affect page breaks.**
 
 - Add the ability to configure the horizontal offset for the paragraph costs printed in draft mode.
