@@ -454,6 +454,10 @@ only if it fails will \lwc/ come in and lengthen a paragraph. As a special
 case, if you set the values to~0, both \TeX{} and \lwc/ will completely
 ignore the \woo/.
 
+\Lwc/ will pick up on the values of \tex{widowpenalty}, \tex{clubpenalty}, and
+\tex{brokenpenalty} regardless of how you set them, so the use of these
+dedicated keys is entirely optional.
+
 \subsection{\tex{nobreak} Behaviour}
 
 When \lwc/ encounters an orphan, it removes it by moving the orphaned
@@ -604,7 +608,7 @@ In draft mode, the paragraph costs are printed in the margins, offset a certain 
 \setuplwc[draft=stop]
 \subsection{Debug Mode}
 
-\Lwc/ offers a \q{debug} mode that prints extra information in the log files. This may be helpful to understand how \lwc/ is processing paragraphs and pages, although the information is likely inscrutable unless you are the package's author. If you are reporting an issue with \lwc/ make sure to compile your document with debug mode enabled!
+\Lwc/ offers a \q{debug} mode that prints extra information in the log files. This may be helpful to understand how \lwc/ is processing paragraphs and pages, although the information is likely inscrutable unless you are the package's author. If you are reporting an issue with \lwc/, make sure to compile your document with debug mode enabled!
 
 \startTABLE[setups=commandtable]
     \NC \plainop/
@@ -734,7 +738,7 @@ By setting a custom activation and cost function, you can transform \lwc/ from a
 
 The \lwc/ implementation is almost entirely in Lua, with only a minimal
 \TeX{} footprint. It
-doesn't modify the output routine, inserts\slash floats, \tex{everypar}, and
+doesn't modify the output routine, \tex{everypar}, and
 it doesn't insert any whatsits. This means that it should be compatible with
 nearly any \TeX{} package, class, and format. Most changes that \lwc/ makes
 are not observable on the \TeX{} side.
@@ -747,14 +751,31 @@ does not matter for Plain~\TeX{} or \LaTeX{}, where even most Lua-based
 packages don't depend on the node list structure; nevertheless, there are
 a few issues with \ConTeXt{}.
 
-Simple \ConTeXt{} documents tend to be fine, but many advanced
-\ConTeXt{} features rely heavily on Lua and can thus be disturbed by
-\lwc/. This is not a huge issue---the \lwc/ manual is
-written in \ConTeXt{}---but \lwc/ is inevitably more reliable
-with Plain \TeX{} and \LaTeX{} than with \ConTeXt{}.
+However, on the Lua side, \lwc/ modifies much of a page's internal
+structure. This should not affect any \TeX{} code; however, it may surprise
+Lua code that modifies or depends on the page's low-level structure. This
+does not affect Plain~\TeX{} or \LaTeX{} where even most Lua-based packages
+don't depend on the node list structure. \ConTeXt{} \emph{does} depend on
+this internal node structure; however, I have carefully tested the package
+to ensure that this causes no issues.
 
 Finally, keep in mind that adding \lwc/ to a document will almost certainly
 change its page break locations.
+
+\subsection{Formats}
+
+\Lwc/ runs on all known Lua\TeX{}-based formats: Plain~Lua\TeX{},
+Lua\LaTeX{}, \ConTeXt{} Mk\acro{IV}, and~\OpTeX{}. Unless otherwise
+documented, all features should work equally well in all formats.
+
+\Lwc/ is also fully-compatible with the \LuaMeta\TeX{}-based formats:
+\ConTeXt{} Mk\acro{XL}\slash\acro{LMTX}, \LuaMeta\LaTeX{}, and
+\LuaMeta{}Plain~\cite{luametalatex}. \ConTeXt{} Mk\acro{XL} works equally
+well as \ConTeXt{} Mk\acro{IV} and Lua\LaTeX{}; however, \LuaMeta\LaTeX{}
+and \LuaMeta{}Plain support is still quite early. All features should work,
+although there are still a few minor bugs.
+
+All told, \lwc/ supports 7 different format\slash{}engine combinations.
 
 \subsection{Columns}
 
