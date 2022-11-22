@@ -25,6 +25,8 @@ All notable changes to lua-widow-control will be listed here, in reverse chronol
 
 - Add support for presets in ConTeXt.
 
+ Add support for node colouring in ConTeXt and OpTeX  ([#39](https://github.com/gucci-on-fleek/lua-widow-control/issues/39)).
+
 ## v2.2.2 (2022-08-23)
 
 - Add preliminary support for inserts/footnotes in LuaMetaTeX ([#38](https://github.com/gucci-on-fleek/lua-widow-control/issues/38)).
