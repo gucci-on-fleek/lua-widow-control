@@ -49,6 +49,7 @@ jobs:
 
       - name: Install TeX Live
         uses: zauguin/install-texlive@v1
+        continue-on-error: true
         with:
           packages: >
             collection-latexrecommended
@@ -67,6 +68,15 @@ jobs:
             path
             pgfplots
             tugboat
+            luatex85
+            csbulletin
+            babel-czech
+            babel-slovak
+            hyphen-czech
+            hyphen-slovak
+            biblatex
+            biblatex-iso690
+            biber
 
       - name: Install ConTeXt LMTX
         run: |
