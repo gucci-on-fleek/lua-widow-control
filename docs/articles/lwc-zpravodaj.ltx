@@ -36,10 +36,6 @@
 
 \documentclass{csbulletin}
 
-% Hyperlinks
-\usepackage[implicit=false, hidelinks]{hyperref}
-\setcounter{secnumdepth}{3}
-
 % Load lwc
 \usepackage[balanced, draftoffset=\oddsidemargin + 1in + 10pt]{lua-widow-control}
 
@@ -197,6 +193,10 @@
 \csbul@webtrue
 \csbul@colortrue
 \makeatother
+
+% Hyperlinks
+\usepackage[hidelinks, bookmarks=true]{hyperref}
+\setcounter{secnumdepth}{5}
 
 \begin{document}
     \title{Automatically Removing Widows and Orphans\\ with \lwc/}
