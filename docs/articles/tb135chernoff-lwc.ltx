@@ -1,0 +1,428 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+ OR CC-BY-SA-4.0+
+% SPDX-FileCopyrightText: 2022 Max Chernoff
+
+\documentclass[final]{ltugboat}
+
+% This is the LaTeX source for the following article:
+% @article{tb135chernoff-widows,
+%     title={Updates to \textsf{lua-widow-control}},
+%     author={Chernoff, Max},
+%     journal={TUGboat},
+%     volume={43},
+%     number={3},
+%     pages={340--342},
+%     year={2022},
+%     month=nov,
+%     DOI={10.47397/tb/43-3/tb135chernoff-lwc},
+% }
+% Please refer to the PDF on tug.org for the authoritative version.
+
+% Set the publication info
+\vol 43, 3.
+\issyear 2022.
+\issueseqno=135
+\setcounter{page}{340}
+\PrelimDraftfalse
+
+\hbadness=10000
+\def\LuaMeta{Lua\-Meta\-}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{microtype}
+\usepackage[hidelinks,pdfa]{hyperref}
+
+\title[Updates to \textsf{lua-widow-control}]
+      {Updates to ``Automatically removing widows and orphans
+       with \textsf{lua-widow-control}'', \TUB\ \textbf{43}:1}
+\author{Max Chernoff}
+\EDITORnoaddress
+\personalURL{https://ctan.org/pkg/lua-widow-control}
+
+% Sneaky way to always force expansion
+\directlua{
+    forcelwc = 1
+    luatexbase.add_to_callback("pre_output_filter", function()
+        if forcelwc >= 1 and tex.outputpenalty >= -9000 then
+            tex.outputpenalty = 1
+        end
+        return true
+    end, "interlinepenalty")
+}
+
+\def\forcelwc#1{\directlua{forcelwc = #1}}
+
+\usepackage[draft, debug, draftoffset=1in - 10pt]{lua-widow-control}
+
+\makeatletter
+\usepackage{color}
+\definecolor{expanded}{rgb}{0.00, 0.70, 0.25}
+\definecolor{failure} {rgb}{0.90, 0.00, 0.25}
+\definecolor{moved}   {rgb}{0.25, 0.25, 1.00}
+
+\ExplSyntaxOn
+\seq_new:N \l_sec_seq
+\tl_new:N \l_sec_tl
+\def\modifiedsection[#1]{
+    \regex_split:nnN { \. } { #1 } \l_sec_seq
+    \setcounter{section}{0\seq_item:Nn \l_sec_seq { 1 }}
+    \setcounter{subsection}{0\seq_item:Nn \l_sec_seq { 2 }}
+    \setcounter{subsubsection}{0\seq_item:Nn \l_sec_seq { 3 }}
+
+    \int_case:nn { \seq_count:N \l_sec_seq } {
+        1 { \tl_set:Nn \l_sec_tl { section } }
+        2 { \tl_set:Nn \l_sec_tl { subsection } }
+        3 { \tl_set:Nn \l_sec_tl { subsubsection } }
+    }
+
+    \addtocounter{\l_sec_tl}{-1}
+
+    \TB@startsection{
+        {\l_sec_tl}
+        {\seq_count:N \l_sec_seq}%
+        {\z@}%
+        {-8\p@ \@plus-2\p@ \@minus-2\p@}%
+        {4\p@}{\normalsize\bf\raggedright\hyphenpenalty\@M\tubsechook}%
+    }
+}
+\ExplSyntaxOff
+\makeatother
+
+% Let the macro names in section headings be in boldface
+\usepackage{lmodern}
+\DeclareRobustCommand{\cs}[1]{\texttt{\textbackslash#1}}
+\def\dots{\ensuremath{\mathellipsis}}
+
+\begin{document}
+
+\maketitle
+
+A request from \textit{Zpravodaj}, the journal of the Czech\slash Slovak
+\TeX\ group, to republish the subject article
+led to these updates. The section numbers here correspond to those in
+the original article.
+
+\modifiedsection[3.3]{Clubs}
+
+In the original article, I discussed the origin of the typographical terms
+``widow'', ``orphan'', and ``club''. The first two terms are fairly well-known,
+but I had this to say regarding the third:
+
+\begin{quote}
+    \textsl{The \TeX{}book} never refers to ``orphans'' as such; rather, it
+    refers to them as ``clubs''. This term is remarkably rare: I could only find
+    a \emph{single} source published before \textsl{The \TeX{}book} \Dash a
+    compilation article about the definition of ``widow'' \Dash that mentions
+    a ``club line'' [\dots]
+
+    \hspace*{-2pt}I spent a few hours searching through Google Books and my university library
+    catalogue, but I could not find a single additional source. If anyone has
+    any more information on the definition of a ``club line'' or why Knuth chose
+    to use this archaic Scottish term in \TeX{}, please let me know!
+\end{quote}
+
+\noindent
+Conveniently, Don Knuth\Dash the creator of \TeX{}\Dash read my plea and sent
+me this reply:
+
+\begin{quote}\emergencystretch=3em
+  I cannot remember where I found the term ``club line''. Evidently
+  the books that I scoured in 1977 and 1978 had taught me only that an
+  isolated line, caused by breaking between pages in the midst of a
+  paragraph, was called a ``widow''; hence \TeX78 had only
+  ``\cs{chpar4}'' to
+  change the ``\texttt{widowpenalty}''. Sometime between then and \TeX82
+  I must
+  have come across what appeared to be an authoritative source that
+  distinguished between widows at the beginning of a paragraph and
+  orphans or club lines at the end. I may have felt that the term
+  ``orphan'' was somewhat pejorative, who knows?
+\end{quote}
+
+\noindent
+So this (somewhat) resolves the question of where the term ``club'' came
+from.
+
+\modifiedsection[9]{Options}
+The overview to the ``options'' section stated that:
+
+\begin{quote}
+         Plain \TeX/Op\TeX\quad   Some options are set by modifying
+         a register, while others must be set manually
+         using \cs{directlua}.
+\end{quote}
+
+\noindent However, this is no longer true. Now, commands are provided for all
+options in all formats, so you no longer need to use ugly \cs{directlua}
+commands in your documents. The old commands still work, although they will
+likely be removed at some point in the future.
+
+\modifiedsection[9.5]{Penalties}
+\cs{brokenpenalty} now also exists as a \LaTeX{} and \ConTeXt{} key.
+\textsf{lua-widow-control} will pick up on the values of \cs{widowpenalty},
+\cs{clubpenalty}, and \cs{brokenpenalty} regardless of how you set them, so the
+use of these dedicated keys is entirely optional.
+
+\modifiedsection[9.6]{\cs{nobreak} behaviour}
+The Plain/Op\TeX\ command is now:
+
+\smallskip
+         \verb+\lwcnobreak{+\meta{value}\verb+}+
+
+\modifiedsection[9.8]{Draft mode}
+Since v2.2.0, \textsf{lua-widow-control} has a ``draft mode'' which shows how
+\textsf{lua-widow-control} processes pages.
+
+\smallskip
+\noindent\begin{tabularx}{\linewidth}{@{}Xl@{}}
+    Plain \TeX{}\slash\OpTeX{} &
+    \cs{lwcdraft 1} \\
+    \LaTeX{} &
+    \cs{lwcsetup\{draft\}} \\
+    \ConTeXt{} &
+    \cs{setuplwc[draft=start]} \\
+\end{tabularx}
+\smallskip
+
+Draft mode has been used for
+typesetting this article. It has two main features:
+
+First, it colours lines in the document according to their status. Any
+\textcolor{failure}{remaining widows and orphans will be coloured red}, any
+\textcolor{expanded}{expanded paragraphs will be coloured green}, and any
+\textcolor{moved}{lines moved to the next page will be coloured blue}.
+
+Second, this draft mode shows the paragraph costs at the end each
+paragraph, in the margin.
+
+This draft mode leads to a neat trick: if you don't quite trust
+\textsf{lua-widow-control}, or you're writing a document whose final version
+will need to be compilable by both pdf\LaTeX{} and Lua\LaTeX, you can load the
+package with:
+
+\begin{verbatim}
+\usepackage[draft, disable]
+           {lua-widow-control}
+\end{verbatim}
+
+This way, all the widows and orphans will be coloured red and listed in your log
+file. When you go through the document to try and manually remove the widows and
+orphans \Dash whether through the \cs{looseness} trick or by rewriting certain
+lines \Dash you can easily find the best paragraphs to modify by looking at the
+paragraph costs in the margins. If you're less cautious, you can compile your
+document with \textsf{lua-widow-control} enabled as normal and inspect all the
+green paragraphs to see if they look acceptable to you.
+
+You can also toggle the paragraph colouring and cost displays individually:
+
+\smallskip
+\noindent\begin{tabularx}{\linewidth}{@{}Xl@{}}
+    Plain \TeX{}\slash &
+    \cs{lwcshowcosts 1} \\
+    \OpTeX{} & \cs{lwcshowcolours 0} \\[4pt]
+    \LaTeX{} &
+    \cs{lwcsetup\{showcosts=true\}} \\
+    & \cs{lwcsetup\{showcolours=false\}} \\[4pt]
+    \ConTeXt{} &
+    \cs{setuplwc[showcosts=start]} \\
+    & \cs{setuplwc[showcolours=stop]} \\
+\end{tabularx}
+\smallskip
+
+To demonstrate the new draft mode, I have tricked \textsf{lua-widow-control}
+into thinking that every column in this article ends in a widow, even when they
+actually don't. This means that \textsf{lua-widow-control} is attempting to
+expand paragraphs on every column. This gives terrible page breaks and often
+creates new widows and orphans, but it's a good demonstration of how
+\textsf{lua-widow-control} works.
+
+\modifiedsection[10]{Presets}
+
+The original article stated that ``presets are \LaTeX{}-only''. However,
+\textsf{lua-widow-control} now supports presets with both \LaTeX{} and
+\ConTeXt{} using the following commands:
+
+\smallskip
+\begin{tabular}{@{}rl@{}}
+        \LaTeX{} &
+        \cs{lwcsetup\{\meta{preset}\}} \\
+        \ConTeXt{} &
+        \cs{setuplwc[\meta{preset}]} \\
+\end{tabular}
+
+\modifiedsection[11]{Compatibility}
+This quote:
+
+\begin{quote}
+         It doesn't modify [\dots], inserts/floats,
+\end{quote}
+
+\noindent
+isn't strictly true since v2.1.2 since \textsf{lua-widow-control} now handles
+moving footnotes.
+
+\hspace*{-.1em}This statement is also no longer true:
+
+\begin{quote}
+there are a few issues with \ConTeXt{} [\dots] \textsf{lua-widow-control} is
+inevitably more reliable with Plain \TeX{} and \LaTeX{} than with \ConTeXt{}.
+\end{quote}
+
+\noindent All issues with \ConTeXt{} \Dash including
+grid snapping \Dash have now been resolved. \textsf{lua-widow-control} should be
+equally reliable with all formats.
+
+\modifiedsection[11.1]{Formats}
+
+In addition to the previously-mentioned formats\slash engines,
+\textsf{lua-widow-control} now has preliminary support for \LuaMeta\LaTeX{} and
+\LuaMeta{}Plain.\tbsurlfootnote{github.com/zauguin/luametalatex}
+Aside from a few minor bugs, the \LuaMeta\LaTeX{} and \LuaMeta{}Plain versions work identically to their respective
+Lua\LaTeX{} versions. With this addition, \textsf{lua-widow-control} now supports seven different format\slash engine combinations.
+
+\modifiedsection[11.3]{Performance}
+
+Earlier versions of \textsf{lua-widow-control} had some memory leaks. These
+weren't noticeable for small documents, although it could cause slowdowns for
+documents larger than a few hundred pages. However, I have implemented a new
+testing suite to ensure that there are no memory leaks, so
+\textsf{lua-widow-control} can now easily compile documents $>10\,000$ pages
+long.
+
+\modifiedsection[13.4]{Footnotes}
+
+Earlier versions of \textsf{lua-widow-control} completely ignored inserts. This
+meant that if a moved line had associated footnotes, \textsf{lua-widow-control}
+would move the ``footnote mark'' but not the associated ``footnote text''.
+\textsf{lua-widow-control} now handles footnotes correctly through the
+mechanism detailed in the next section.
+
+\subsubsection{Inserts}
+
+Before we go into the details of how \textsf{lua-widow-control} handles
+footnotes, we need to look at what footnotes actually are to \TeX{}.
+Every \cs{footnote} command ultimately expands to something like
+\cs{insert\meta{class}}\allowbreak\verb|{|\meta{content}\verb|}|,
+\noindent where \meta{class} is an insertion class number, defined as
+\cs{footins} in this case (in Plain \TeX\ and \LaTeX). Inserts can be found in
+horizontal mode (footnotes) or in vertical mode (\cs{topins} in Plain \TeX{} and
+floats in \LaTeX{}), but they cannot be inside boxes. Each of these insert types is
+assigned a different class number, but the mechanism is otherwise identical.
+\textsf{lua-widow-control} treats all inserts identically, although it safely
+ignores vertical mode inserts since they are only ever found between paragraphs.
+
+But what does \cs{insert} do exactly? When \TeX{} sees an \cs{insert} primitive
+in horizontal mode (when typesetting a paragraph), it does two things: first, it
+processes the insert's content and saves it invisibly just below the current
+line. Second, it effectively adds the insert content's height to the height of
+the material on the current page. Also, for the first insert on a page, the glue
+in \cs{skip}\meta{class} is added to the current height. All this is done to
+ensure that there is sufficient room for the insert on the page whenever the
+line is output onto the page.
+
+If there is absolutely no way to make the insert
+fit on the page \Dash say, if you placed an entire paragraph in a footnote on
+the last line of a page \Dash then \TeX{} will begrudgingly ``split'' the
+insert, placing the first part on the current page and ``holding over'' the
+second part until the next page.
+
+There are some other \TeX{}nicalities involving \cs{count}\meta{class} and
+\cs{dimen}\meta{class}, but they mostly don't affect \textsf{lua-widow-control}.
+See Chapter~15 in \TB\ or some other reference for all the details.
+
+After \TeX{} has chosen the breakpoints for a paragraph, it adds the
+chosen lines one by one to the current page. Whenever the accumulated
+page height is ``close enough'' to the target page height (normally
+\cs{vsize}) % but really \cs{pagegoal}
+the \cs{output} token list (often called
+the ``output routine'') is expanded.
+
+But before \cs{output} is called, \TeX{} goes through the page contents and
+moves the contents of any saved inserts into \cs{vbox}es corresponding to the
+inserts' classes, namely \cs{box}\meta{class}, so \cs{output} can work
+with them.
+
+And that's pretty much it on the engine side. Actually placing the inserts on
+the page is reserved for the output routine, which is defined by the format.
+This too is a complicated process, although thankfully not one that
+\textsf{lua-widow-control} needs to worry about.
+
+\subsubsection{LuaMeta\TeX{}}
+
+The \LuaMeta\TeX{} engine treats inserts slightly differently than traditional \TeX{}
+engines. The first major difference is that insertions have dedicated registers; so
+instead of \cs{box}\meta{class}, \LuaMeta\TeX{} has \cs{insertbox}\meta{class};
+instead of \cs{count}\meta{class}, \LuaMeta\TeX{} has
+\cs{insertmultiplier}\meta{class}; etc. The second major difference is that
+\LuaMeta\TeX{} will pick up inserts that are inside of boxes, meaning that
+placing footnotes in things like tables or frames should mostly just work as
+expected.
+
+There are
+also a few new parameters and other minor changes, but the overall mechanism is
+still quite similar to traditional \TeX{}.
+
+\subsubsection{Paragraph breaking}
+
+As stated in the original article, \textsf{lua-widow-control} intercepts
+\TeX{}'s output immediately before the output routine. However, this is
+\emph{after} all the inserts on the page have been processed and boxed. This is
+a bit of a problem because if we move a line to the next page, we need to move
+the associated insert; however, the insert is already gone.
+
+To solve this problem, immediately after \TeX{} has naturally broken a
+paragraph, \textsf{lua-widow-control} copies and stores all its inserts. Then,
+\textsf{lua-widow-control} tags the first element of each line (usually a glyph)
+with a Lua\TeX{} attribute that contains the indices for the first and last
+associated insert. \textsf{lua-widow-control} also tags each line inside the
+insert's content with its corresponding index so that it can be found later.
+
+\subsubsection{Page breaking}
+
+Here, we follow the same algorithm as in the original article. However, when we
+move the last line of the page to the next page, we first need to inspect the
+line to see if any of its contents have been marked with an insert index. If so,
+we need to move the corresponding insert to the next page. To do so, we unpack the
+attributes value to get all the inserts associated with this line.
+
+Using the stored insert indices and class, we can iterate through
+\cs{box}\meta{class} and delete any lines that match one of the current line's
+indices. We also need to iterate through the internal \TeX{} box % technically a list
+\verb|hold_head|\Dash the box that holds any inserts split onto the next page
+\Dash and delete any matching lines. We can safely delete any of these lines
+since they are still stored in the original \cs{insert} nodes that we copied
+earlier.
+
+Now, we can retrieve all of our previously-stored inserts and add them to the
+next page, immediately after the moved line. Then, when \TeX{} builds that page, it will find these inserts and move their contents to the appropriate boxes.
+
+\modifiedsection[16]{Known issues}
+The following two bugs have now been fully resolved:
+
+\begin{itemize}
+\item When running under LuaMeta\TeX, the log may contain [\dots]
+\item \TeX\ may warn about overfull \cs{vbox}es [\dots]
+\end{itemize}
+
+The fundamental limitations previously listed still exist; however, these two
+bugs along with a few dozen others have all been fixed since the original
+article was published. At this point, all \emph{known} bugs have been resolved;
+some bugs certainly still remain, but I'd feel quite confident using
+\textsf{lua-widow-control} in your everyday documents.
+
+There is, however, one new issue:
+
+\begin{itemize}
+    \item \textsf{lua-widow-control} won't properly move footnotes if there are
+          multiple different ``classes'' of inserts on the same line. To the
+          best of my knowledge, this shouldn't happen in any real-world
+          documents. If this happens to be an issue for you, please let me know;
+          this problem is relatively easy to fix, although it will add
+          considerable complexity for what I think isn't a real issue.
+\end{itemize}
+
+\advance\signaturewidth by 37pt
+\makesignature
+
+\end{document}

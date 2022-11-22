@@ -81,11 +81,20 @@ function target_list.doc.func()
     mkdir("./docs/manual/tmp")
     error = error + run("./docs/manual", context .. " lwc-manual")
 
-    error = error + run("./docs/TUGboat", context .. " tb133chernoff-widows-figure.ctx")
-    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
-    error = error + run("./docs/TUGboat", "bibtex tb133chernoff-widows")
-    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
-    error = error + run("./docs/TUGboat", "lualatex tb133chernoff-widows.ltx")
+    error = error + run("./docs/articles", context .. " tb133chernoff-widows-figure.ctx")
+    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+    error = error + run("./docs/articles", "bibtex tb133chernoff-widows")
+    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+
+    error = error + run("./docs/articles", "lualatex tb135chernoff-lwc.ltx")
+    error = error + run("./docs/articles", "pdfunite tb133chernoff-widows.pdf tb135chernoff-lwc.pdf /dev/stdout | sponge tb133chernoff-widows.pdf")
+
+    error = error + run("./docs/articles", context .. " lwc-zpravodaj-figure.ctx")
+    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
+    error = error + run("./docs/articles", "biber lwc-zpravodaj")
+    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
+    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
 
     return error
 end

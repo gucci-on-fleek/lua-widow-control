@@ -27,6 +27,7 @@ jobs:
           poppler-utils
           xsltproc
           libcurl4-openssl-dev
+          moreutils
           ) & disown
 
       # From https://github.com/zauguin/install-texlive
@@ -137,7 +138,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         with:
           prerelease: true
-          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf, ./texmf/doc/luatex/lua-widow-control/tb133chernoff-widows.pdf
+          artifacts: ./lua-widow-control.tds.zip, ./lua-widow-control.ctan.zip, ./texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf, ./texmf/doc/luatex/lua-widow-control/tb133chernoff-widows.pdf, ./texmf/doc/luatex/lua-widow-control/lwc-zpravodaj.pdf
           tag: release-${{github.sha}}
           commit: ${{github.sha}}
           name: Prerelease ${{github.sha}}

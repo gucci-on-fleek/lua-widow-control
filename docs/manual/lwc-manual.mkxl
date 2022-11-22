@@ -313,6 +313,8 @@ interfaces.implement {
 %%%%%%%%%%%%%%%%%%%%%%%%
 \usebtxdefinitions[apa]
 
+\resetsetups[apa:list:sameauthor]
+
 \setupbtx[apa:list][
     stopper:initials=,
     separator:initials=\btxnbsp,

@@ -28,7 +28,8 @@
 \def\mkxl/{\ConTeXt~Mk\acronym{XL}}
 \def\mkiv/{\ConTeXt~Mk\acronym{IV}}
 \define\OpTeX{Op\kern-.05em\TeX}
-\def\LuaMetaTeX{LuaMeta\TeX}
+\def\LuaMeta{Lua\-Meta\-}
+\def\LuaMetaTeX{\LuaMeta\TeX}
 \def\plainop/{Plain~\TeX{}/\OpTeX{}}
 \let\q=\quotation
 
@@ -80,7 +81,7 @@ Ensure that your \TeX~Live/Mik\TeX{} distribution is up-to-date. Then, \LaTeX{} 
 
 \section{Preliminaries}
 
-This manual begins with a brief introduction to widows, orphans, and \lwc/. For an extended introduction and discussion of these topics, please see the \emph{TUGboat} article\cite[article] distributed with this manual (Links: \goto{local}[tb133chernoff-widows::], \goto{\acronym{CTAN}}[url(http://mirrors.ctan.org/macros/luatex/generic/lua-widow-control/tb133chernoff-widows.pdf)], \goto{GitHub}[url(https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/tb133chernoff-widows.pdf)]). You can also skip ahead to the \goto{installation instructions on \at{page}[sec:install]}[sec:install] or the \goto{usage section starting at \at{page}[sec:usage]}[sec:usage].
+This manual begins with a brief introduction to widows, orphans, and \lwc/. For an extended introduction and discussion of these topics, please see the \emph{Zpravodaj} article\cite[zpravodaj] distributed with this manual (Links: \goto{local}[lwc-zpravodaj::], \goto{\acronym{CTAN}}[url(http://mirrors.ctan.org/macros/luatex/generic/lua-widow-control/lwc-zpravodaj.pdf)], \goto{GitHub}[url(https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/lwc-zpravodaj.pdf)]). This same material is also available in two \emph{TUGboat} articles\cite[tugboat1, tugboat2] (Links: \goto{local}[tb133chernoff-widows::], \goto{\acronym{CTAN}}[url(http://mirrors.ctan.org/macros/luatex/generic/lua-widow-control/tb133chernoff-widows.pdf)], \goto{GitHub}[url(https://github.com/gucci-on-fleek/lua-widow-control/releases/latest/download/tb133chernoff-widows.pdf)]) if you prefer. You can also skip ahead to the \goto{installation instructions on \at{page}[sec:install]}[sec:install] or the \goto{usage section starting at \at{page}[sec:usage]}[sec:usage].
 
 \section[sec:motivation]{Motivation}
 
@@ -765,13 +766,13 @@ change its page break locations.
 \subsection{Formats}
 
 \Lwc/ runs on all known Lua\TeX{}-based formats: Plain~Lua\TeX{},
-Lua\LaTeX{}, \ConTeXt{} Mk\acro{IV}, and~\OpTeX{}. Unless otherwise
+Lua\LaTeX{}, \ConTeXt{} Mk\acronym{IV}, and~\OpTeX{}. Unless otherwise
 documented, all features should work equally well in all formats.
 
 \Lwc/ is also fully-compatible with the \LuaMeta\TeX{}-based formats:
-\ConTeXt{} Mk\acro{XL}\slash\acro{LMTX}, \LuaMeta\LaTeX{}, and
-\LuaMeta{}Plain~\cite{luametalatex}. \ConTeXt{} Mk\acro{XL} works equally
-well as \ConTeXt{} Mk\acro{IV} and Lua\LaTeX{}; however, \LuaMeta\LaTeX{}
+\ConTeXt{} Mk\acronym{XL}\slash\acronym{LMTX}, \LuaMeta\LaTeX{}, and
+\LuaMeta{}Plain. \ConTeXt{} Mk\acronym{XL} works equally
+well as \ConTeXt{} Mk\acronym{IV} and Lua\LaTeX{}; however, \LuaMeta\LaTeX{}
 and \LuaMeta{}Plain support is still quite early. All features should work,
 although there are still a few minor bugs.
 
