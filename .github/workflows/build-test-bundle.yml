@@ -133,6 +133,10 @@ jobs:
 
       - name: Bundle the package
         run: |
+          cd ~/luametalatex
+          l3build uninstall
+
+          cd "$GITHUB_WORKSPACE"
           l3build bundle
 
       - name: Archive on failure
