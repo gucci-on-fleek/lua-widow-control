@@ -149,13 +149,13 @@
 \define\lwc_patch_pre{%
     \lwc_if_enabled%
         \advance\lwc_disable_count by 1%
-        \setuplwc[\c!state=\v!stop]%
+        \lwc_disable%
     \fi%
 }
 
 \define\lwc_patch_post{
     \ifnum\lwc_disable_count>0\relax%
-        \setuplwc[\c!state=\v!start]%
+        \lwc_enable%
         \advance\lwc_disable_count by -1%
     \fi%
 }
