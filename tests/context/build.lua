@@ -15,11 +15,11 @@ dofile(prefix .. "tests/test-config.lua")
 -- ConTeXt
 specialformats = { context = {
     mkxl = {
-        binary = os.getenv("lmtx_context") or "context",
+        binary = "context",
         format = ""
     },
     mkiv = {
-        binary = os.getenv("tl_context") or "context",
+        binary = "context --luatex",
         format = ""
     },
 }}

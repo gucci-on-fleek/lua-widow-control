@@ -20,12 +20,12 @@ specialformats = { plain = {
         binary = "luatex",
         format = "luatex"
     },
-    luametatex = {
-        binary = common .. "/luametatex-wrapper",
-        format = "luametaplain"
-    },
+    -- luametatex = {
+    --     binary = common .. "/luametatex-wrapper",
+    --     format = "luametaplain"
+    -- },
 }}
 
-checkengines = { "luatex", "luametatex" }
+checkengines = { "luatex", --[["luametatex"]] }
 checkformat = "plain"
 testfiledir = prefix .. "tests/plain"

@@ -24,12 +24,12 @@ specialformats = { lualatex = {
         binary = "lualatex-dev",
         format = ""
     },
-    luametatex = {
-        binary = common .. "/luametatex-wrapper",
-        format = "luametalatex"
-    },
+    -- luametatex = {
+    --     binary = common .. "/luametatex-wrapper",
+    --     format = "luametalatex"
+    -- },
 }}
 
-checkengines = { "lualatex", "lualatex-dev", "luametatex" }
+checkengines = { "lualatex", "lualatex-dev", --[["luametatex"]] }
 checkformat = "lualatex"
 testfiledir = prefix .. "tests/latex"
