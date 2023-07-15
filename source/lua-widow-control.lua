@@ -21,7 +21,6 @@ lwc = lwc or {}
 lwc.name = "lua-widow-control"
 
 -- Locals for `debug_print`
-local debug_lib = debug
 local string_rep = string.rep
 local write_nl = texio.write_nl
 
@@ -1732,6 +1731,7 @@ register_tex_cmd(
 ---
 --- @return nil
 local function silence_luatexbase()
+    local debug_lib = require("debug")
     local nups = debug_lib.getinfo(luatexbase.add_to_callback).nups
 
     for i = 1, nups do
