@@ -1,4 +1,5 @@
 \usemodule[lua-widow-control]
+\setuppapersize[A4][A4]
 \showframe
 \parskip=0pt
 
