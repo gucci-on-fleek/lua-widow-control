@@ -9,6 +9,12 @@ Changelog
 
 All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
 
+## v3.0.1 (2024-03-11)
+
+- Disable `debug` hooks for TeX Live 2024.
+
+- Fix compatibility issue with `selnolig` ([#43](https://github.com/gucci-on-fleek/lua-widow-control/issues/43)).
+
 ## v3.0.0 (2022-11-22)
 
 - Add the new _TUGboat_ and _Zpravodaj_ articles.

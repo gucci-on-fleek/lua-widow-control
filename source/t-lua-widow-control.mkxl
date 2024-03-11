@@ -1,10 +1,10 @@
 %D \module
 %D   [     file=t-lua-widow-control,
-%D      version=3.0.0, %%version
+%D      version=3.0.1, %%version
 %D        title=lua-widow-control,
 %D     subtitle=\ConTeXt module for lua-widow-control,
 %D       author=Max Chernoff,
-%D         date=2022-11-22, %%dashdate
+%D         date=2024-03-11, %%dashdate
 %D    copyright=Max Chernoff,
 %D      license=MPL-2.0+,
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
