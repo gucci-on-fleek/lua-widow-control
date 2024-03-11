@@ -1722,16 +1722,26 @@ register_tex_cmd(
 --- callback and disable it so that no warning is generated.
 ---
 --- However, each time that we enable/disable the null `hpack_quality` callback,
---- luatexbase puts an info message in the log. This completely fills the log file
---- with useless error messages, so we disable it here.
+--- luatexbase puts an info message in the log. This completely fills the log
+--- file with useless error messages, so we disable it here.
 ---
---- This uses the Lua `debug` library to internally modify the log upvalue in the
---- `add_to_callback` function. This is almost certainly a terrible idea, but I
---- don't know of a better way to do it.
+--- This uses the Lua `debug` library to internally modify the log upvalue in
+--- the `add_to_callback` function. This is almost certainly a terrible idea,
+--- but I don't know of a better way to do it.
 ---
 --- @return nil
 local function silence_luatexbase()
     local debug_lib = require("debug")
+
+    -- On TL24, the `debug` library no longer exists, so there's nothing that
+    -- we can do here.
+    if not debug_lib or
+       not debug_lib.getinfo or
+       not debug_lib.getupvalue or
+       not debug_lib.setupvalue then
+        return
+    end
+
     local nups = debug_lib.getinfo(luatexbase.add_to_callback).nups
 
     for i = 1, nups do
