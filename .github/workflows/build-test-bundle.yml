@@ -50,37 +50,49 @@ jobs:
         continue-on-error: true
         with:
           packages: >
-            collection-latexrecommended
-            latex-bin-dev
-            context
-            l3build
+            babel-czech
+            babel-slovak
             beebe
+            biber
+            biblatex
+            biblatex-iso690
             blindtext
+            collection-latexrecommended
+            context
+            csbulletin
             hyperxmp
+            hyphen-czech
+            hyphen-slovak
             ifmtarg
             kantlipsum
+            l3build
+            latex-bin-dev
+            libertinus-fonts
             linebreaker
             luacode
+            luatex85
             luatexbase
             optex
             path
             pgfplots
+            plex
+            tex-gyre
+            tex-gyre-math
             tugboat
-            luatex85
-            csbulletin
-            babel-czech
-            babel-slovak
-            hyphen-czech
-            hyphen-slovak
-            biblatex
-            biblatex-iso690
-            biber
 
       - name: Set environment variables
         run: |
           echo "TEXMFHOME=$GITHUB_WORKSPACE/texmf" >> $GITHUB_ENV
           mtxrun --generate
           mtxrun --luatex --generate
+          tlmgr paper letter
+
+      - uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: |
+            ~/texlive
+          key: tex-v1-${{ steps.get-id.outputs.id }}
 
       # - name: Install LuaMetaLaTeX
       #   run: |

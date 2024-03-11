@@ -367,5 +367,36 @@ interfaces.implement {
     \lwc_doi{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{doi}}
 \stoptexdefinition
 
+
+%%%%%%%%%%%%%%%%
+%%% Markdown %%%
+%%%%%%%%%%%%%%%%
+
+\startluacode
+sandbox.registerrunner {
+    name     = "pandoc",
+    program  = "pandoc",
+    method   = "resultof",
+    template = "--from markdown --to context %filename%",
+    checkers = {
+        filename = "readable",
+        path     = "string",
+    }
+}
+
+interfaces.implement {
+    name = "markdownInput",
+    public = true,
+    arguments = { "string" },
+    actions = function (str)
+        -- local out = sandbox.getrunner("pandoc"){
+        --     filename = str,
+        -- }
+        --
+        -- context(out)
+    end
+}
+\stopluacode
+
 \protect
 \stopenvironment

@@ -45,24 +45,6 @@
 \definecolor[moved]   [r=0.25, g=0.25, b=1.00]
 \definecolor[cost]    [r=0.50, g=0.50, b=0.50]
 
-\usemodule[markdown]
-\define[4]\markdownRendererLinkPrototype{\goto{#1}[url(#3)]}
-\def\markdownOptionHtml{true}
-\def\markdownOptionShiftHeadings{1}
-\startluacode
-    interfaces.implement {
-        name = "markdownRendererHeadingThreePrototype",
-        public = true,
-        arguments = { "string" },
-        actions = function (str)
-            context.subsection {
-                title = str,
-                list = str:match "v%d+%.%d+%.%d+"
-            }
-        end
-    }
-\stopluacode
-
 \startdocument[
     title=lua-widow-control,
     author=Max Chernoff,
@@ -444,6 +426,8 @@ may want to change them.
     \NC\NR\NC\NC\inlineTEX{\setuplwc[brokenpenalty = $\meta{integer}$]}
     \NC\NR
 \stopTABLE
+
+\page % TODO
 
 The value of these penalties determines how much \TeX{} should attempt
 to stretch glue before passing the \woo/ to \lwc/. If you set the values to~1
@@ -852,7 +836,7 @@ ultra-short~lines.
     to be better than widows\cite[elements], so this is still an
     improvement.
 
-    \item \Lwc/ only attempts to expand paragraphs; it never attempts to shrink them. See the \emph{TUGboat}~article\cite[article] §15.3 for further discussion. \githubissue{33}
+    \item \Lwc/ only attempts to expand paragraphs; it never attempts to shrink them. See the \emph{TUGboat}~article\cite[tugboat1] §15.3 for further discussion. \githubissue{33}
 
     \item \Lwc/ can only expand paragraphs that fit completely on a page. This is unavoidable due to the one-page-at-a-time model: you can't modify the bottom half of a paragraph since its top half has already shipped out, and you can't expand the top half of a paragraph since that can't remove orphans. This only causes issues if your document has paragraphs so long that a page only has two half-paragraphs and zero whole paragraphs.
 
