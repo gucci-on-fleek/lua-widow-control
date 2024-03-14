@@ -359,8 +359,7 @@ interfaces.implement {
 ]
 
 \starttexdefinition mutable protected btx:apa:url
-    \strippedurl{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}
-        }
+    \strippedurl{\clf_btxflush{\currentbtxdataset}{\currentbtxtag}{url}}
 \stoptexdefinition
 
 \define[1]\lwc_doi{\goto{\acronym{DOI:}\,\tt\hyphenatedurl{#1}}[url(https://dx.doi.org/#1)]}
