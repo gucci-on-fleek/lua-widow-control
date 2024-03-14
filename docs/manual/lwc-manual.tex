@@ -881,6 +881,8 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
     \def\startsubsection[#1]{
         \start
             \def\goto##1[##2]{##1}
+            \def\useURL[##1][##2][##3][##4]{##4}
+            \def\from[##1]{}
             \normalexpanded{\subsection[#1]}
         \stop
     }
