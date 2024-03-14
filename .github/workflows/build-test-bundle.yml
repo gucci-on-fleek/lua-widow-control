@@ -81,12 +81,14 @@ jobs:
             tex-gyre-math
             tugboat
 
-      - name: Set environment variables
+      - name: Post-installation setup
         run: |
           echo "TEXMFHOME=$GITHUB_WORKSPACE/texmf" >> $GITHUB_ENV
-          mtxrun --generate
-          mtxrun --luatex --generate
-          tlmgr paper letter
+          sed -i 's/"rb"/"r"/' $(kpsewhich util-sbx.lmt)
+          tlmgr paper letter &
+          (mtxrun --generate && context --make && mtxrun --script fonts --reload) &
+          (mtxrun --luatex --generate && context --luatex --make) &
+          wait
 
       - uses: actions/cache/save@v3
         if: always()
@@ -117,9 +119,6 @@ jobs:
 
       - name: Test the package
         run: |
-          # Temporary workaround; see latex3/l3build#232
-          sed -i '2i if os.getenv"TEXMFCNF"==".:"then os.setenv"TEXMFCNF"end' $(type -p mtxrun).lua
-
           l3build check --show-log-on-error
 
       - name: Bundle the package
