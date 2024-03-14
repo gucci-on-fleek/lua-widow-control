@@ -427,8 +427,6 @@ may want to change them.
     \NC\NR
 \stopTABLE
 
-\page % TODO
-
 The value of these penalties determines how much \TeX{} should attempt
 to stretch glue before passing the \woo/ to \lwc/. If you set the values to~1
 (default), \TeX{} will stretch nothing and immediately trigger \lwc/;
@@ -681,7 +679,7 @@ still requires a little manual intervention.
 
 \section{Lua Interface}
 
-\Lwc/ provides a few public functions and tables that you can safely use or modify as documented. Any Lua interfaces that aren't documented below are subject to change at any time, but ff you do want to use an undocumented interface, please let me know and can easily document it.
+\Lwc/ provides a few public functions and tables that you can safely use or modify as documented. Any Lua interfaces that aren't documented below are subject to change at any time, but if you do want to use an undocumented interface, please let me know and can easily document it.
 
 \subsection{Costs}
 
@@ -878,7 +876,16 @@ Please note that a compiled document is \bold{not} considered to be an \q{Execut
     style=\ssitb,
     after={\blank[disable, penalty:10000]}
 ]
-\markdownInput{../../CHANGELOG.md}
+\start
+    \let\stopsubsection=\relax
+    \def\startsubsection[#1]{
+        \start
+            \def\goto##1[##2]{##1}
+            \normalexpanded{\subsection[#1]}
+        \stop
+    }
+    \markdownInput{../../CHANGELOG.md}
+\stop
 
 \page
 

@@ -290,6 +290,7 @@ interfaces.implement {
         \doifdocumentvariable{ctan}{
             \strippedurl{\documentvariable{ctan}}
         }
+        \par
         \doifdocumentvariable{github}{
             \strippedurl{\documentvariable{github}}
         }
@@ -377,7 +378,7 @@ sandbox.registerrunner {
     name     = "pandoc",
     program  = "pandoc",
     method   = "resultof",
-    template = "--from markdown --to context %filename%",
+    template = "--from markdown --to context --top-level-division=section %filename%",
     checkers = {
         filename = "readable",
         path     = "string",
@@ -389,11 +390,11 @@ interfaces.implement {
     public = true,
     arguments = { "string" },
     actions = function (str)
-        -- local out = sandbox.getrunner("pandoc"){
-        --     filename = str,
-        -- }
-        --
-        -- context(out)
+        local out = sandbox.getrunner("pandoc"){
+            filename = str,
+        }
+
+        context(out)
     end
 }
 \stopluacode

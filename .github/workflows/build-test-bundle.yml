@@ -28,6 +28,7 @@ jobs:
           xsltproc
           libcurl4-openssl-dev
           moreutils
+          pandoc
           ) & disown
 
       # From https://github.com/zauguin/install-texlive
