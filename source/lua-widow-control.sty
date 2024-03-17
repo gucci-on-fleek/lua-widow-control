@@ -63,6 +63,16 @@
         \c_right_brace_str\ instead.
     }
 
+\msg_new:nnn
+    { \c__lwc_name_str }
+    { dubious-emergencystretch }
+    {
+        Questionable~ `emergencystretch'~ value. \\
+        `emergencystretch'~ values~ greater~ than~ \c_backslash_str textwidth~
+        generally~ give~ poor~ results.~ Use~ at~ your~ own~ risk.~
+        (Current~ value:~ \dim_use:N \g__lwc_emergencystretch_dim)
+    }
+
 % Don't let the user proceed unless they are using \LuaTeX{}.
 \sys_if_engine_luatex:F {
     \msg_critical:nn { \c__lwc_name_str } { no-luatex }
@@ -70,9 +80,16 @@
 
 % Define (most of) the keys
 \cs_generate_variant:Nn \keys_define:nn { Vn }
+\dim_new:N \g__lwc_emergencystretch_dim
 
 \keys_define:Vn { \c__lwc_name_str } {
-    emergencystretch .dim_gset:N       = \g__lwc_emergencystretch_dim,
+    emergencystretch .code:n           = {
+        \dim_gset:Nn \g__lwc_emergencystretch_dim { #1 }
+        \dim_compare:nNnT { #1 } > { \dim_max:nn { \textwidth } { 6in } }
+        {
+            \msg_warning:nn { \c__lwc_name_str } { dubious-emergencystretch }
+        }
+    },
     emergencystretch .value_required:n = true,
     emergencystretch .initial:x        = \dim_max:nn { 3em } { 30pt },
 

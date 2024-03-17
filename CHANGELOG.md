@@ -9,6 +9,10 @@ Changelog
 
 All notable changes to lua-widow-control will be listed here, in reverse chronological order. **Changes listed in bold** are important changes: they either remove options or commands, or may change the location of page breaks.
 
+## Unreleased
+
+- Warn on questionable `emergencystretch` values.
+
 ## [v3.0.1 (2024-03-11)](https://github.com/gucci-on-fleek/lua-widow-control/releases/tag/release-1d224f39e2cadf74e5fb6a5d2dcd42c3fdaf2002)
 
 _Final release present in TeX Live 2023_
