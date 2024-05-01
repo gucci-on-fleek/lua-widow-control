@@ -1,11 +1,12 @@
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
-% SPDX-FileCopyrightText: 2022 Max Chernoff
+% SPDX-FileCopyrightText: 2024 Max Chernoff
 
 \_codedecl\lwcenable{lua-widow-control <v3.0.1>} %%version
 \_namespace{lwc}
 
+% Register Definitions
 \_clubpenalty=1
 \_widowpenalty=1
 \_displaywidowpenalty=1
@@ -20,6 +21,21 @@
 \_newcount\lwcmaxcost
 \lwcmaxcost=2147483647
 
+% Define the output routine handler
+\_newtoks\.saved_output
+\_newtoks\.trigger_special_output
+
+\.trigger_special_output={%
+    \_holdinginserts=0\_relax%
+    \.saved_output=\_output%
+    \_output={%
+        \_global\_output=\.saved_output%
+        \_unvbox255\_relax%
+        \_penalty\_outputpenalty\_relax%
+    }%
+}
+
+% Load the Lua code
 \_directlua{require "lua-widow-control"}
 
 % Enable \lwc/ by default when the package is loaded.

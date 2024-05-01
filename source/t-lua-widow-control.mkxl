@@ -9,6 +9,11 @@
 %D      license=MPL-2.0+,
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
+
+\errhelp{ConTeXt support for lua-widow-control is currently broken. Sorry!}
+\errmessage{ConTeXt support for lua-widow-control is currently broken. Sorry!}
+\normalend
+
 \unprotect
 
 % Preliminaries

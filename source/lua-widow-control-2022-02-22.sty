@@ -1,7 +1,7 @@
 % lua-widow-control
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
-% SPDX-FileCopyrightText: 2022 Max Chernoff
+% SPDX-FileCopyrightText: 2024 Max Chernoff
 
 \NeedsTeXFormat{LaTeX2e}[2015/01/01] % Formats built after 2015 include \LuaTeX{}Base
 \ProvidesPackage{lua-widow-control}%
@@ -43,6 +43,21 @@
 \newcount\lwcmaxcost
 \lwcmaxcost=2147483647
 
+% Define the output routine handler
+\newtoks\lwc@saved@output
+\newtoks\lwc@trigger@special@output
+
+\lwc@trigger@special@output={%
+    \holdinginserts=0\relax%
+    \lwc@saved@output=\output%
+    \output={%
+        \global\output=\lwc@saved@output%
+        \unvbox255\relax%
+        \penalty\outputpenalty\relax%
+    }%
+}
+
+% Load the Lua code
 \directlua{require "lua-widow-control"}
 
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
