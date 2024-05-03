@@ -15,6 +15,9 @@
 --- @field penalty integer
 --- @field prev node
 --- @field subtype integer
+--- @field user_id integer
+--- @field value node
+--- @field width integer
 
 -- Initial setup
 lwc = lwc or {}
@@ -95,6 +98,7 @@ local glue_id = id_from_name("glue")
 local glyph_id = id_from_name("glyph")
 local hlist_id = id_from_name("hlist")
 local line_subid = 1
+local mark_id = id_from_name("mark")
 local par_id = id_from_name("par") or id_from_name("local_par")
 local parfill_subids = {
     parfillleftskip = 17,
@@ -103,6 +107,7 @@ local parfill_subids = {
     parinitrightskip = 18,
 }
 local vlist_id = id_from_name("vlist")
+local whatsit_id = id_from_name("whatsit")
 
 -- Local versions of globals
 local abs = math.abs
@@ -112,11 +117,13 @@ local find_attribute = node.find_attribute or node.findattribute
 local free_list = node.flush_list or node.flushlist
 local get_attribute = node.get_attribute or node.getattribute
 local hpack = node.hpack
+local insert_node_before = node.insert_before
 local insert_token = token.put_next or token.putnext
 local is_node = node.is_node or node.isnode
 local last = node.slide
 local linebreak = tex.linebreak
 local new_node = node.new
+local remove_node = node.remove
 local set_attribute = node.set_attribute or node.setattribute
 local str_byte = string.byte
 local str_char = string.char
@@ -128,6 +135,7 @@ local tex_dimen = tex.dimen
 local tex_lists = tex.lists
 local traverse = node.traverse
 local traverse_id = node.traverse_id or node.traverseid
+local whatsit_node_type = string.byte("n")
 
 -- Misc. Constants
 local iffalse = token.create("iffalse")
@@ -154,6 +162,7 @@ local contrib_head,
       draft_offset,
       emergencystretch,
       info,
+      mark_whatsit_id,
       max_cost,
       page_head,
       paragraph_attribute,
@@ -193,6 +202,7 @@ if context then
         logs.poptarget()
     end
     paragraph_attribute = attributes.public(lwc.name .. "_paragraph")
+    mark_whatsit_id = 55
 
     -- Register names
     emergencystretch = "lwc_emergency_stretch"
@@ -234,12 +244,14 @@ paragraphs.]],
         warning = function(str) luatexbase.module_warning(lwc.name, str) end
         info = function(str) luatexbase.module_info(lwc.name, str) end
         paragraph_attribute = luatexbase.new_attribute(lwc.name .. "_paragraph")
+        mark_whatsit_id = luatexbase.new_whatsit(lwc.name .. "_mark")
     elseif optex then
         debug("OpTeX")
 
         warning = function(str) write_nl(lwc.name .. " Warning: " .. str) end
         info = function(str) write_nl("log", lwc.name .. " Info: " .. str) end
         paragraph_attribute = alloc.new_attribute(lwc.name .. "_paragraph")
+        mark_whatsit_id = 55
     end
 else -- This shouldn't ever happen
     error [[Unsupported format.
@@ -388,6 +400,19 @@ local function next_of_type(head, id, args)
 end
 
 
+--- Replaces a node in a list with another node.
+---
+--- @param head node The head of the list that contains `find`
+--- @param find node The node to remove
+--- @param replace node The node to insert
+--- @return node head The new head of the list
+local function replace_node(head, find, replace)
+    local head, current = remove_node(head, find)
+    head, replace = insert_node_before(head, current, replace)
+    return head
+end
+
+
 --- Ensures that a paragraph is ready to be broken
 ---
 --- Only applies to LuaMetaTeX
@@ -496,7 +521,7 @@ local function colour_list(head, colour)
     )
 
     if optex and optex.set_node_color then
-        for n in node.traverse(head) do
+        for n in traverse(head) do
             optex.set_node_color(n, pdf_colour)
         end
 
@@ -864,7 +889,7 @@ end
 --- @param head node
 --- @param paragraph_index number
 local function replace_paragraph(head, paragraph_index)
-    local target_node = node.copy_list(paragraphs[paragraph_index].node)
+    local target_node = copy_list(paragraphs[paragraph_index].node)
 
     local start_found = false
     local end_found = false
@@ -947,6 +972,60 @@ local function replace_paragraph(head, paragraph_index)
 end
 
 
+--- “Hides” the marks on the page by replacing them with a special whatsit node.
+---
+--- There's no such thing as `\holdingmarks`, so we need to do this manually
+--- to prevent the marks disappearing when we run the “no-op” output routine.
+---
+--- @param head node `tex.lists.contrib_head`
+--- @return node head The modified `tex.lists.contrib_head` list
+local function hide_marks(head)
+    local n = head
+    while n do
+        if n.id == mark_id then
+            local mark = n
+            n = mark.next
+
+            local whatsit = new_node("whatsit", "user_defined")
+            whatsit.user_id = mark_whatsit_id
+            whatsit.type = whatsit_node_type
+            whatsit.value = mark
+
+            head = replace_node(head, mark, whatsit)
+            whatsit.value.next = nil
+        else
+            n = n.next
+        end
+    end
+
+    return head
+end
+
+
+--- “Unhides” the marks on the page.
+---
+--- @param head node The `pre_output_filter` list
+--- @return node head The modified `pre_output_filter` list
+local function unhide_marks(head)
+    local n = head
+    while n do
+        if n.id == whatsit_id and
+           n.user_id == mark_whatsit_id
+        then
+            local whatsit = n
+            n = whatsit.next
+
+            local mark = whatsit.value
+            head = replace_node(head, whatsit, mark)
+        else
+            n = n.next
+        end
+    end
+
+    return head
+end
+
+
 local special_output = false
 --- Trigger a “special” output routine. Called by the `buildpage_filter`
 --- callback.
@@ -977,6 +1056,7 @@ function lwc.trigger_special_output(info)
     -- Attempt an output routine without any inserts
     tex.holdinginserts = 1
     special_output = true
+    tex_lists[contrib_head] = hide_marks(tex_lists[contrib_head])
     tex.triggerbuildpage()
     special_output = false
 end
@@ -999,6 +1079,8 @@ end
 --- @param head node
 --- @return node
 function lwc.remove_widows(head)
+    head = unhide_marks(head)
+
     local should_remove = lwc.should_remove_widows(
         tex.outputpenalty, paragraphs, head
     ) and #paragraphs > 0
