@@ -1,0 +1,55 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2024 Max Chernoff
+
+\documentclass{article}
+
+% Use the default `article` layout, but draw a frame around the text area
+\usepackage[
+    textwidth=345pt,
+    textheight=550pt,
+    top=125.25pt,
+    left=134.3pt,
+    showframe,
+]{geometry}
+
+\usepackage{longtable}
+
+\usepackage{lua-widow-control}
+
+\begin{document}
+
+    \begin{longtable}{|l|r|}
+        \caption{Table Caption} \\ \hline
+        Row & One \\ \hline
+        Row & Two \\ \hline
+        Row & Three \\ \hline
+    \end{longtable}
+
+    \begin{figure}
+        \centering
+        \framebox{Figure Contents}
+        \caption{Figure Caption}
+    \end{figure}
+
+    One two three four five six seven eight nine ten. One two three four
+    five six seven eight nine ten. One two three four five six seven
+    eight nine ten. One two three four five six seven eight nine ten.
+    One two three four five six seven eight nine ten. One two three four
+    five six seven eight nine ten. One two three four five six seven
+    eight nine ten. One two three four five six seven eight nine ten.
+    One two three four five six seven eight nine ten. One two three four
+    five six seven eight nine ten. One two three four five six seven
+    eight nine ten. One~two.\footnote{First Footnote}
+
+    \newcount\n \n=0
+    \loop\ifnum\n<9
+        \advance\n by 1
+
+        One two three four five six seven eight nine ten. One two three four
+        five six seven eight nine ten. One two three four five six seven
+        eight nine ten. One two\ifnum\n=9\footnote{Second Footnote}\fi{} three.
+    \repeat
+
+\end{document}

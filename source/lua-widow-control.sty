@@ -135,25 +135,32 @@
 
 % Define some commands to handle \toks registers
 \cs_new_eq:NN \__lwc_toks_new:N \newtoks
+
 \cs_new_protected:Nn \__lwc_toks_set:Nn {
     #1 = { #2 }
 }
-\cs_new_protected:Nn \__lwc_toks_set_eq:NN {
-    #1 = #2
+
+% `\aftergroup` works incorrectly inside `\output`, so we set
+% `\l__lwc_after_output_toks` with the content that we want to run immediately
+% after the output routine ends.
+\__lwc_toks_new:N \l__lwc_after_output_toks
+
+\cs_new_protected:Nn \__lwc_set_after_output:n {
+    \__lwc_toks_set:Nn \l__lwc_after_output_toks {
+        \__lwc_toks_set:Nn \tex_output:D { #1 }
+    }
 }
-\cs_new_protected:Nn \__lwc_toks_gset_eq:NN {
-    \tex_global:D #1 = #2
-}
+\cs_generate_variant:Nn \__lwc_set_after_output:n { V }
 
 % Define the output routine handler
-\__lwc_toks_new:N \g__lwc_saved_output_toks
 \__lwc_toks_new:N \g__lwc_trigger_special_output_toks
 
 \__lwc_toks_set:Nn \g__lwc_trigger_special_output_toks {
     \int_set:Nn \tex_holdinginserts:D { 0 }
-    \__lwc_toks_set_eq:NN \g__lwc_saved_output_toks \tex_output:D
+
+    \__lwc_set_after_output:V \tex_output:D
+
     \__lwc_toks_set:Nn \tex_output:D {
-        \__lwc_toks_gset_eq:NN \tex_output:D \g__lwc_saved_output_toks
         \vbox_unpack_drop:N \tex_outputbox:D
         \tex_penalty:D \tex_outputpenalty:D \scan_stop:
     }

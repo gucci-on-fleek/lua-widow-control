@@ -158,7 +158,8 @@ lwc.colours = {
      generic equivalents. This way, we can write the rest of the module without
      worrying about any format/engine differences.
   ]]
-local contrib_head,
+local after_output,
+      contrib_head,
       draft_offset,
       emergencystretch,
       info,
@@ -216,6 +217,7 @@ elseif plain or latex or optex then
         draft_offset = "g__lwc_draftoffset_dim"
         max_cost = "g__lwc_maxcost_int"
         trigger_special_output = "g__lwc_trigger_special_output_toks"
+        after_output = "l__lwc_after_output_toks"
     else
         emergencystretch = "lwcemergencystretch"
         draft_offset = "lwcdraftoffset"
@@ -1044,10 +1046,21 @@ local special_output = false
 --- @param info string The reason that this `buildpage` was triggered
 --- @return nil
 function lwc.trigger_special_output(info)
+    -- `\aftergroup` works incorrectly inside `\output`, so we need to handle
+    -- that manually here. LaTeX-only for now, since I don't think that the
+    -- other formats rely upon setting `\output` locally and it's much more
+    -- annoying to set than a `\global` OR.
+    if info == "after_output" then
+        if after_output and tex.toks[after_output] ~= "" then
+            tex.runtoks(after_output)
+            tex.toks[after_output] = ""
+        end
+        return
+    end
+
     -- We need to let the real output routine run sometimes, otherwise we get
     -- stuck in a `\deadcycles` loop.
     if status.output_active or
-       info == "after_output" or
        info == "end"
     then
         return
