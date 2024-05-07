@@ -28,16 +28,8 @@ A \printlocation{3} paragraph with exactly two lines. A paragraph with exactly t
 \flushbottom
 
 \begin{document}
-    \lwcsetup{nobreak = keep}
     \text
 
-    \lwcsetup{nobreak = split}
-    \text
-
-    \lwcsetup{nobreak = warn}
-    \text
-
-    \lwcsetup{nobreak = keep}
     \def\sectionname{Long\printlocation{X} long long long long long long long long long long long\printlocation{2}}
     \text
 \end{document}
