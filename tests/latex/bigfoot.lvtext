@@ -1,0 +1,34 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2024 Max Chernoff
+
+% See https://github.com/gucci-on-fleek/lua-widow-control/issues/44
+\documentclass{article}
+
+\usepackage{lua-widow-control}
+
+\usepackage{bigfoot}
+\DeclareNewFootnote{default}
+\DeclareNewFootnote{Z}[alph]
+
+\begin{document}
+
+\vspace*{33\baselineskip}
+
+One two three four five six seven eight nine ten. One two three four five six
+seven eight nine ten. One two three four five six seven eight nine ten. One two
+three four five six seven eight nine ten. One two three four five six seven
+eight nine ten. One two three four five six seven eight nine ten. One two three
+four five six seven eight nine ten. One two three four five six seven eight nine
+ten. One two three four five six seven eight nine ten. One two three four five
+six seven eight nine ten. One two three four five six seven eight nine ten. One
+two.
+
+Some text \footnote{%
+    Note\footnoteZ{first note to note}note2\footnoteZ{second note to note}%
+} One two three four five six seven eight nine ten. One two three four five six
+seven eight nine ten. One two three four five six seven eight nine ten. One two
+three four five six seven eight nine ten. One two three.
+
+\end{document}
