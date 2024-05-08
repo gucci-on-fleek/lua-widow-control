@@ -1102,10 +1102,11 @@ end
 --- @param head node
 --- @return node
 function lwc.remove_widows(head)
+    local output_penalty = tex.outputpenalty
     head = unhide_marks(head)
 
     local should_remove = lwc.should_remove_widows(
-        tex.outputpenalty, paragraphs, head
+        output_penalty, paragraphs, head
     ) and #paragraphs > 0
 
     if not special_output then
@@ -1127,7 +1128,7 @@ function lwc.remove_widows(head)
         -- doesn't do anything clever to break the page here again on the
         -- next pass.
         tex.outputpenalty = 10000
-    elseif tex.outputpenalty == 10000 then
+    elseif output_penalty == 10000 then
         -- An `\outputpenalty` of 10000 signals that TeX broke at a
         -- non-penalty, so we need to ignore this so that TeX can break here
         -- again if it needs to.
@@ -1146,6 +1147,7 @@ function lwc.remove_widows(head)
 
     if not paragraph_index then
         debug("failure", "no good paragraph")
+        tex.outputpenalty = output_penalty
         remove_widows_fail()
         return head
     end
