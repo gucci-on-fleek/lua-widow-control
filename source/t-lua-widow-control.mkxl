@@ -10,10 +10,6 @@
 %D          url=https://github.com/gucci-on-fleek/lua-widow-control]
 \startmodule[lua-widow-control]
 
-\errhelp{ConTeXt support for lua-widow-control is currently broken. Sorry!}
-\errmessage{ConTeXt support for lua-widow-control is currently broken. Sorry!}
-\normalend
-
 \unprotect
 
 % Preliminaries
@@ -77,6 +73,20 @@
 
     \setups[*default]
 \stoptexdefinition
+
+% Define the output routine handler
+\newtoks\lwc_saved_output
+\newtoks\lwc_trigger_special_output
+
+\lwc_trigger_special_output={%
+    \holdinginserts=0\relax%
+    \lwc_saved_output=\output%
+    \output={%
+        \global\output=\lwc_saved_output%
+        \unvbox255\relax%
+        \penalty\outputpenalty\relax%
+    }%
+}
 
 % Load the main Lua file
 \ctxloadluafile{lua-widow-control}

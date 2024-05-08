@@ -170,7 +170,7 @@ local after_output,
       set_whatsit_field,
       shrink_order,
       stretch_order,
-      trigger_special_output,
+      trigger_special_output_toks,
       warning
 
 if lmtx then
@@ -209,14 +209,14 @@ if context then
     emergencystretch = "lwc_emergency_stretch"
     draft_offset = "lwc_draft_offset"
     max_cost = "lwc_max_cost"
-    trigger_special_output = error -- TODO
+    trigger_special_output_toks = "lwc_trigger_special_output"
 elseif plain or latex or optex then
     -- Register names
     if tex.isdimen("g__lwc_emergencystretch_dim") then
         emergencystretch = "g__lwc_emergencystretch_dim"
         draft_offset = "g__lwc_draftoffset_dim"
         max_cost = "g__lwc_maxcost_int"
-        trigger_special_output = "g__lwc_trigger_special_output_toks"
+        trigger_special_output_toks = "g__lwc_trigger_special_output_toks"
         after_output = "l__lwc_after_output_toks"
     else
         emergencystretch = "lwcemergencystretch"
@@ -224,9 +224,9 @@ elseif plain or latex or optex then
         max_cost = "lwcmaxcost"
 
         if optex then
-            trigger_special_output = "_lwc_trigger_special_output"
+            trigger_special_output_toks = "_lwc_trigger_special_output"
         else
-            trigger_special_output = "lwc@trigger@special@output"
+            trigger_special_output_toks = "lwc@trigger@special@output"
         end
     end
 
@@ -917,12 +917,16 @@ local function replace_paragraph(head, paragraph_index)
             start_found = true
 
             -- Fix the `\\baselineskip` glue between paragraphs
-            height_difference = (
-                next_of_type(n, hlist_id, { subtype = line_subid }).height -
-                next_of_type(
-                    target_node, hlist_id, { subtype = line_subid }
-                ).height
-            )
+            if grid_mode_enabled() then
+                height_difference = 0
+            else
+                height_difference = (
+                    next_of_type(n, hlist_id, { subtype = line_subid }).height -
+                    next_of_type(
+                        target_node, hlist_id, { subtype = line_subid }
+                    ).height
+                )
+            end
 
             local prev_bls = next_of_type(
                 n,
@@ -947,16 +951,7 @@ local function replace_paragraph(head, paragraph_index)
 
             local target_node_last = last(target_node)
 
-            if grid_mode_enabled() then
-                -- Account for the difference in depth
-                local after_glue = new_node("glue")
-                after_glue.width = n.depth - target_node_last.depth
-                target_node_last.next = after_glue
-
-                after_glue.next = n.next
-            else
-                target_node_last.next = n.next
-            end
+            target_node_last.next = n.next
 
             n.next = nil
 
@@ -1029,8 +1024,7 @@ end
 
 
 local special_output = false
---- Trigger a “special” output routine. Called by the `buildpage_filter`
---- callback.
+--- Trigger a “special” output routine.
 ---
 --- This function runs before every time that TeX tries to build a page. We
 --- intercept this by asking TeX to build a page, but with `\holdinginserts`
@@ -1043,9 +1037,10 @@ local special_output = false
 --- handle as normal, without needing to shuffle around the last line of the
 --- page as we needed to with previous versions of \lwc/.
 ---
+--- @param head node `tex.lists.contrib_head`
 --- @param info string The reason that this `buildpage` was triggered
 --- @return nil
-function lwc.trigger_special_output(info)
+local function _trigger_special_output(head, info)
     -- `\aftergroup` works incorrectly inside `\output`, so we need to handle
     -- that manually here. LaTeX-only for now, since I don't think that the
     -- other formats rely upon setting `\output` locally and it's much more
@@ -1069,9 +1064,24 @@ function lwc.trigger_special_output(info)
     -- Attempt an output routine without any inserts
     tex.holdinginserts = 1
     special_output = true
-    tex_lists[contrib_head] = hide_marks(tex_lists[contrib_head])
+    tex_lists[contrib_head] = hide_marks(head)
     tex.triggerbuildpage()
     special_output = false
+end
+
+
+--- Wrapper function to normalize the `buildpage_filter` callback arguments.
+function lwc.trigger_special_output(...)
+    local head, info
+    if select("#", ...) == 1 then -- LaTeX, Plain, OpTeX
+        head = tex_lists[contrib_head]
+        info = ...
+    else -- ConTeXt
+        head, info = ...
+    end
+
+    _trigger_special_output(head, info)
+    return tex_lists[contrib_head]
 end
 
 
@@ -1110,7 +1120,7 @@ function lwc.remove_widows(head)
 
     -- Set a “no-op” output routine. No good way to do this directly from Lua
     -- unfortunately.
-    tex.runtoks(trigger_special_output)
+    tex.runtoks(trigger_special_output_toks)
 
     if should_remove then
         -- If there's a widow/orphan here, we need to make sure that TeX
@@ -1385,7 +1395,7 @@ lwc.callbacks = {
         func     = lwc.trigger_special_output,
         name     = "trigger_special_output",
         category = "mvlbuilders",
-        position = "before",
+        position = "after",
     }),
 }
 

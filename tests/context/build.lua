@@ -19,7 +19,7 @@ specialformats = { context = {
     --     format = ""
     -- },
     mkiv = {
-        binary = "context --luatex",
+        binary = "context --luatex --once",
         format = ""
     },
 }}
