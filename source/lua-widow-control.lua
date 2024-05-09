@@ -573,7 +573,11 @@ function lwc.save_paragraphs(head)
        #luatexbase.callback_descriptions("hpack_quality") == 0
     then -- See #18 and michal-h21/linebreaker#3
         renable_box_warnings = true
-        lwc.callbacks.disable_box_warnings.enable()
+        if lmtx then
+            trackers.disable("builders.hpack.quality")
+        else
+            lwc.callbacks.disable_box_warnings.enable()
+        end
     end
 
     natural_info = natural_paragraph(head)
@@ -598,7 +602,11 @@ function lwc.save_paragraphs(head)
     end
 
     if renable_box_warnings then
-        lwc.callbacks.disable_box_warnings.disable()
+        if lmtx then
+            trackers.enable("builders.hpack.quality")
+        else
+            lwc.callbacks.disable_box_warnings.disable()
+        end
     end
 
     if not grid_mode_enabled() then

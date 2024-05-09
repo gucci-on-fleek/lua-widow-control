@@ -91,6 +91,33 @@
 % Load the main Lua file
 \ctxloadluafile{lua-widow-control}
 
+% Set up the default options
+\setuplwc[
+    emergencystretch=3em,
+    maxcost=2147483647,
+    nobreak=keep,
+    orphanpenalty=1,
+    widowpenalty=1,
+    brokenpenalty=1,
+    \c!state=\v!start,
+    debug=\v!stop,
+    draft=,
+    showcosts=\v!stop,
+    showcolours=\v!stop,
+]
+
+\ifcase\contextlmtxmode
+    % MkIV
+    \setuplwc[
+        draftoffset=1in,
+    ]
+\else
+    % LMTX
+    \setuplwc[
+        draftoffset=2in,
+    ]
+\fi
+
 % Define the presets
 \definelwc[default][
     emergencystretch=3em,
@@ -118,29 +145,6 @@
     orphanpenalty=500,
     brokenpenalty=500,
 ]
-
-% Set up the default options
-\setuplwc[
-    \c!state=\v!start,
-    debug=\v!stop,
-    draft=,
-    showcosts=\v!stop,
-    showcolours=\v!stop,
-]
-
-\ifcase\contextlmtxmode
-    % MkIV
-    \setuplwc[
-        draftoffset=1in,
-    ]
-\else
-    % LMTX
-    \setuplwc[
-        draftoffset=2in,
-    ]
-\fi
-
-\setuplwc[default]
 
 \appendtoks
     \ifcase\lwcsetupmode
