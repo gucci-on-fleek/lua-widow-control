@@ -100,6 +100,7 @@ local hlist_id = id_from_name("hlist")
 local line_subid = 1
 local mark_id = id_from_name("mark")
 local par_id = id_from_name("par") or id_from_name("local_par")
+local par_subids = table.swapped(node.subtypes("par") or {})
 local parfill_subids = {
     parfillleftskip = 17,
     parfillrightskip = 16,
@@ -560,13 +561,16 @@ end
 --- @param head node The pre-broken paragraph
 --- @return node head The unmodified `head` argument
 function lwc.save_paragraphs(head)
-    if (head.id ~= par_id and context) or -- Make sure that `head` is a paragraph
+    if (context and head.id ~= par_id) or -- Make sure that `head` is a paragraph
         status.output_active or -- Don't run during the output routine
-        tex.nest.ptr > 1 -- Don't run inside boxes
+        tex.nest.ptr > 1 or -- Don't run inside boxes
+       (lmtx and not ( -- Check for weird `par` nodes
+            head.subtype == par_subids.vmodepar or
+            head.subtype == par_subids.hmodepar
+       ))
     then
         return head
     end
-
     -- Prevent the "underfull hbox" warnings when we store a potential paragraph
     local renable_box_warnings
     if (context or optex) or

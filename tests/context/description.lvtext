@@ -1,0 +1,39 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2024 Max Chernoff
+
+% See https://github.com/gucci-on-fleek/lua-widow-control/issues/45
+
+\usemodule[lua-widow-control]
+\setuplwc[showcolours=start]
+
+\setuppapersize[A6]
+
+\setupindenting[yes, 3em]
+
+\definefontfeature[default][default][expansion=quality,protrusion=quality]
+
+\usetypescript[modern-base]
+\setupbodyfont[reset,modern]
+
+\setupalign[hz, hanging, verytolerant]
+
+\definedescription[concept]
+
+\setupdescription[concept][
+    indenting=yes,
+    width=fit,
+]
+
+\startdocument
+    \samplefile{knuth}
+
+    \dorecurse{3}{
+        \startconcept{Concept}
+            \dorecurse{8}{
+                Filler \dorecurse{15}{ filler}.\par
+            }
+        \stopconcept
+    }
+\stopdocument
