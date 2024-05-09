@@ -117,7 +117,7 @@ local find_attribute = node.find_attribute or node.findattribute
 local free_list = node.flush_list or node.flushlist
 local get_attribute = node.get_attribute or node.getattribute
 local hpack = node.hpack
-local insert_node_before = node.insert_before
+local insert_node_before = node.insert_before or node.insertbefore
 local insert_token = token.put_next or token.putnext
 local is_node = node.is_node or node.isnode
 local last = node.slide
@@ -203,7 +203,7 @@ if context then
         logs.poptarget()
     end
     paragraph_attribute = attributes.public(lwc.name .. "_paragraph")
-    mark_whatsit_id = 55
+    mark_whatsit_id = nodes.pool.userids[lwc.name .. "_mark"]
 
     -- Register names
     emergencystretch = "lwc_emergency_stretch"
@@ -983,13 +983,20 @@ local function hide_marks(head)
             local mark = n
             n = mark.next
 
-            local whatsit = new_node("whatsit", "user_defined")
-            whatsit.user_id = mark_whatsit_id
-            whatsit.type = whatsit_node_type
-            whatsit.value = mark
-
+            local whatsit
+            if lmtx then
+                -- LMTX whatsits don't hold any data, so we need to store the
+                -- mark in an engine-provided table instead.
+                whatsit = nodes.pool.userdefined(mark_whatsit_id, mark)
+            else
+                whatsit = new_node("whatsit", "user_defined")
+                whatsit.user_id = mark_whatsit_id
+                whatsit.type = whatsit_node_type
+                whatsit.value = mark
+            end
             head = replace_node(head, mark, whatsit)
-            whatsit.value.next = nil
+
+            mark.next = nil
         else
             n = n.next
         end
@@ -1006,13 +1013,23 @@ end
 local function unhide_marks(head)
     local n = head
     while n do
+        local user_id, mark
+        if lmtx then
+            local d = is_node(n)
+            local properties = nodes.properties.data[d] or {}
+            user_id = properties.id
+            mark = properties.data
+        else
+            user_id = n.user_id
+            mark = n.value
+        end
+
         if n.id == whatsit_id and
-           n.user_id == mark_whatsit_id
+           user_id == mark_whatsit_id
         then
             local whatsit = n
             n = whatsit.next
 
-            local mark = whatsit.value
             head = replace_node(head, whatsit, mark)
         else
             n = n.next

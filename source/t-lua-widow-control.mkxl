@@ -126,8 +126,19 @@
     draft=,
     showcosts=\v!stop,
     showcolours=\v!stop,
-    draftoffset=1in,
 ]
+
+\ifcase\contextlmtxmode
+    % MkIV
+    \setuplwc[
+        draftoffset=1in,
+    ]
+\else
+    % LMTX
+    \setuplwc[
+        draftoffset=2in,
+    ]
+\fi
 
 \setuplwc[default]
 
