@@ -158,7 +158,7 @@ lwc.colours = {
      generic equivalents. This way, we can write the rest of the module without
      worrying about any format/engine differences.
   ]]
-local after_output,
+local after_output_toks,
       contrib_head,
       draft_offset,
       emergencystretch,
@@ -217,7 +217,7 @@ elseif plain or latex or optex then
         draft_offset = "g__lwc_draftoffset_dim"
         max_cost = "g__lwc_maxcost_int"
         trigger_special_output_toks = "g__lwc_trigger_special_output_toks"
-        after_output = "l__lwc_after_output_toks"
+        after_output_toks = "l__lwc_after_output_toks"
     else
         emergencystretch = "lwcemergencystretch"
         draft_offset = "lwcdraftoffset"
@@ -359,7 +359,7 @@ end
 --- @return boolean
 local function grid_mode_enabled()
     -- Compare the token "mode" to see if `\\ifgridsnapping` is `\\iftrue`
-    return token.create("ifgridsnapping").mode == iftrue.mode
+    return token.create("ifgridsnapping").index == iftrue.index
 end
 
 
@@ -1045,10 +1045,10 @@ local function _trigger_special_output(head, info)
     -- that manually here. LaTeX-only for now, since I don't think that the
     -- other formats rely upon setting `\output` locally and it's much more
     -- annoying to set than a `\global` OR.
-    if info == "after_output" then
-        if after_output and tex.toks[after_output] ~= "" then
-            tex.runtoks(after_output)
-            tex.toks[after_output] = ""
+    if info == "after_output" or info == "afteroutput" then
+        if after_output_toks and tex.toks[after_output_toks] ~= "" then
+            tex.runtoks(after_output_toks)
+            tex.toks[after_output_toks] = ""
         end
         return
     end
@@ -1080,8 +1080,13 @@ function lwc.trigger_special_output(...)
         head, info = ...
     end
 
-    _trigger_special_output(head, info)
-    return tex_lists[contrib_head]
+    if special_output then
+        -- Needed to prevent infinite recursion with LMTX
+        return head
+    else
+        _trigger_special_output(head, info)
+        return tex_lists[contrib_head]
+    end
 end
 
 
@@ -1320,7 +1325,7 @@ local function register_callback(t)
                 luatexbase.remove_from_callback(t.callback, t.name)
             end,
         }
-    elseif context and not t.lowlevel then
+    elseif context and (lmtx or not t.lowlevel) then
         return {
             -- Register the callback when the table is created,
             -- but activate it when `enable()` is called.
@@ -1332,7 +1337,10 @@ local function register_callback(t)
                 nodes.tasks.disableaction(t.category, "lwc." .. t.name)
             end,
         }
-    elseif context and t.lowlevel then
+    elseif context and not lmtx and t.lowlevel then
+        -- ConTeXt LMTX defines "actions" for all the callbacks now. The old
+        -- comment below still applies to MkIV.
+        --
         -- Some of the callbacks in \ConTeXt{} have no associated "actions".
         -- Unlike with \LuaTeX{}base, \ConTeXt{} leaves some \LuaTeX{} callbacks
         -- unregistered and unfrozen. Because of this, we need to register some
@@ -1363,12 +1371,16 @@ lwc.callbacks = {
         callback = "hpack_quality",
         func     = function() end,
         name     = "disable_box_warnings",
+        category = "hquality",
+        position = "before",
         lowlevel = true,
     }),
     remove_widows = register_callback({
         callback = "pre_output_filter",
         func     = lwc.remove_widows,
         name     = "remove_widows",
+        category = "pagebuilders",
+        position = "before",
         lowlevel = true,
     }),
     save_paragraphs = register_callback({

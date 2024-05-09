@@ -14,16 +14,16 @@ dofile(prefix .. "tests/test-config.lua")
 
 -- ConTeXt
 specialformats = { context = {
-    -- mkxl = {
-    --     binary = "context",
-    --     format = ""
-    -- },
+    mkxl = {
+        binary = "context --once",
+        format = ""
+    },
     mkiv = {
         binary = "context --luatex --once",
         format = ""
     },
 }}
 
-checkengines = { --[["mkxl",]] "mkiv" }
+checkengines = { "mkxl", "mkiv" }
 checkformat = "context"
 testfiledir = prefix .. "tests/context"
