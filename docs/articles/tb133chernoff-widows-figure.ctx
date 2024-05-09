@@ -6,7 +6,7 @@
 \startbuffer[demo-text]
     \definepapersize[smallpaper][
         width=6cm,
-        height=8.3cm
+        height=8.6cm
     ]
     \setuppapersize[smallpaper]
 
@@ -34,14 +34,16 @@
         topspace=0.1cm,
         backspace=0.1cm,
         width=middle,
-        height=\dimexpr 21\baselineskip + 1.1pt,
+        height=\dimexpr 22\baselineskip + 1.1pt,
         header=0pt,
         footer=0pt,
     ]
 
     \starttext
+        {\linepenalty=10000 % TODO Weird hack???
         \Lwc/ can remove most widows and orphans from a document, \emph{without}
         stretching any glue or shortening any pages.
+        \par}
 
         \ifx\uselooseness\undefined\else\uselooseness\fi It does so by automatically lengthening a paragraph on a page where a
         widow or orphan would otherwise occur. While \TeX{} breaks paragraphs

@@ -6,7 +6,7 @@
 \startbuffer[demo-text]
     \definepapersize[smallpaper][
         width=6cm,
-        height=8.3cm
+        height=8.6cm
     ]\setuppapersize[smallpaper]
 
     \setuplayout[
@@ -37,7 +37,9 @@
     \setuplanguage[en][spacing=packed]
 
     \starttext
+        {\linepenalty=10000 % TODO Weird hack???
         \Lwc/ can remove most widows and orphans from a document, \emph{without} stretching any glue or shortening any pages.
+        \par}
 
         It does so by automatically lengthening a paragraph on a page where a widow or orphan would otherwise occur. While \TeX{} breaks paragraphs into their natural length, \lwc/ is breaking the paragraph 1~line longer than its natural length. \TeX{}'s paragraph is output to the page, but \lwc/'s paragraph is just stored for later. When a widow or orphan occurs, \lwc/ can take over. It selects the previously-saved paragraph with the least badness; then, it replaces \TeX{}'s paragraph with its saved paragraph. This increases the text block height of the page by 1~line.
 
