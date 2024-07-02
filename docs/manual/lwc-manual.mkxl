@@ -36,6 +36,9 @@ fonts.handlers.otf.addfeature {
 \definefontfeature[allsmall][c2sc=yes, smcp=yes]
 \define\lining{\feature[+][lining]}
 
+\usebodyfont[pagella]
+\usebodyfont[adventor]
+
 \starttypescript[lwc-fonts]
     \definetypeface[lwc-fonts] [rm] [serif][pagella] [default]
     \definetypeface[lwc-fonts] [ss] [sans] [libertinus] [default] [rscale=1.07]
