@@ -27,35 +27,45 @@
     {v3.0.1} %%version
     {Use Lua to remove widows and orphans}
 
+% Variants
+\cs_generate_variant:Nn \hook_gput_code:nnn { nVn }
+\cs_generate_variant:Nn \keys_define:nn { Vn }
+\cs_generate_variant:Nn \keys_set:nn { Vn }
+\cs_generate_variant:Nn \msg_critical:nn { Vn }
+\cs_generate_variant:Nn \msg_error:nnnn { Vnee }
+\cs_generate_variant:Nn \msg_error:nnnnn { Vnnnn }
+\cs_generate_variant:Nn \msg_new:nnn { Vnn }
+\cs_generate_variant:Nn \msg_warning:nn { Vn }
+
 % Message and String Constants
 \str_const:Nn \c__lwc_name_str { lua-widow-control }
 
-\msg_new:nnn
-    { \c__lwc_name_str }
+\msg_new:Vnn
+    \c__lwc_name_str
     { no-luatex }
     {
         LuaTeX~ is~ REQUIRED! \\
         Make~ sure~ to~ compile~ your~ document~ with~ `lualatex'.
     }
 
-\msg_new:nnn
-    { \c__lwc_name_str }
+\msg_new:Vnn
+    \c__lwc_name_str
     { patch-failed }
     {
         Patching~ \c_backslash_str #1~ failed. \\
         Please~ ensure~ that~ \c_backslash_str #1~ exists.
     }
 
-\msg_new:nnn
-    { \c__lwc_name_str }
+\msg_new:Vnn
+    \c__lwc_name_str
     { old-format-patch }
     {
         Patching~ not~ supported~ with~ old~ LaTeX. \\
         Please~ use~ a~ LaTeX~ format~ >=~ 2021/06/01.
     }
 
-\msg_new:nnn
-    { \c__lwc_name_str }
+\msg_new:Vnn
+    \c__lwc_name_str
     { old-command }
     {
         \c_backslash_str #1~ has~ been~ REMOVED! \\
@@ -63,8 +73,8 @@
         \c_right_brace_str\ instead.
     }
 
-\msg_new:nnn
-    { \c__lwc_name_str }
+\msg_new:Vnn
+    \c__lwc_name_str
     { dubious-emergencystretch }
     {
         Questionable~ `emergencystretch'~ value. \\
@@ -75,11 +85,10 @@
 
 % Don't let the user proceed unless they are using \LuaTeX{}.
 \sys_if_engine_luatex:F {
-    \msg_critical:nn { \c__lwc_name_str } { no-luatex }
+    \msg_critical:Vn \c__lwc_name_str { no-luatex }
 }
 
 % Define (most of) the keys
-\cs_generate_variant:Nn \keys_define:nn { Vn }
 \dim_new:N \g__lwc_emergencystretch_dim
 
 \keys_define:Vn { \c__lwc_name_str } {
@@ -87,7 +96,7 @@
         \dim_gset:Nn \g__lwc_emergencystretch_dim { #1 }
         \dim_compare:nNnT { #1 } > { \dim_max:nn { \textwidth } { 6in } }
         {
-            \msg_warning:nn { \c__lwc_name_str } { dubious-emergencystretch }
+            \msg_warning:Vn \c__lwc_name_str { dubious-emergencystretch }
         }
     },
     emergencystretch .value_required:n = true,
@@ -120,15 +129,17 @@
     microtype .initial:n        = true,
     microtype .usage:n          = preamble,
 
-    disablecmds .clist_gset:N     = \g__lwc_disablecmds_cl,
+    disablecmds .clist_gset:N     = \g__lwc_disablecmds_clist,
     disablecmds .value_required:n = false,
-    disablecmds .initial:n        = { \@sect,           % LaTeX default
-                                      \@ssect,          % LaTeX starred
-                                      \M@sect,          % Memoir
-                                      \@mem@old@ssect,  % Memoir Starred
-                                      \ttl@straight@ii, % titlesec normal
-                                      \ttl@top@ii,      % titlesec top
-                                      \ttl@part@ii,     % titlesec part
+    disablecmds .initial:n        = { \@sect,            % LaTeX default
+                                      \@ssect,           % LaTeX starred
+                                      \@makechapterhead, % LaTeX chapter
+                                      \M@sect,           % Memoir
+                                      \@mem@old@ssect,   % Memoir Starred
+                                      \ttl@straight@ii,  % titlesec normal
+                                      \ttl@top@ii,       % titlesec top
+                                      \ttl@part@ii,      % titlesec part
+                                      \ttl@mkchap,       % titlesec chapter
                                     },
     disablecmds .usage:n          = preamble,
 }
@@ -176,7 +187,7 @@
 % Here, we enable font expansion/contraction. It isn't strictly necessary for
 % \lwc/'s functionality; however, it is required for the
 % lengthened paragraphs to not have terrible spacing.
-\hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
+\hook_gput_code:nVn { begindocument / before } \c__lwc_name_str {
     \bool_if:NT \g__lwc_use_microtype_bool {
         \@ifpackageloaded { microtype } {} {
             \RequirePackage[
@@ -228,16 +239,14 @@
 
 \cs_new:Npn \__lwc_patch_cmd:c #1 {
     \IfFormatAtLeastTF { 2021/06/01 } {
-        \hook_gput_code:nnn { cmd / #1 / before } { \c__lwc_name_str } {
+        \hook_gput_code:nVn { cmd / #1 / before } \c__lwc_name_str {
             \__lwc_patch_pre:
         }
-        \hook_gput_code:nnn { cmd / #1 / after } { \c__lwc_name_str } {
+        \hook_gput_code:nVn { cmd / #1 / after } \c__lwc_name_str {
             \__lwc_patch_post:
         }
     } {
-        \msg_warning:nn
-                { \c__lwc_name_str }
-                { old-format-patch }
+        \msg_warning:Vn \c__lwc_name_str { old-format-patch }
     }
 }
 
@@ -255,8 +264,14 @@
     }
 }
 
-\hook_gput_code:nnn { begindocument / before } { \c__lwc_name_str } {
-    \clist_map_function:NN \g__lwc_disablecmds_cl \__lwc_patch_cmd:n
+\hook_gput_code:nVn { begindocument / before } \c__lwc_name_str {
+    % Remove the @makechapterhead hooks with titlesec
+    \@ifpackageloaded { titlesec } {
+        \clist_remove_all:Nn \g__lwc_disablecmds_clist { \@makechapterhead }
+    } {}
+
+    % Patch the commands that we want to disable
+    \clist_map_function:NN \g__lwc_disablecmds_clist \__lwc_patch_cmd:n
 }
 
 \__lwc_if_lmtx:T {
@@ -353,23 +368,22 @@
     \exp_args:NV \ProcessKeysOptions { \c__lwc_name_str }
 }
 
-\cs_generate_variant:Nn \keys_set:nn { Vn }
 \NewDocumentCommand \lwcsetup {m} {
     \keys_set:Vn { \c__lwc_name_str }{ #1 }
 }
 
 % Legacy Commands
 \NewDocumentCommand \lwcemergencystretch { } {
-    \msg_error:nnnnn
-        { \c__lwc_name_str }
+    \msg_error:Vnnnn
+        \c__lwc_name_str
         { old-command }
         { lwcemergencystretch }
         { emergencystretch=XXXpt }
 }
 
 \NewDocumentCommand \lwcdisablecmd { m } {
-    \msg_error:nnxx
-        { \c__lwc_name_str }
+    \msg_error:Vnee
+        \c__lwc_name_str
         { old-command }
         { lwcdisablecmd }
         { disablecmds={\c_backslash_str aaa,~ \c_backslash_str bbb} }

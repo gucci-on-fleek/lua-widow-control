@@ -1,0 +1,39 @@
+% lua-widow-control
+% https://github.com/gucci-on-fleek/lua-widow-control
+% SPDX-License-Identifier: MPL-2.0+
+% SPDX-FileCopyrightText: 2024 Max Chernoff
+
+% See https://tex.stackexchange.com/q/721804
+
+\documentclass{book}
+\raggedbottom
+\widowpenalty=1
+\clubpenalty=1
+
+\usepackage[draft]{lua-widow-control}
+
+\def\test{
+    \chapter{Test}
+
+    \newcount\n \n=0
+    \loop\ifnum\n<30
+        \advance\n by 1\relax
+        \the\n~One line one line one line one line one line one line.
+        \par
+    \repeat
+
+    1~Three lines three lines three lines three lines three lines three lines
+    three 2~lines. Three lines three lines three lines three lines three lines
+    three lines three 3~lines. Three lines three lines three lines three lines
+    three lines three lines.
+
+    \clearpage
+}
+
+\begin{document}
+    \lwcsetup{disable}
+    \test
+
+    \lwcsetup{enable}
+    \test
+\end{document}
