@@ -104,7 +104,7 @@ function target_list.doc.func()
     run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
     run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
 
-    return error
+    return 0
 end
 
 -- Tests
