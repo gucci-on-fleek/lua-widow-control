@@ -35,6 +35,9 @@
     }%
 }
 
+% Load luaotfload
+\_initunifonts
+
 % Load the Lua code
 \_directlua{require "lua-widow-control"}
 
