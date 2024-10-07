@@ -24,3 +24,4 @@ steps:
         - texmf/doc/luatex/lua-widow-control/lwc-zpravodaj.pdf
       api_key:
         from_secret: GITHUB_TOKEN
+      prerelease: true
