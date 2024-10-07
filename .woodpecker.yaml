@@ -6,6 +6,7 @@ steps:
   - name: Build
     image: localhost/fedora-local:latest
     commands:
+      - export TEXMFHOME=$(realpath ./texmf)
       - l3build doc | grep -v 'hpack_quality'
       - l3build check --show-log-on-error | grep -v 'hpack_quality'
       - l3build bundle
