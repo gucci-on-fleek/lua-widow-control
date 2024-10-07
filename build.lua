@@ -74,26 +74,35 @@ end
 target_list.doc = {}
 target_list.doc.desc = "Builds the documentation"
 
+local l3_run = run
+local function run(cwd, cmd)
+    local error = l3_run(cwd, cmd)
+    if error ~= 0 then
+        print(("\n"):rep(5))
+        print("Error code " .. error .. " for command " .. cmd .. ".")
+        print("\n")
+        os.exit(error)
+    end
+end
+
 function target_list.doc.func()
-    local error = 0
-
     mkdir("./docs/manual/tmp")
-    error = error + run("./docs/manual", "context  lwc-manual")
+    run("./docs/manual", "context  lwc-manual")
 
-    error = error + run("./docs/articles", "context  tb133chernoff-widows-figure.ctx")
-    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
-    error = error + run("./docs/articles", "bibtex tb133chernoff-widows")
-    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
-    error = error + run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+    run("./docs/articles", "context  tb133chernoff-widows-figure.ctx")
+    run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+    run("./docs/articles", "bibtex tb133chernoff-widows")
+    run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
+    run("./docs/articles", "lualatex tb133chernoff-widows.ltx")
 
-    error = error + run("./docs/articles", "lualatex tb135chernoff-lwc.ltx")
-    error = error + run("./docs/articles", "pdfunite tb133chernoff-widows.pdf tb135chernoff-lwc.pdf /dev/stdout | sponge tb133chernoff-widows.pdf")
+    run("./docs/articles", "lualatex tb135chernoff-lwc.ltx")
+    run("./docs/articles", "pdfunite tb133chernoff-widows.pdf tb135chernoff-lwc.pdf /dev/stdout | sponge tb133chernoff-widows.pdf")
 
-    error = error + run("./docs/articles", "context  lwc-zpravodaj-figure.ctx")
-    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
-    error = error + run("./docs/articles", "biber lwc-zpravodaj")
-    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
-    error = error + run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
+    run("./docs/articles", "context  lwc-zpravodaj-figure.ctx")
+    run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
+    run("./docs/articles", "biber lwc-zpravodaj")
+    run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
+    run("./docs/articles", "lualatex lwc-zpravodaj.ltx")
 
     return error
 end
