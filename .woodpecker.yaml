@@ -1,0 +1,25 @@
+when:
+  - event: [push, tag, pull_request]
+    branch: master
+
+steps:
+  - name: Build
+    image: localhost/fedora-local:latest
+    commands:
+      - l3build doc
+      - l3build check --show-log-on-error
+      - l3build bundle
+
+  - name: Release
+    when:
+      event: tag
+    image: woodpeckerci/plugin-release
+    settings:
+      files:
+        - lua-widow-control.tds.zip
+        - lua-widow-control.ctan.zip
+        - texmf/doc/luatex/lua-widow-control/lua-widow-control.pdf
+        - texmf/doc/luatex/lua-widow-control/tb133chernoff-widows.pdf
+        - texmf/doc/luatex/lua-widow-control/lwc-zpravodaj.pdf
+      api_key:
+        from_secret: GITHUB_TOKEN
