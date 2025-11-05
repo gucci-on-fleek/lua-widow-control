@@ -5,6 +5,7 @@
 
 % From issue #37:
 \documentclass{article}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage[debug=true]{lua-widow-control}
 \usepackage{blindtext}

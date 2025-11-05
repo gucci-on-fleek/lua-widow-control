@@ -2,7 +2,7 @@
 % https://github.com/gucci-on-fleek/lua-widow-control
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
-\documentclass[fontsize=10pt]{scrartcl}
+\documentclass[a4paper, fontsize=10pt]{scrartcl}
 \areaset{345pt}{550pt}
 
 \usepackage{lua-widow-control}

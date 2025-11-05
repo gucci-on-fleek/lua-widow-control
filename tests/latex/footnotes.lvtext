@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage{lua-widow-control}
 \parskip=0pt

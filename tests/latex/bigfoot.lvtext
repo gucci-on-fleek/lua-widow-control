@@ -5,6 +5,7 @@
 
 % See https://github.com/gucci-on-fleek/lua-widow-control/issues/44
 \documentclass{article}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage{lua-widow-control}
 

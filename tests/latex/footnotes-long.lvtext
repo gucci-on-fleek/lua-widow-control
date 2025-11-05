@@ -17,7 +17,7 @@
 }
 
 
-\usepackage[paperwidth=140mm,paperheight=213mm]{geometry}
+\usepackage[letterpaper, paperwidth=140mm,paperheight=213mm]{geometry}
 \parskip=0pt
 
 \usepackage[debug=true]{lua-widow-control}

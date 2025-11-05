@@ -10,7 +10,7 @@
 \usepackage{mathtools}
 \allowdisplaybreaks
 
-\usepackage[textwidth=345pt, textheight=540pt, showframe]{geometry}
+\usepackage[letterpaper, textwidth=345pt, textheight=540pt, showframe]{geometry}
 
 \usepackage{linebreaker}
 \usepackage[debug=true]{lua-widow-control}

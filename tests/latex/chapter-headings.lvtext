@@ -6,6 +6,7 @@
 % See https://tex.stackexchange.com/q/721804
 
 \documentclass{book}
+\usepackage[letterpaper, pass]{geometry}
 \raggedbottom
 \widowpenalty=1
 \clubpenalty=1

@@ -9,6 +9,7 @@
 \RequirePackage[2016/01/01]{latexrelease}
 
 \documentclass{article}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage{lua-widow-control}
 

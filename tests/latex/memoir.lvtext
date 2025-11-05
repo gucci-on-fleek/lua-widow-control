@@ -3,6 +3,7 @@
 % SPDX-License-Identifier: MPL-2.0+
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 \documentclass{memoir}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage{lua-widow-control}
 

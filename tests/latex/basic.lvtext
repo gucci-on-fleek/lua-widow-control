@@ -4,6 +4,7 @@
 % SPDX-FileCopyrightText: 2022 Max Chernoff
 
 \documentclass{article}
+\usepackage[letterpaper, pass]{geometry}
 
 \usepackage{lua-widow-control}
 

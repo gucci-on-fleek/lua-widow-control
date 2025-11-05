@@ -6,7 +6,7 @@
 \documentclass{article}
 
 \usepackage{lua-widow-control}
-\usepackage[textwidth=345pt, textheight=550pt, showframe]{geometry}
+\usepackage[letterpaper, textwidth=345pt, textheight=550pt, showframe]{geometry}
 
 \def\section#1{\vskip0pt plus 1ex\noindent{\bfseries\interlinepenalty=10000\Large#1\par}\nobreak\vskip0pt plus 1ex\relax}
 
