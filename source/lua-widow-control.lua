@@ -584,12 +584,12 @@ function lwc.save_paragraphs(head)
         end
     end
 
-    natural_info = natural_paragraph(head)
+    local natural_info = natural_paragraph(head)
 
     -- Prevent ultra-short last lines (\TeX{}book p. 104). Equivalent to
     -- \\parfillskip=0.75\\hsize plus 0.05\\hsize minus 0.75\\hsize.
     -- From http://petr.olsak.net/ftp/olsak/tbn/tbn.pdf p. 234 (via Jan Sustek)
-    long_node, long_info = long_paragraph(
+    local long_node, long_info = long_paragraph(
         head,
         {0.75 * tex.hsize, 0.05 * tex.hsize, 0.75 * tex.hsize, 0, 0}
     )
@@ -724,12 +724,13 @@ end
 --- @param penalty number
 --- @return boolean
 local function is_matching_penalty(penalty)
-    local widowpenalty = tex.widowpenalty
-    local clubpenalty = tex.clubpenalty
-    local displaywidowpenalty = tex.displaywidowpenalty
-    local brokenpenalty = tex.brokenpenalty
+    local widowpenalty = tex.widowpenalty or tex.widowpenalties[1]
+    local clubpenalty = tex.clubpenalty or tex.clubpenalties[1]
+    local displaywidowpenalty = tex.displaywidowpenalty or tex.displaywidowpenalties[1]
+    local brokenpenalty = tex.brokenpenalty or tex.localbrokenpenalty
+    local interlinepenalty = tex.interlinepenalty or tex.localinterlinepenalty
 
-    penalty = penalty - tex.interlinepenalty
+    penalty = penalty - interlinepenalty
 
     -- Adapted from https://tug.org/TUGboat/tb39-3/tb123mitt-widows-code.pdf.
     -- This only takes into account the original \TeX{} penalties, not the
@@ -929,6 +930,7 @@ local function replace_paragraph(head, paragraph_index)
             start_found = true
 
             -- Fix the `\\baselineskip` glue between paragraphs
+            local height_difference
             if grid_mode_enabled() then
                 height_difference = 0
             else
